@@ -102,7 +102,7 @@ final case class XsSchema(
 // Linkbase root element
 
 final case class Linkbase(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with TaxonomyRootElem {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInCLinkNamespace.Linkbase with TaxonomyRootElem {
 
   requireName(ENames.CLinkLinkbaseEName)
 
