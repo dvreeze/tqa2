@@ -32,6 +32,7 @@ import eu.cdevreeze.yaidom2.queryapi.ElemStep
  *
  * @author Chris de Vreeze
  */
+// scalastyle:off number.of.types
 sealed trait TaxonomyNode extends BackingNodes.Node
 
 sealed trait CanBeTaxonomyDocumentChild extends TaxonomyNode with BackingNodes.CanBeDocumentChild

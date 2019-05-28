@@ -38,6 +38,8 @@ trait ElemInXsNamespace extends BackingElemApi {
   }
 }
 
+// scalastyle:off number.of.types
+// scalastyle:off number.of.methods
 object ElemInXsNamespace {
 
   // Traits that are more general than specific schema components
