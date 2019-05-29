@@ -21,7 +21,7 @@ import scala.collection.immutable.ArraySeq
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.tqa2.common.locfreexlink
-import eu.cdevreeze.tqa2.common.xmlschema.ElemInXsNamespace
+import eu.cdevreeze.tqa2.common.xmlschema.XmlSchemaDialect
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.dialect.AbstractDialectBackingElem
 import eu.cdevreeze.yaidom2.queryapi.BackingNodes
@@ -88,7 +88,7 @@ sealed abstract class TaxonomyElem(
 // TODO Attributes like use on arcs
 
 final case class XsSchema(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.XsSchema with TaxonomyRootElem {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.XsSchema with TaxonomyRootElem {
 
   requireName(ENames.XsSchemaEName)
 
@@ -120,7 +120,7 @@ final case class Linkbase(
  * to determine that in isolation.
  */
 final case class GlobalElementDeclaration(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.GlobalElementDeclaration {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.GlobalElementDeclaration {
 
   requireName(ENames.XsElementEName)
 
@@ -128,7 +128,7 @@ final case class GlobalElementDeclaration(
 }
 
 final case class LocalElementDeclaration(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.LocalElementDeclaration {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.LocalElementDeclaration {
 
   requireName(ENames.XsElementEName)
 
@@ -136,7 +136,7 @@ final case class LocalElementDeclaration(
 }
 
 final case class ElementReference(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.ElementReference {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.ElementReference {
 
   requireName(ENames.XsElementEName)
 
@@ -144,7 +144,7 @@ final case class ElementReference(
 }
 
 final case class GlobalAttributeDeclaration(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.GlobalAttributeDeclaration {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.GlobalAttributeDeclaration {
 
   requireName(ENames.XsAttributeEName)
 
@@ -152,7 +152,7 @@ final case class GlobalAttributeDeclaration(
 }
 
 final case class LocalAttributeDeclaration(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.LocalAttributeDeclaration {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.LocalAttributeDeclaration {
 
   requireName(ENames.XsAttributeEName)
 
@@ -160,7 +160,7 @@ final case class LocalAttributeDeclaration(
 }
 
 final case class AttributeReference(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.AttributeReference {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.AttributeReference {
 
   requireName(ENames.XsAttributeEName)
 
@@ -168,7 +168,7 @@ final case class AttributeReference(
 }
 
 final case class NamedSimpleTypeDefinition(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.NamedSimpleTypeDefinition {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.NamedSimpleTypeDefinition {
 
   requireName(ENames.XsSimpleTypeEName)
 
@@ -176,7 +176,7 @@ final case class NamedSimpleTypeDefinition(
 }
 
 final case class AnonymousSimpleTypeDefinition(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.AnonymousSimpleTypeDefinition {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.AnonymousSimpleTypeDefinition {
 
   requireName(ENames.XsSimpleTypeEName)
 
@@ -184,7 +184,7 @@ final case class AnonymousSimpleTypeDefinition(
 }
 
 final case class NamedComplexTypeDefinition(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.NamedComplexTypeDefinition {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.NamedComplexTypeDefinition {
 
   requireName(ENames.XsComplexTypeEName)
 
@@ -192,7 +192,7 @@ final case class NamedComplexTypeDefinition(
 }
 
 final case class AnonymousComplexTypeDefinition(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.AnonymousComplexTypeDefinition {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.AnonymousComplexTypeDefinition {
 
   requireName(ENames.XsComplexTypeEName)
 
@@ -200,7 +200,7 @@ final case class AnonymousComplexTypeDefinition(
 }
 
 final case class AttributeGroupDefinition(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.AttributeGroupDefinition {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.AttributeGroupDefinition {
 
   requireName(ENames.XsAttributeGroupEName)
 
@@ -208,7 +208,7 @@ final case class AttributeGroupDefinition(
 }
 
 final case class AttributeGroupReference(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.AttributeGroupReference {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.AttributeGroupReference {
 
   requireName(ENames.XsAttributeGroupEName)
 
@@ -216,7 +216,7 @@ final case class AttributeGroupReference(
 }
 
 final case class ModelGroupDefinition(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.ModelGroupDefinition {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.ModelGroupDefinition {
 
   requireName(ENames.XsGroupEName)
 
@@ -224,7 +224,7 @@ final case class ModelGroupDefinition(
 }
 
 final case class ModelGroupReference(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.ModelGroupReference {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.ModelGroupReference {
 
   requireName(ENames.XsGroupEName)
 
@@ -232,7 +232,7 @@ final case class ModelGroupReference(
 }
 
 final case class SequenceModelGroup(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.SequenceModelGroup {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.SequenceModelGroup {
 
   requireName(ENames.XsSequenceEName)
 
@@ -240,7 +240,7 @@ final case class SequenceModelGroup(
 }
 
 final case class ChoiceModelGroup(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.ChoiceModelGroup {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.ChoiceModelGroup {
 
   requireName(ENames.XsChoiceEName)
 
@@ -248,7 +248,7 @@ final case class ChoiceModelGroup(
 }
 
 final case class AllModelGroup(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.AllModelGroup {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.AllModelGroup {
 
   requireName(ENames.XsAllEName)
 
@@ -256,7 +256,7 @@ final case class AllModelGroup(
 }
 
 final case class Restriction(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.Restriction {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.Restriction {
 
   requireName(ENames.XsRestrictionEName)
 
@@ -264,7 +264,7 @@ final case class Restriction(
 }
 
 final case class Extension(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.Extension {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.Extension {
 
   requireName(ENames.XsExtensionEName)
 
@@ -272,7 +272,7 @@ final case class Extension(
 }
 
 final case class SimpleContent(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.SimpleContent {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.SimpleContent {
 
   requireName(ENames.XsSimpleContentEName)
 
@@ -280,7 +280,7 @@ final case class SimpleContent(
 }
 
 final case class ComplexContent(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.ComplexContent {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.ComplexContent {
 
   requireName(ENames.XsComplexContentEName)
 
@@ -288,7 +288,7 @@ final case class ComplexContent(
 }
 
 final case class Annotation(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.Annotation {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.Annotation {
 
   requireName(ENames.XsAnnotationEName)
 
@@ -296,7 +296,7 @@ final case class Annotation(
 }
 
 final case class Appinfo(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.Appinfo {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.Appinfo {
 
   requireName(ENames.XsAppinfoEName)
 
@@ -304,7 +304,7 @@ final case class Appinfo(
 }
 
 final case class Import(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace.Import {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.Import {
 
   requireName(ENames.XsImportEName)
 
@@ -316,7 +316,7 @@ final case class Import(
  * that has both a name and a ref attribute.
  */
 final case class OtherElemInXsNamespace(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInXsNamespace {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.Elem {
 
   // TODO Other query methods
 }

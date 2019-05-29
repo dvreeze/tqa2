@@ -22,32 +22,38 @@ import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.queryapi.BackingElemApi
 
 /**
- * Element in the "XML schema" namespace in a locator-free taxonomy.
- * This type or a sub-type is mixed in by taxonomy elements that are indeed in the XML Schema namespace.
+ * XML Schema dialect. All elements in this dialect are in the "xs" namespace.
+ *
+ * The elements in this dialect extend the yaidom `BackingElemApi` API and not the more specific `BackingNodes.Elem` API.
+ * It is meant to be mixed in by more concrete XML Schema dialects that do extend the `BackingNodes.Elem` API.
  *
  * @author Chris de Vreeze
  */
-trait ElemInXsNamespace extends BackingElemApi {
-
-  /**
-   * Returns the optional target namespace of the surrounding schema root element (or self), ignoring the possibility that
-   * this is an included chameleon schema.
-   */
-  final def schemaTargetNamespaceOption: Option[String] = {
-    findAncestorElemOrSelf(_.name == ENames.XsSchemaEName).flatMap(_.attrOption(ENames.TargetNamespaceEName))
-  }
-}
-
 // scalastyle:off number.of.types
 // scalastyle:off number.of.methods
-object ElemInXsNamespace {
+object XmlSchemaDialect {
+
+  /**
+   * Element in the "XML schema" namespace in a locator-free taxonomy.
+   * This type or a sub-type is mixed in by taxonomy elements that are indeed in the XML Schema namespace.
+   */
+  trait Elem extends BackingElemApi {
+
+    /**
+     * Returns the optional target namespace of the surrounding schema root element (or self), ignoring the possibility that
+     * this is an included chameleon schema.
+     */
+    final def schemaTargetNamespaceOption: Option[String] = {
+      findAncestorElemOrSelf(_.name == ENames.XsSchemaEName).flatMap(_.attrOption(ENames.TargetNamespaceEName))
+    }
+  }
 
   // Traits that are more general than specific schema components
 
   /**
    * Super-type of schema components that can be abstract.
    */
-  trait CanBeAbstract extends ElemInXsNamespace {
+  trait CanBeAbstract extends Elem {
 
     /**
      * Returns the boolean "abstract" attribute (defaulting to false). This may fail with an exception if the taxonomy is not schema-valid.
@@ -64,7 +70,7 @@ object ElemInXsNamespace {
   /**
    * Super-type of schema components that have a name attribute.
    */
-  trait NamedDeclOrDef extends ElemInXsNamespace {
+  trait NamedDeclOrDef extends Elem {
 
     /**
      * Returns the "name" attribute. This may fail with an exception if the taxonomy is not schema-valid.
@@ -77,7 +83,7 @@ object ElemInXsNamespace {
   /**
    * Super-type of schema components that are references.
    */
-  trait Reference extends ElemInXsNamespace {
+  trait Reference extends Elem {
 
     /**
      * Returns the "ref" attribute as EName. This may fail with an exception if the taxonomy is not schema-valid.
@@ -87,19 +93,19 @@ object ElemInXsNamespace {
     }
   }
 
-  trait Particle extends ElemInXsNamespace {
+  trait Particle extends Elem {
     // TODO
   }
 
   // The schema root element itself
 
-  trait XsSchema extends ElemInXsNamespace {
+  trait XsSchema extends Elem {
     // TODO
   }
 
   // Traits that are specific to schema components or parts thereof
 
-  trait ElementDeclarationOrReference extends ElemInXsNamespace {
+  trait ElementDeclarationOrReference extends Elem {
     // TODO
   }
 
@@ -153,7 +159,7 @@ object ElemInXsNamespace {
     // TODO
   }
 
-  trait AttributeDeclarationOrReference extends ElemInXsNamespace {
+  trait AttributeDeclarationOrReference extends Elem {
     // TODO
   }
 
@@ -199,7 +205,7 @@ object ElemInXsNamespace {
     // TODO
   }
 
-  trait TypeDefinition extends ElemInXsNamespace {
+  trait TypeDefinition extends Elem {
     // TODO
   }
 
@@ -235,7 +241,7 @@ object ElemInXsNamespace {
     // TODO
   }
 
-  trait AttributeGroupDefinitionOrReference extends ElemInXsNamespace {
+  trait AttributeGroupDefinitionOrReference extends Elem {
     // TODO
   }
 
@@ -247,7 +253,7 @@ object ElemInXsNamespace {
     // TODO
   }
 
-  trait ModelGroupDefinitionOrReference extends ElemInXsNamespace {
+  trait ModelGroupDefinitionOrReference extends Elem {
     // TODO
   }
 
@@ -259,7 +265,7 @@ object ElemInXsNamespace {
     // TODO
   }
 
-  trait ModelGroup extends ElemInXsNamespace {
+  trait ModelGroup extends Elem {
     // TODO
   }
 
@@ -275,7 +281,7 @@ object ElemInXsNamespace {
     // TODO
   }
 
-  trait RestrictionOrExtension extends ElemInXsNamespace {
+  trait RestrictionOrExtension extends Elem {
     // TODO
   }
 
@@ -287,7 +293,7 @@ object ElemInXsNamespace {
     // TODO
   }
 
-  trait Content extends ElemInXsNamespace {
+  trait Content extends Elem {
     // TODO
   }
 
@@ -299,15 +305,15 @@ object ElemInXsNamespace {
     // TODO
   }
 
-  trait Annotation extends ElemInXsNamespace {
+  trait Annotation extends Elem {
     // TODO
   }
 
-  trait Appinfo extends ElemInXsNamespace {
+  trait Appinfo extends Elem {
     // TODO
   }
 
-  trait Import extends ElemInXsNamespace {
+  trait Import extends Elem {
     // TODO
   }
 
