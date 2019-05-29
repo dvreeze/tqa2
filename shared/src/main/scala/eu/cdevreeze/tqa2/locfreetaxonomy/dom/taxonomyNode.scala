@@ -102,7 +102,7 @@ final case class XsSchema(
 // Linkbase root element
 
 final case class Linkbase(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInCLinkNamespace.Linkbase with TaxonomyRootElem {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.Linkbase with TaxonomyRootElem {
 
   requireName(ENames.CLinkLinkbaseEName)
 
@@ -324,7 +324,7 @@ final case class OtherElemInXsNamespace(
 // Linkbase content.
 
 final case class DefinitionLink(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInCLinkNamespace.DefinitionLink {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.DefinitionLink {
 
   requireName(ENames.CLinkDefinitionLinkEName)
 
@@ -332,7 +332,7 @@ final case class DefinitionLink(
 }
 
 final case class PresentationLink(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInCLinkNamespace.PresentationLink {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.PresentationLink {
 
   requireName(ENames.CLinkPresentationLinkEName)
 
@@ -340,7 +340,7 @@ final case class PresentationLink(
 }
 
 final case class CalculationLink(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInCLinkNamespace.CalculationLink {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.CalculationLink {
 
   requireName(ENames.CLinkCalculationLinkEName)
 
@@ -348,7 +348,7 @@ final case class CalculationLink(
 }
 
 final case class LabelLink(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInCLinkNamespace.LabelLink {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.LabelLink {
 
   requireName(ENames.CLinkLabelLinkEName)
 
@@ -356,7 +356,7 @@ final case class LabelLink(
 }
 
 final case class ReferenceLink(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInCLinkNamespace.ReferenceLink {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.ReferenceLink {
 
   requireName(ENames.CLinkReferenceLinkEName)
 
@@ -364,7 +364,7 @@ final case class ReferenceLink(
 }
 
 final case class DefinitionArc(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInCLinkNamespace.DefinitionArc {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.DefinitionArc {
 
   requireName(ENames.CLinkDefinitionArcEName)
 
@@ -372,7 +372,7 @@ final case class DefinitionArc(
 }
 
 final case class PresentationArc(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInCLinkNamespace.PresentationArc {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.PresentationArc {
 
   requireName(ENames.CLinkPresentationArcEName)
 
@@ -380,7 +380,7 @@ final case class PresentationArc(
 }
 
 final case class CalculationArc(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInCLinkNamespace.CalculationArc {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.CalculationArc {
 
   requireName(ENames.CLinkCalculationArcEName)
 
@@ -388,7 +388,7 @@ final case class CalculationArc(
 }
 
 final case class LabelArc(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInCLinkNamespace.LabelArc {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.LabelArc {
 
   requireName(ENames.CLinkLabelArcEName)
 
@@ -396,7 +396,7 @@ final case class LabelArc(
 }
 
 final case class ReferenceArc(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInCLinkNamespace.ReferenceArc {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.ReferenceArc {
 
   requireName(ENames.CLinkReferenceArcEName)
 
@@ -404,7 +404,7 @@ final case class ReferenceArc(
 }
 
 final case class ConceptLabelResource(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInCLinkNamespace.ConceptLabelResource {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.ConceptLabelResource {
 
   requireName(ENames.CLinkLabelEName)
 
@@ -412,7 +412,7 @@ final case class ConceptLabelResource(
 }
 
 final case class ConceptReferenceResource(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInCLinkNamespace.ConceptReferenceResource {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.ConceptReferenceResource {
 
   requireName(ENames.CLinkReferenceEName)
 
@@ -423,13 +423,13 @@ final case class ConceptReferenceResource(
  * Other element in the CLink namespace. Either valid other CLink content, or invalid content.
  */
 final case class OtherElemInCLinkNamespace(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInCLinkNamespace {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.Elem {
 
   // TODO Other query methods
 }
 
 final case class RoleType(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInLinkNamespace.RoleType {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with LinkDialect.RoleType {
 
   requireName(ENames.LinkRoleTypeEName)
 
@@ -437,7 +437,7 @@ final case class RoleType(
 }
 
 final case class ArcroleType(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInLinkNamespace.ArcroleType {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with LinkDialect.ArcroleType {
 
   requireName(ENames.LinkArcroleTypeEName)
 
@@ -445,7 +445,7 @@ final case class ArcroleType(
 }
 
 final case class Definition(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInLinkNamespace.Definition {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with LinkDialect.Definition {
 
   requireName(ENames.LinkDefinitionEName)
 
@@ -453,7 +453,7 @@ final case class Definition(
 }
 
 final case class UsedOn(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInLinkNamespace.UsedOn {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with LinkDialect.UsedOn {
 
   requireName(ENames.LinkUsedOnEName)
 
@@ -464,7 +464,7 @@ final case class UsedOn(
  * Other element in the Link namespace. Either valid other Link content, or invalid content.
  */
 final case class OtherElemInLinkNamespace(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ElemInLinkNamespace {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with LinkDialect.Elem {
 
   // TODO Other query methods
 }

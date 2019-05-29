@@ -16,11 +16,40 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.dom
 
+import eu.cdevreeze.yaidom2.queryapi.BackingElemApi
+
 /**
- * The "legacy" linkbase dialect (in a locator-free taxonomy).
+ * The "legacy" linkbase dialect (in a locator-free taxonomy). All elements in this dialect are in the "link" namespace.
+ *
+ * The elements in this dialect extend the yaidom `BackingElemApi` API and not the more specific `BackingNodes.Elem` API.
+ * It is meant to be mixed in by more concrete XML Schema dialects that do extend the `BackingNodes.Elem` API.
  *
  * @author Chris de Vreeze
  */
 object LinkDialect {
+
+  /**
+   * Element in the "Link" namespace in a locator-free taxonomy, like roleTypes and arcroleTypes.
+   * This type or a sub-type is mixed in by taxonomy elements that are indeed in that namespace.
+   */
+  trait Elem extends BackingElemApi {
+    // TODO
+  }
+
+  trait RoleType extends Elem {
+    // TODO
+  }
+
+  trait ArcroleType extends Elem {
+    // TODO
+  }
+
+  trait Definition extends Elem {
+    // TODO
+  }
+
+  trait UsedOn extends Elem {
+    // TODO
+  }
 
 }
