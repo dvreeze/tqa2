@@ -21,4 +21,15 @@ package eu.cdevreeze.tqa2.common
  *
  * @author Chris de Vreeze
  */
-package object locfreexlink
+package object locfreexlink {
+
+  type XLinkElem = XLink.XLinkElem
+
+  type ChildXLink = XLink.ChildXLink
+
+  type XLinkResource = XLink.XLinkResource
+
+  type XLinkArc = XLink.XLinkArc
+
+  type ExtendedLink = XLink.ExtendedLink
+}
