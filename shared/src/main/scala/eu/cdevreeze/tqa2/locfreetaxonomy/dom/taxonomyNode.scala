@@ -22,8 +22,15 @@ import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.tqa2.common.locfreexlink
 import eu.cdevreeze.tqa2.common.xmlschema.XmlSchemaDialect
+import eu.cdevreeze.tqa2.locfreetaxonomy.common.BaseSetKey
+import eu.cdevreeze.tqa2.locfreetaxonomy.common.CyclesAllowed
+import eu.cdevreeze.tqa2.locfreetaxonomy.common.PeriodType
+import eu.cdevreeze.tqa2.locfreetaxonomy.common.Use
+import eu.cdevreeze.tqa2.locfreetaxonomy.common.Variety
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.dialect.AbstractDialectBackingElem
+import eu.cdevreeze.yaidom2.queryapi.anyElem
+import eu.cdevreeze.yaidom2.queryapi.named
 import eu.cdevreeze.yaidom2.queryapi.BackingNodes
 import eu.cdevreeze.yaidom2.queryapi.ElemStep
 
@@ -48,11 +55,11 @@ final case class TaxonomyProcessingInstructionNode(target: String, data: String)
  * Locator-free taxonomy dialect element node, offering the `BackingNodes.Elem` element query API and additional
  * type-safe query methods.
  *
- * Note that the underlying element can be of any element implementatioon that offers the `BackingNodes.Elem` API.
+ * Note that the underlying element can be of any element implementation that offers the `BackingNodes.Elem` API.
  *
- * Taxonomy elements are instantiated without knowing any context, such as substitution groups or sibling extended link
- * child elements. Only an entire taxonomy has enough context to turn global element declarations into concept declarations,
- * for example.
+ * Taxonomy elements are instantiated without knowing any context of the containing document, such as substitution groups or
+ * sibling extended link child elements. Only an entire taxonomy has enough context to turn global element declarations into
+ * concept declarations, for example.
  *
  * Creating taxonomy elements should hardly, if ever, fail. After creation, type-safe query methods can fail if the taxonomy
  * content is not valid against the schema, however.
@@ -83,12 +90,80 @@ sealed abstract class TaxonomyElem(
   }
 }
 
+// XLink
+
+sealed trait XLinkElem extends TaxonomyElem with locfreexlink.XLinkElem
+
+sealed trait ChildXLink extends XLinkElem with locfreexlink.ChildXLink
+
+sealed trait XLinkResource extends ChildXLink with locfreexlink.XLinkResource
+
+sealed trait ExtendedLink extends XLinkElem with locfreexlink.ExtendedLink
+
+sealed trait XLinkArc extends ChildXLink with locfreexlink.XLinkArc {
+
+  /**
+   * Returns the Base Set key.
+   *
+   * If the taxonomy is not known to be schema-valid, it may be impossible to create a Base Set key.
+   */
+  final def baseSetKey: BaseSetKey = {
+    val parentElemOption = underlyingElem.findParentElem()
+    require(parentElemOption.nonEmpty, s"Missing parent element. Document $docUri. Element name: $name")
+    BaseSetKey(name, arcrole, parentElemOption.get.name, parentElemOption.get.attr(ENames.XLinkRoleEName))
+  }
+
+  /**
+   * Returns the "use" attribute (defaulting to "optional").
+   */
+  final def use: Use = {
+    Use.fromString(attrOption(ENames.UseEName).getOrElse("optional"))
+  }
+
+  /**
+   * Returns the "priority" integer attribute (defaulting to 0).
+   */
+  final def priority: Int = {
+    attrOption(ENames.PriorityEName).getOrElse("0").toInt
+  }
+
+  /**
+   * Returns the "order" decimal attribute (defaulting to 1).
+   */
+  final def order: BigDecimal = {
+    BigDecimal(attrOption(ENames.OrderEName).getOrElse("1"))
+  }
+}
+
+// Root element
+
+/**
+ * Taxonomy root element
+ */
+sealed trait RootElement extends TaxonomyElem with TaxonomyRootElem
+
+// Elements in some known namespaces
+
+sealed abstract class ElemInXsNamespace(
+  underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.Elem {
+
+  type GlobalElementDeclarationType = GlobalElementDeclaration
+
+  type GlobalAttributeDeclarationType = GlobalAttributeDeclaration
+
+  type NamedTypeDefinitionType = NamedTypeDefinition
+}
+
+sealed abstract class ElemInCLinkNamespace(
+  underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.Elem
+
+sealed abstract class ElemInLinkNamespace(
+  underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with LinkDialect.Elem
+
 // Schema root element
 
-// TODO Attributes like use on arcs
-
 final case class XsSchema(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.XsSchema with TaxonomyRootElem {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with XmlSchemaDialect.XsSchema with RootElement {
 
   requireName(ENames.XsSchemaEName)
 
@@ -96,13 +171,40 @@ final case class XsSchema(
 
   def isLinkbase: Boolean = false
 
-  // TODO Queries for schema content, such as element declarations
+  def findAllImports: Seq[Import] = {
+    filterChildElems(named(ENames.XsImportEName)).collect { case e: Import => e }
+  }
+
+  def filterGlobalElementDeclarations(p: GlobalElementDeclaration => Boolean): Seq[GlobalElementDeclaration] = {
+    filterChildElems(named(ENames.XsElementEName)).collect { case e: GlobalElementDeclaration if p(e) => e }
+  }
+
+  def findAllGlobalElementDeclarations(): Seq[GlobalElementDeclaration] = {
+    filterGlobalElementDeclarations(anyElem)
+  }
+
+  def filterGlobalAttributeDeclarations(p: GlobalAttributeDeclaration => Boolean): Seq[GlobalAttributeDeclaration] = {
+    filterChildElems(named(ENames.XsAttributeEName)).collect { case e: GlobalAttributeDeclaration if p(e) => e }
+  }
+
+  def findAllGlobalAttributeDeclarations(): Seq[GlobalAttributeDeclaration]  = {
+    filterGlobalAttributeDeclarations(anyElem)
+  }
+
+  def filterNamedTypeDefinitions(p: NamedTypeDefinition => Boolean): Seq[NamedTypeDefinition] = {
+    filterChildElems(e => e.name == ENames.XsComplexTypeEName || e.name == ENames.XsSimpleTypeEName)
+      .collect { case e: NamedTypeDefinition if p(e) => e }
+  }
+
+  def findAllNamedTypeDefinitions(): Seq[NamedTypeDefinition] = {
+    filterNamedTypeDefinitions(anyElem)
+  }
 }
 
 // Linkbase root element
 
 final case class Linkbase(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.Linkbase with TaxonomyRootElem {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with CLinkDialect.Linkbase with RootElement {
 
   requireName(ENames.CLinkLinkbaseEName)
 
@@ -110,205 +212,228 @@ final case class Linkbase(
 
   def isLinkbase: Boolean = true
 
-  // TODO Queries for extended links
+  /**
+   * Finds all ("taxonomy DOM") extended links
+   */
+  def findAllExtendedLinks: Seq[ExtendedLink] = {
+    findAllChildElems().collect { case e: ExtendedLink => e }
+  }
+
+  def findAllRoleRefs(): Seq[RoleRef] = {
+    filterChildElems(named(ENames.CLinkRoleRefEName)).collect { case e: RoleRef => e }
+  }
+
+  def findAllArcroleRefs(): Seq[ArcroleRef] = {
+    filterChildElems(named(ENames.CLinkArcroleRefEName)).collect { case e: ArcroleRef => e }
+  }
 }
 
 // Schema content.
+
+sealed trait ElementDeclarationOrReference extends ElemInXsNamespace with XmlSchemaDialect.ElementDeclarationOrReference
+
+sealed trait ElementDeclaration extends ElementDeclarationOrReference with XmlSchemaDialect.ElementDeclaration
 
 /**
  * Global element declaration. Often a concept declaration, although in general the DOM element has not enough context
  * to determine that in isolation.
  */
 final case class GlobalElementDeclaration(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.GlobalElementDeclaration {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with ElementDeclaration with XmlSchemaDialect.GlobalElementDeclaration {
 
   requireName(ENames.XsElementEName)
 
-  // TODO Other query methods
+  /**
+   * Returns the optional xbrli:periodType attribute, as `PeriodType`.
+   */
+  final def periodTypeOption: Option[PeriodType] = {
+    attrOption(ENames.XbrliPeriodTypeEName).map(v => PeriodType.fromString(v))
+  }
+
+  // TODO Methods hasSubstitutionGroup and findAllOwnOrTransitivelyInheritedSubstitutionGroups, taking a SubstitutionGroupMap
 }
 
 final case class LocalElementDeclaration(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.LocalElementDeclaration {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with ElementDeclaration with XmlSchemaDialect.LocalElementDeclaration {
 
   requireName(ENames.XsElementEName)
-
-  // TODO Other query methods
 }
 
 final case class ElementReference(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.ElementReference {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with ElementDeclarationOrReference with XmlSchemaDialect.ElementReference {
 
   requireName(ENames.XsElementEName)
-
-  // TODO Other query methods
 }
 
+sealed trait AttributeDeclarationOrReference extends ElemInXsNamespace with XmlSchemaDialect.AttributeDeclarationOrReference
+
+sealed trait AttributeDeclaration extends AttributeDeclarationOrReference with XmlSchemaDialect.AttributeDeclaration
+
 final case class GlobalAttributeDeclaration(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.GlobalAttributeDeclaration {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with AttributeDeclaration with XmlSchemaDialect.GlobalAttributeDeclaration {
 
   requireName(ENames.XsAttributeEName)
-
-  // TODO Other query methods
 }
 
 final case class LocalAttributeDeclaration(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.LocalAttributeDeclaration {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with AttributeDeclaration with XmlSchemaDialect.LocalAttributeDeclaration {
 
   requireName(ENames.XsAttributeEName)
-
-  // TODO Other query methods
 }
 
 final case class AttributeReference(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.AttributeReference {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with AttributeDeclarationOrReference with XmlSchemaDialect.AttributeReference {
 
   requireName(ENames.XsAttributeEName)
-
-  // TODO Other query methods
 }
 
+sealed trait TypeDefinition extends ElemInXsNamespace with XmlSchemaDialect.TypeDefinition
+
+sealed trait NamedTypeDefinition extends TypeDefinition with XmlSchemaDialect.NamedTypeDefinition
+
+sealed trait AnonymousTypeDefinition extends TypeDefinition with XmlSchemaDialect.AnonymousTypeDefinition
+
+sealed trait SimpleTypeDefinition extends TypeDefinition with XmlSchemaDialect.SimpleTypeDefinition {
+
+  /**
+   * Returns the variety.
+   */
+  final def variety: Variety = {
+    if (findChildElem(named(ENames.XsListEName)).isDefined) {
+      Variety.List
+    } else if (findChildElem(named(ENames.XsUnionEName)).isDefined) {
+      Variety.Union
+    } else if (findChildElem(named(ENames.XsRestrictionEName)).isDefined) {
+      Variety.Atomic
+    } else {
+      sys.error(s"Could not determine variety. Document: $docUri. Element: $name")
+    }
+  }
+
+  /**
+   * Returns the optional base type.
+   */
+  final def baseTypeOption: Option[EName] = variety match {
+    case Variety.Atomic =>
+      filterChildElems(named(ENames.XsRestrictionEName)).collectFirst { case e: Restriction => e }.flatMap(_.baseTypeOption)
+    case _ => None
+  }
+}
+
+sealed trait ComplexTypeDefinition extends TypeDefinition with XmlSchemaDialect.ComplexTypeDefinition
+
 final case class NamedSimpleTypeDefinition(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.NamedSimpleTypeDefinition {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem)
+  with NamedTypeDefinition with SimpleTypeDefinition with XmlSchemaDialect.NamedSimpleTypeDefinition {
 
   requireName(ENames.XsSimpleTypeEName)
-
-  // TODO Other query methods
 }
 
 final case class AnonymousSimpleTypeDefinition(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.AnonymousSimpleTypeDefinition {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem)
+  with AnonymousTypeDefinition with SimpleTypeDefinition with XmlSchemaDialect.AnonymousSimpleTypeDefinition {
 
   requireName(ENames.XsSimpleTypeEName)
-
-  // TODO Other query methods
 }
 
 final case class NamedComplexTypeDefinition(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.NamedComplexTypeDefinition {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem)
+  with NamedTypeDefinition with ComplexTypeDefinition with XmlSchemaDialect.NamedComplexTypeDefinition {
 
   requireName(ENames.XsComplexTypeEName)
-
-  // TODO Other query methods
 }
 
 final case class AnonymousComplexTypeDefinition(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.AnonymousComplexTypeDefinition {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem)
+  with AnonymousTypeDefinition with ComplexTypeDefinition with XmlSchemaDialect.AnonymousComplexTypeDefinition {
 
   requireName(ENames.XsComplexTypeEName)
-
-  // TODO Other query methods
 }
 
 final case class AttributeGroupDefinition(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.AttributeGroupDefinition {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with XmlSchemaDialect.AttributeGroupDefinition {
 
   requireName(ENames.XsAttributeGroupEName)
-
-  // TODO Other query methods
 }
 
 final case class AttributeGroupReference(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.AttributeGroupReference {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with XmlSchemaDialect.AttributeGroupReference {
 
   requireName(ENames.XsAttributeGroupEName)
-
-  // TODO Other query methods
 }
 
 final case class ModelGroupDefinition(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.ModelGroupDefinition {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with XmlSchemaDialect.ModelGroupDefinition {
 
   requireName(ENames.XsGroupEName)
-
-  // TODO Other query methods
 }
 
 final case class ModelGroupReference(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.ModelGroupReference {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with XmlSchemaDialect.ModelGroupReference {
 
   requireName(ENames.XsGroupEName)
-
-  // TODO Other query methods
 }
 
+sealed trait ModelGroup extends ElemInXsNamespace with XmlSchemaDialect.ModelGroup
+
 final case class SequenceModelGroup(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.SequenceModelGroup {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with ModelGroup with XmlSchemaDialect.SequenceModelGroup {
 
   requireName(ENames.XsSequenceEName)
-
-  // TODO Other query methods
 }
 
 final case class ChoiceModelGroup(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.ChoiceModelGroup {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with ModelGroup with XmlSchemaDialect.ChoiceModelGroup {
 
   requireName(ENames.XsChoiceEName)
-
-  // TODO Other query methods
 }
 
 final case class AllModelGroup(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.AllModelGroup {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with ModelGroup with XmlSchemaDialect.AllModelGroup {
 
   requireName(ENames.XsAllEName)
-
-  // TODO Other query methods
 }
 
 final case class Restriction(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.Restriction {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with XmlSchemaDialect.Restriction {
 
   requireName(ENames.XsRestrictionEName)
-
-  // TODO Other query methods
 }
 
 final case class Extension(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.Extension {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with XmlSchemaDialect.Extension {
 
   requireName(ENames.XsExtensionEName)
-
-  // TODO Other query methods
 }
 
 final case class SimpleContent(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.SimpleContent {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with XmlSchemaDialect.SimpleContent {
 
   requireName(ENames.XsSimpleContentEName)
-
-  // TODO Other query methods
 }
 
 final case class ComplexContent(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.ComplexContent {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with XmlSchemaDialect.ComplexContent {
 
   requireName(ENames.XsComplexContentEName)
-
-  // TODO Other query methods
 }
 
 final case class Annotation(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.Annotation {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with XmlSchemaDialect.Annotation {
 
   requireName(ENames.XsAnnotationEName)
-
-  // TODO Other query methods
 }
 
 final case class Appinfo(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.Appinfo {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with XmlSchemaDialect.Appinfo {
 
   requireName(ENames.XsAppinfoEName)
-
-  // TODO Other query methods
 }
 
 final case class Import(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.Import {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with XmlSchemaDialect.Import {
 
   requireName(ENames.XsImportEName)
-
-  // TODO Other query methods
 }
 
 /**
@@ -316,242 +441,221 @@ final case class Import(
  * that has both a name and a ref attribute.
  */
 final case class OtherElemInXsNamespace(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XmlSchemaDialect.Elem {
-
-  // TODO Other query methods
-}
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem)
 
 // Linkbase content.
 
+sealed trait StandardLink extends ElemInCLinkNamespace with ExtendedLink with CLinkDialect.StandardLink
+
 final case class DefinitionLink(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.DefinitionLink {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardLink with CLinkDialect.DefinitionLink {
 
   requireName(ENames.CLinkDefinitionLinkEName)
-
-  // TODO Other query methods
 }
 
 final case class PresentationLink(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.PresentationLink {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardLink with CLinkDialect.PresentationLink {
 
   requireName(ENames.CLinkPresentationLinkEName)
-
-  // TODO Other query methods
 }
 
 final case class CalculationLink(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.CalculationLink {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardLink with CLinkDialect.CalculationLink {
 
   requireName(ENames.CLinkCalculationLinkEName)
-
-  // TODO Other query methods
 }
 
 final case class LabelLink(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.LabelLink {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardLink with CLinkDialect.LabelLink {
 
   requireName(ENames.CLinkLabelLinkEName)
-
-  // TODO Other query methods
 }
 
 final case class ReferenceLink(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.ReferenceLink {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardLink with CLinkDialect.ReferenceLink {
 
   requireName(ENames.CLinkReferenceLinkEName)
-
-  // TODO Other query methods
 }
 
+sealed trait StandardArc extends ElemInCLinkNamespace with XLinkArc with CLinkDialect.StandardArc
+
 final case class DefinitionArc(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.DefinitionArc {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardArc with CLinkDialect.DefinitionArc {
 
   requireName(ENames.CLinkDefinitionArcEName)
-
-  // TODO Other query methods
 }
 
 final case class PresentationArc(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.PresentationArc {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardArc with CLinkDialect.PresentationArc {
 
   requireName(ENames.CLinkPresentationArcEName)
-
-  // TODO Other query methods
 }
 
 final case class CalculationArc(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.CalculationArc {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardArc with CLinkDialect.CalculationArc {
 
   requireName(ENames.CLinkCalculationArcEName)
-
-  // TODO Other query methods
 }
 
 final case class LabelArc(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.LabelArc {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardArc with CLinkDialect.LabelArc {
 
   requireName(ENames.CLinkLabelArcEName)
-
-  // TODO Other query methods
 }
 
 final case class ReferenceArc(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.ReferenceArc {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardArc with CLinkDialect.ReferenceArc {
 
   requireName(ENames.CLinkReferenceArcEName)
-
-  // TODO Other query methods
 }
 
+sealed trait StandardResource extends ElemInCLinkNamespace with XLinkResource with CLinkDialect.StandardResource
+
 final case class ConceptLabelResource(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.ConceptLabelResource {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardResource with CLinkDialect.ConceptLabelResource {
 
   requireName(ENames.CLinkLabelEName)
-
-  // TODO Other query methods
 }
 
 final case class ConceptReferenceResource(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.ConceptReferenceResource {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardResource with CLinkDialect.ConceptReferenceResource {
 
   requireName(ENames.CLinkReferenceEName)
+}
 
-  // TODO Other query methods
+final case class RoleRef(
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with CLinkDialect.RoleRef {
+
+  requireName(ENames.CLinkRoleRefEName)
+}
+
+final case class ArcroleRef(
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with CLinkDialect.ArcroleRef {
+
+  requireName(ENames.CLinkArcroleRefEName)
 }
 
 /**
  * Other element in the CLink namespace. Either valid other CLink content, or invalid content.
  */
 final case class OtherElemInCLinkNamespace(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with CLinkDialect.Elem {
-
-  // TODO Other query methods
-}
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem)
 
 final case class RoleType(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with LinkDialect.RoleType {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace(underlyingElem) with LinkDialect.RoleType {
 
   requireName(ENames.LinkRoleTypeEName)
 
-  // TODO Other query methods
+  def definitionOption: Option[Definition] = {
+    filterChildElems(named(ENames.LinkDefinitionEName)).collectFirst { case e: Definition => e }
+  }
+
+  def usedOn: Seq[UsedOn] = {
+    filterChildElems(named(ENames.LinkUsedOnEName)).collect { case e: UsedOn => e }
+  }
 }
 
 final case class ArcroleType(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with LinkDialect.ArcroleType {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace(underlyingElem) with LinkDialect.ArcroleType {
 
   requireName(ENames.LinkArcroleTypeEName)
 
-  // TODO Other query methods
+  /**
+   * Returns the cyclesAllowed attribute.
+   */
+  def cyclesAllowed: CyclesAllowed = {
+    CyclesAllowed.fromString(attr(ENames.CyclesAllowedEName))
+  }
+
+  def definitionOption: Option[Definition] = {
+    filterChildElems(named(ENames.LinkDefinitionEName)).collectFirst { case e: Definition => e }
+  }
+
+  def usedOn: Seq[UsedOn] = {
+    filterChildElems(named(ENames.LinkUsedOnEName)).collect { case e: UsedOn => e }
+  }
 }
 
 final case class Definition(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with LinkDialect.Definition {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace(underlyingElem) with LinkDialect.Definition {
 
   requireName(ENames.LinkDefinitionEName)
-
-  // TODO Other query methods
 }
 
 final case class UsedOn(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with LinkDialect.UsedOn {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace(underlyingElem) with LinkDialect.UsedOn {
 
   requireName(ENames.LinkUsedOnEName)
-
-  // TODO Other query methods
 }
 
 /**
  * Other element in the Link namespace. Either valid other Link content, or invalid content.
  */
 final case class OtherElemInLinkNamespace(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with LinkDialect.Elem {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace(underlyingElem)
 
-  // TODO Other query methods
-}
+sealed abstract class TaxonomyElemKey(
+  underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XLinkResource with TaxonomyElementKey
 
 final case class ConceptKey(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with TaxonomyElementKey.ConceptKey {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElementKey.ConceptKey {
 
   requireName(ENames.CKeyConceptKeyEName)
-
-  // TODO Other query methods
 }
 
 final case class ElementKey(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with TaxonomyElementKey.ElementKey {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElementKey.ElementKey {
 
   requireName(ENames.CKeyElementKeyEName)
-
-  // TODO Other query methods
 }
 
 final case class TypeKey(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with TaxonomyElementKey.TypeKey {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElementKey.TypeKey {
 
   requireName(ENames.CKeyTypeKeyEName)
-
-  // TODO Other query methods
 }
 
 final case class RoleKey(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with TaxonomyElementKey.RoleKey {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElementKey.RoleKey {
 
   requireName(ENames.CKeyRoleKeyEName)
-
-  // TODO Other query methods
 }
 
 final case class ArcroleKey(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with TaxonomyElementKey.ArcroleKey {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElementKey.ArcroleKey {
 
   requireName(ENames.CKeyArcroleKeyEName)
-
-  // TODO Other query methods
 }
 
 final case class AnyElementKey(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with TaxonomyElementKey.AnyElementKey {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElementKey.AnyElementKey {
 
   requireName(ENames.CKeyAnyElemKeyEName)
-
-  // TODO Other query methods
 }
 
 /**
  * Non-standard extended link
  */
 final case class NonStandardLink(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with locfreexlink.ExtendedLink {
-
-  // TODO Other query methods
-}
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with ExtendedLink
 
 /**
  * Non-standard arc
  */
 final case class NonStandardArc(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with locfreexlink.XLinkArc {
-
-  // TODO Other query methods
-}
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XLinkArc
 
 /**
  * Non-standard resource, which is also not a taxonomy element key
  */
 final case class NonStandardResource(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with locfreexlink.XLinkResource {
-
-  // TODO Other query methods
-}
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XLinkResource
 
 /**
- * Any other non-XLink element
+ * Any other non-XLink element, not in the "xs", "clink" or "link" namespaces.
  */
 final case class OtherNonXLinkElem(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) {
-
-  // TODO Other query methods
-}
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem)
 
 // Companion objects
 
@@ -710,7 +814,9 @@ object TaxonomyElem {
           ENames.CLinkLabelArcEName -> (e => new LabelArc(e)),
           ENames.CLinkReferenceArcEName -> (e => new ReferenceArc(e)),
           ENames.CLinkLabelEName -> (e => new ConceptLabelResource(e)),
-          ENames.CLinkReferenceEName -> (e => new ConceptReferenceResource(e))
+          ENames.CLinkReferenceEName -> (e => new ConceptReferenceResource(e)),
+          ENames.CLinkRoleRefEName -> (e => new RoleRef(e)),
+          ENames.CLinkArcroleRefEName -> (e => new ArcroleRef(e))
         ),
         (e => new OtherElemInCLinkNamespace(e))),
       Namespaces.LinkNamespace -> new ElemFactoryWithFallback(

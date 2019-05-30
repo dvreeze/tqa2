@@ -18,6 +18,7 @@ package eu.cdevreeze.tqa2.common.xlink
 
 import java.net.URI
 
+import scala.collection.immutable.SeqMap
 import scala.util.Try
 
 import eu.cdevreeze.tqa2.ENames
@@ -52,8 +53,8 @@ object XLink {
       attrOption(ENames.XLinkTypeEName).getOrElse(sys.error(s"Missing xlink:type attribute. Document: $docUri. Element: $name"))
     }
 
-    final def xlinkAttributes: Map[EName, String] = {
-      attributes.filter { case (attrName, _) => Namespaces.XLinkNamespace.contains(attrName.namespaceUriOption.getOrElse("")) }
+    final def xlinkAttributes: SeqMap[EName, String] = {
+      attributes.filter { case (attrName, _) => attrName.namespaceUriOption.contains(Namespaces.XLinkNamespace) }
     }
   }
 

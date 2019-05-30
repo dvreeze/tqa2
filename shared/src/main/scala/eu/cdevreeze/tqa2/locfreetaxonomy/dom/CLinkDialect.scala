@@ -16,6 +16,7 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.dom
 
+import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.locfreexlink
 import eu.cdevreeze.yaidom2.queryapi.BackingElemApi
 
@@ -33,79 +34,63 @@ object CLinkDialect {
    * Element in the "CLink" namespace in a locator-free taxonomy.
    * This type or a sub-type is mixed in by taxonomy elements that are indeed in that namespace.
    */
-  trait Elem extends BackingElemApi {
-    // TODO
-  }
+  trait Elem extends BackingElemApi
 
   // Linkbase
 
-  trait Linkbase extends Elem {
-    // TODO
-  }
+  trait Linkbase extends Elem
 
   // Standard extended links
 
-  trait StandardLink extends Elem with locfreexlink.ExtendedLink {
-    // TODO
-  }
+  trait StandardLink extends Elem with locfreexlink.ExtendedLink
 
-  trait DefinitionLink extends StandardLink {
-    // TODO
-  }
+  trait DefinitionLink extends StandardLink
 
-  trait PresentationLink extends StandardLink {
-    // TODO
-  }
+  trait PresentationLink extends StandardLink
 
-  trait CalculationLink extends StandardLink {
-    // TODO
-  }
+  trait CalculationLink extends StandardLink
 
-  trait LabelLink extends StandardLink {
-    // TODO
-  }
+  trait LabelLink extends StandardLink
 
-  trait ReferenceLink extends StandardLink {
-    // TODO
-  }
+  trait ReferenceLink extends StandardLink
 
   // Standard arcs
 
-  trait StandardArc extends Elem with locfreexlink.XLinkArc {
-    // TODO
-  }
+  trait StandardArc extends Elem with locfreexlink.XLinkArc
 
-  trait DefinitionArc extends StandardArc {
-    // TODO
-  }
+  trait DefinitionArc extends StandardArc
 
-  trait PresentationArc extends StandardArc {
-    // TODO
-  }
+  trait PresentationArc extends StandardArc
 
-  trait CalculationArc extends StandardArc {
-    // TODO
-  }
+  trait CalculationArc extends StandardArc
 
-  trait LabelArc extends StandardArc {
-    // TODO
-  }
+  trait LabelArc extends StandardArc
 
-  trait ReferenceArc extends StandardArc {
-    // TODO
-  }
+  trait ReferenceArc extends StandardArc
 
   // Standard resources
 
-  trait StandardResource extends Elem with locfreexlink.XLinkResource {
-    // TODO
+  trait StandardResource extends Elem with locfreexlink.XLinkResource
+
+  trait ConceptLabelResource extends StandardResource
+
+  trait ConceptReferenceResource extends StandardResource
+
+  // Other elements
+
+  trait RoleRef extends Elem {
+
+    final def roleUri: String = {
+      attrOption(ENames.RoleURIEName)
+        .getOrElse(sys.error(s"Expected roleURI attribute. Document: $docUri. Element: $name"))
+    }
   }
 
-  trait ConceptLabelResource extends StandardResource {
-    // TODO
-  }
+  trait ArcroleRef extends Elem {
 
-  trait ConceptReferenceResource extends StandardResource {
-    // TODO
+    final def arcroleUri: String = {
+      attrOption(ENames.ArcroleURIEName)
+        .getOrElse(sys.error(s"Expected arcroleURI attribute. Document: $docUri. Element: $name"))
+    }
   }
 }

@@ -505,6 +505,9 @@ object ENames {
   val CLinkCalculationLinkEName = EName(CLinkNamespace, "calculationLink")
   val CLinkCalculationArcEName = EName(CLinkNamespace, "calculationArc")
 
+  val CLinkRoleRefEName = EName(CLinkNamespace, "roleRef")
+  val CLinkArcroleRefEName = EName(CLinkNamespace, "arcroleRef")
+
   // The "ckey" namespace.
 
   val CKeyConceptKeyEName = EName(CKeyNamespace, "conceptKey")
@@ -522,7 +525,8 @@ object ENames {
 
   val CGenLinkEName = EName(CGenNamespace, "link")
 
-  // Key attribute name
+  // Key attribute name, etc.
 
   val KeyEName = EName.fromLocalName("key")
+  val ElementNameEName = EName.fromLocalName("elementName")
 }

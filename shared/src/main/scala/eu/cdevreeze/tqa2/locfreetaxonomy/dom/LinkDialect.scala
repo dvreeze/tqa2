@@ -16,6 +16,7 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.dom
 
+import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.yaidom2.queryapi.BackingElemApi
 
 /**
@@ -32,24 +33,30 @@ object LinkDialect {
    * Element in the "Link" namespace in a locator-free taxonomy, like roleTypes and arcroleTypes.
    * This type or a sub-type is mixed in by taxonomy elements that are indeed in that namespace.
    */
-  trait Elem extends BackingElemApi {
-    // TODO
-  }
+  trait Elem extends BackingElemApi
 
   trait RoleType extends Elem {
-    // TODO
+
+    /**
+     * Returns the roleURI attribute.
+     */
+    def roleUri: String = {
+      attr(ENames.RoleURIEName)
+    }
   }
 
   trait ArcroleType extends Elem {
-    // TODO
+
+    /**
+     * Returns the arcroleURI attribute.
+     */
+    def arcroleUri: String = {
+      attr(ENames.ArcroleURIEName)
+    }
   }
 
-  trait Definition extends Elem {
-    // TODO
-  }
+  trait Definition extends Elem
 
-  trait UsedOn extends Elem {
-    // TODO
-  }
+  trait UsedOn extends Elem
 
 }
