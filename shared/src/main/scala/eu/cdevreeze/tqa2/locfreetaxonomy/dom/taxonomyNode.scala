@@ -40,6 +40,7 @@ import eu.cdevreeze.yaidom2.queryapi.ElemStep
  * @author Chris de Vreeze
  */
 // scalastyle:off number.of.types
+// scalastyle:off file.size.limit
 sealed trait TaxonomyNode extends BackingNodes.Node
 
 sealed trait CanBeTaxonomyDocumentChild extends TaxonomyNode with BackingNodes.CanBeDocumentChild
@@ -239,7 +240,8 @@ sealed trait ElementDeclaration extends ElementDeclarationOrReference with XmlSc
  * to determine that in isolation.
  */
 final case class GlobalElementDeclaration(
-  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with ElementDeclaration with XmlSchemaDialect.GlobalElementDeclaration {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem)
+  with ElementDeclaration with XmlSchemaDialect.GlobalElementDeclaration {
 
   requireName(ENames.XsElementEName)
 
@@ -254,13 +256,15 @@ final case class GlobalElementDeclaration(
 }
 
 final case class LocalElementDeclaration(
-  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with ElementDeclaration with XmlSchemaDialect.LocalElementDeclaration {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem)
+  with ElementDeclaration with XmlSchemaDialect.LocalElementDeclaration {
 
   requireName(ENames.XsElementEName)
 }
 
 final case class ElementReference(
-  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with ElementDeclarationOrReference with XmlSchemaDialect.ElementReference {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem)
+  with ElementDeclarationOrReference with XmlSchemaDialect.ElementReference {
 
   requireName(ENames.XsElementEName)
 }
@@ -270,19 +274,22 @@ sealed trait AttributeDeclarationOrReference extends ElemInXsNamespace with XmlS
 sealed trait AttributeDeclaration extends AttributeDeclarationOrReference with XmlSchemaDialect.AttributeDeclaration
 
 final case class GlobalAttributeDeclaration(
-  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with AttributeDeclaration with XmlSchemaDialect.GlobalAttributeDeclaration {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem)
+  with AttributeDeclaration with XmlSchemaDialect.GlobalAttributeDeclaration {
 
   requireName(ENames.XsAttributeEName)
 }
 
 final case class LocalAttributeDeclaration(
-  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with AttributeDeclaration with XmlSchemaDialect.LocalAttributeDeclaration {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem)
+  with AttributeDeclaration with XmlSchemaDialect.LocalAttributeDeclaration {
 
   requireName(ENames.XsAttributeEName)
 }
 
 final case class AttributeReference(
-  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem) with AttributeDeclarationOrReference with XmlSchemaDialect.AttributeReference {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace(underlyingElem)
+  with AttributeDeclarationOrReference with XmlSchemaDialect.AttributeReference {
 
   requireName(ENames.XsAttributeEName)
 }
@@ -512,13 +519,15 @@ final case class ReferenceArc(
 sealed trait StandardResource extends ElemInCLinkNamespace with XLinkResource with CLinkDialect.StandardResource
 
 final case class ConceptLabelResource(
-  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardResource with CLinkDialect.ConceptLabelResource {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem)
+  with StandardResource with CLinkDialect.ConceptLabelResource {
 
   requireName(ENames.CLinkLabelEName)
 }
 
 final case class ConceptReferenceResource(
-  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardResource with CLinkDialect.ConceptReferenceResource {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem)
+  with StandardResource with CLinkDialect.ConceptReferenceResource {
 
   requireName(ENames.CLinkReferenceEName)
 }
