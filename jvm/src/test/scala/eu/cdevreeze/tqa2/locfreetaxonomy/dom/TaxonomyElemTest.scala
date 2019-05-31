@@ -83,8 +83,8 @@ class TaxonomyElemTest extends AnyFunSuite {
 
     val venjBw2DimNs = "http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes"
 
-    assertResult(true) {
-      extendedLinks.head.arcs.exists { arc =>
+    assertResult(1) {
+      extendedLinks.head.arcs.count { arc =>
         labeledResourceMap.getOrElse(arc.from, Seq.empty)
           .collect { case k: ConceptKey if k.key == EName(venjBw2DimNs, "ClassesOfDirectorsAndPersonnelAxis") => k }.nonEmpty &&
           labeledResourceMap.getOrElse(arc.to, Seq.empty)
