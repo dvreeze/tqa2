@@ -93,13 +93,42 @@ sealed abstract class TaxonomyElem(
 
 // XLink
 
-sealed trait XLinkElem extends TaxonomyElem with locfreexlink.XLinkElem
+sealed trait XLinkElem extends TaxonomyElem with locfreexlink.XLinkElem {
+
+  type ChildXLinkType = ChildXLink
+
+  type XLinkResourceType = XLinkResource
+
+  type XLinkArcType = XLinkArc
+}
 
 sealed trait ChildXLink extends XLinkElem with locfreexlink.ChildXLink
 
 sealed trait XLinkResource extends ChildXLink with locfreexlink.XLinkResource
 
-sealed trait ExtendedLink extends XLinkElem with locfreexlink.ExtendedLink
+sealed trait ExtendedLink extends XLinkElem with locfreexlink.ExtendedLink {
+
+  final def xlinkChildren: Seq[ChildXLink] = {
+    findAllChildElems().collect { case e: ChildXLink => e }
+  }
+
+  final def xlinkResourceChildren: Seq[XLinkResource] = {
+    findAllChildElems().collect { case e: XLinkResource => e }
+  }
+
+  final def arcs: Seq[XLinkArc] = {
+    findAllChildElems().collect { case e: XLinkArc => e }
+  }
+
+  /**
+   * Returns the XLink resources grouped by XLink label.
+   * This is an expensive method, so when processing an extended link, this method should
+   * be called only once per extended link.
+   */
+  final def labeledXlinkResourceMap: Map[String, Seq[XLinkResource]] = {
+    xlinkResourceChildren.groupBy(_.xlinkLabel)
+  }
+}
 
 sealed trait XLinkArc extends ChildXLink with locfreexlink.XLinkArc {
 

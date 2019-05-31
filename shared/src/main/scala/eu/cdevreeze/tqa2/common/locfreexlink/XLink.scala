@@ -47,6 +47,12 @@ object XLink {
    */
   trait XLinkElem extends BackingElemApi {
 
+    type ChildXLinkType <: ChildXLink
+
+    type XLinkResourceType <: XLinkResource
+
+    type XLinkArcType <: XLinkArc
+
     final def xlinkType: String = {
       attrOption(ENames.XLinkTypeEName).getOrElse(sys.error(s"Missing xlink:type attribute. Document: $docUri. Element: $name"))
     }
@@ -102,26 +108,18 @@ object XLink {
       attrOption(ENames.XLinkRoleEName).getOrElse(sys.error(s"Missing xlink:role attribute. Document: $docUri. Element: $name"))
     }
 
-    final def xlinkChildren: Seq[ChildXLink] = {
-      findAllChildElems().collect { case e: ChildXLink => e }
-    }
+    def xlinkChildren: Seq[ChildXLinkType]
 
-    final def xlinkResourceChildren: Seq[XLinkResource] = {
-      findAllChildElems().collect { case e: XLinkResource => e }
-    }
+    def xlinkResourceChildren: Seq[XLinkResourceType]
 
-    final def arcs: Seq[XLinkArc] = {
-      findAllChildElems().collect { case e: XLinkArc => e }
-    }
+    def arcs: Seq[XLinkArcType]
 
     /**
      * Returns the XLink resources grouped by XLink label.
      * This is an expensive method, so when processing an extended link, this method should
      * be called only once per extended link.
      */
-    final def labeledXlinkResourceMap: Map[String, Seq[XLinkResource]] = {
-      xlinkResourceChildren.groupBy(_.xlinkLabel)
-    }
+    def labeledXlinkResourceMap: Map[String, Seq[XLinkResourceType]]
   }
 
   /**
