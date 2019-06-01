@@ -58,15 +58,19 @@ object CLinkDialect {
 
   trait StandardArc extends Elem with locfreexlink.XLinkArc
 
-  trait DefinitionArc extends StandardArc
+  trait InterConceptArc extends StandardArc
 
-  trait PresentationArc extends StandardArc
+  trait ConceptResourceArc extends StandardArc
 
-  trait CalculationArc extends StandardArc
+  trait DefinitionArc extends InterConceptArc
 
-  trait LabelArc extends StandardArc
+  trait PresentationArc extends InterConceptArc
 
-  trait ReferenceArc extends StandardArc
+  trait CalculationArc extends InterConceptArc
+
+  trait LabelArc extends ConceptResourceArc
+
+  trait ReferenceArc extends ConceptResourceArc
 
   // Standard resources
 

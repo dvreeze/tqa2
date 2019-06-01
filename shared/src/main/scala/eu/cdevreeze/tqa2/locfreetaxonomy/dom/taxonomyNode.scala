@@ -515,32 +515,36 @@ final case class ReferenceLink(
 
 sealed trait StandardArc extends ElemInCLinkNamespace with XLinkArc with CLinkDialect.StandardArc
 
+sealed trait InterConceptArc extends StandardArc
+
+sealed trait ConceptResourceArc extends StandardArc
+
 final case class DefinitionArc(
-  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardArc with CLinkDialect.DefinitionArc {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with InterConceptArc with CLinkDialect.DefinitionArc {
 
   requireName(ENames.CLinkDefinitionArcEName)
 }
 
 final case class PresentationArc(
-  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardArc with CLinkDialect.PresentationArc {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with InterConceptArc with CLinkDialect.PresentationArc {
 
   requireName(ENames.CLinkPresentationArcEName)
 }
 
 final case class CalculationArc(
-  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardArc with CLinkDialect.CalculationArc {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with InterConceptArc with CLinkDialect.CalculationArc {
 
   requireName(ENames.CLinkCalculationArcEName)
 }
 
 final case class LabelArc(
-  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardArc with CLinkDialect.LabelArc {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with ConceptResourceArc with CLinkDialect.LabelArc {
 
   requireName(ENames.CLinkLabelArcEName)
 }
 
 final case class ReferenceArc(
-  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with StandardArc with CLinkDialect.ReferenceArc {
+  override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with ConceptResourceArc with CLinkDialect.ReferenceArc {
 
   requireName(ENames.CLinkReferenceArcEName)
 }
