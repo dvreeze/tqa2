@@ -515,9 +515,9 @@ final case class ReferenceLink(
 
 sealed trait StandardArc extends ElemInCLinkNamespace with XLinkArc with CLinkDialect.StandardArc
 
-sealed trait InterConceptArc extends StandardArc
+sealed trait InterConceptArc extends StandardArc with CLinkDialect.InterConceptArc
 
-sealed trait ConceptResourceArc extends StandardArc
+sealed trait ConceptResourceArc extends StandardArc with CLinkDialect.ConceptResourceArc
 
 final case class DefinitionArc(
   override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem) with InterConceptArc with CLinkDialect.DefinitionArc {
