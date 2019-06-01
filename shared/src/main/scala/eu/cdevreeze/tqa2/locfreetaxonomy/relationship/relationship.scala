@@ -199,7 +199,7 @@ final case class ConceptReferenceRelationship(
  * Presentation relationship in the locator-free model.
  */
 sealed abstract class PresentationRelationship(
-  arc: dom.PresentationArc,
+  override val arc: dom.PresentationArc,
   source: dom.ConceptKey,
   target: dom.ConceptKey) extends InterConceptRelationship(arc, source, target)
 
@@ -217,7 +217,7 @@ final case class OtherPresentationRelationship(
  * Calculation relationship in the locator-free model.
  */
 sealed abstract class CalculationRelationship(
-  arc: dom.CalculationArc,
+  override val arc: dom.CalculationArc,
   source: dom.ConceptKey,
   target: dom.ConceptKey) extends InterConceptRelationship(arc, source, target)
 
@@ -235,7 +235,7 @@ final case class OtherCalculationRelationship(
  * Definition relationship in the locator-free model.
  */
 sealed abstract class DefinitionRelationship(
-  arc: dom.DefinitionArc,
+  override val arc: dom.DefinitionArc,
   source: dom.ConceptKey,
   target: dom.ConceptKey) extends InterConceptRelationship(arc, source, target)
 
