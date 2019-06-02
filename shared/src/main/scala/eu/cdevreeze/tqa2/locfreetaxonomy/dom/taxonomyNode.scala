@@ -642,40 +642,40 @@ final case class OtherElemInLinkNamespace(
   override val underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace(underlyingElem)
 
 sealed abstract class TaxonomyElemKey(
-  underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XLinkResource with TaxonomyElementKey
+  underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XLinkResource with TaxonomyElemKeyDialect.TaxonomyElemKey
 
 final case class ConceptKey(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElementKey.ConceptKey {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElemKeyDialect.ConceptKey {
 
   requireName(ENames.CKeyConceptKeyEName)
 }
 
 final case class ElementKey(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElementKey.ElementKey {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElemKeyDialect.ElementKey {
 
   requireName(ENames.CKeyElementKeyEName)
 }
 
 final case class TypeKey(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElementKey.TypeKey {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElemKeyDialect.TypeKey {
 
   requireName(ENames.CKeyTypeKeyEName)
 }
 
 final case class RoleKey(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElementKey.RoleKey {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElemKeyDialect.RoleKey {
 
   requireName(ENames.CKeyRoleKeyEName)
 }
 
 final case class ArcroleKey(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElementKey.ArcroleKey {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElemKeyDialect.ArcroleKey {
 
   requireName(ENames.CKeyArcroleKeyEName)
 }
 
 final case class AnyElementKey(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElementKey.AnyElementKey {
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey(underlyingElem) with TaxonomyElemKeyDialect.AnyElementKey {
 
   requireName(ENames.CKeyAnyElemKeyEName)
 }

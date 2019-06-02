@@ -25,24 +25,27 @@ import eu.cdevreeze.tqa2.common.locfreexlink
 import eu.cdevreeze.yaidom2.core.EName
 
 /**
- * Taxonomy element key in a locator-free taxonomy.
- *
- * It is assumed that the keys obey their schema(s), or else the query methods below may throw an exception.
+ * Taxonomy element key dialect in a locator-free taxonomy.
  *
  * @author Chris de Vreeze
  */
-trait TaxonomyElementKey extends locfreexlink.XLinkResource {
+object TaxonomyElemKeyDialect {
 
-  type KeyType
+  /**
+   * Taxonomy element key in a locator-free taxonomy.
+   *
+   * It is assumed that the keys obey their schema(s), or else the query methods below may throw an exception.
+   */
+  trait TaxonomyElemKey extends locfreexlink.XLinkResource {
 
-  def key: KeyType
-}
+    type KeyType
 
-object TaxonomyElementKey {
+    def key: KeyType
+  }
 
   // General categories of taxonomy element keys
 
-  trait SchemaComponentKey extends TaxonomyElementKey {
+  trait SchemaComponentKey extends TaxonomyElemKey {
 
     type KeyType = EName
 
@@ -51,7 +54,7 @@ object TaxonomyElementKey {
     }
   }
 
-  trait AppinfoContentKey extends TaxonomyElementKey
+  trait AppinfoContentKey extends TaxonomyElemKey
 
   // Specific taxonomy element keys
 
@@ -104,7 +107,7 @@ object TaxonomyElementKey {
    *
    * TODO How stable is such a key with element scheme XPointer as URI fragment?
    */
-  trait AnyElementKey extends TaxonomyElementKey {
+  trait AnyElementKey extends TaxonomyElemKey {
 
     type KeyType = URI
 
