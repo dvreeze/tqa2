@@ -194,7 +194,7 @@ sealed abstract class InterConceptRelationship(
  * Concept-resource relationship in the locator-free model.
  *
  * Note that in regular taxonomies concept-resource relationships may use a locator to a resource for prohibition/overriding.
- * Hence the use of a LocalOrRemoteNonKeyResource object.
+ * Hence the use of a ResourceHolder object for local or remote standard resources.
  */
 sealed abstract class ConceptResourceRelationship(
   override val arc: dom.ConceptResourceArc,
