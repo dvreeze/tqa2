@@ -110,7 +110,7 @@ sealed abstract class Relationship(
  */
 sealed abstract class StandardRelationship(
   override val arc: dom.StandardArc,
-  override val source: ResourceHolder[dom.ConceptKey],
+  override val source: ResourceHolder.Key[dom.ConceptKey],
   target: ResourceHolder[dom.XLinkResource]) extends Relationship(arc, source, target) {
 
   final def effectiveSource: dom.ConceptKey = source.effectiveResource
@@ -151,8 +151,8 @@ final case class UnknownRelationship(
  */
 sealed abstract class InterConceptRelationship(
   override val arc: dom.InterConceptArc,
-  source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends StandardRelationship(arc, source, target) {
+  source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends StandardRelationship(arc, source, target) {
 
   final def effectiveTarget: dom.ConceptKey = target.effectiveResource
 
@@ -198,7 +198,7 @@ sealed abstract class InterConceptRelationship(
  */
 sealed abstract class ConceptResourceRelationship(
   override val arc: dom.ConceptResourceArc,
-  source: ResourceHolder[dom.ConceptKey],
+  source: ResourceHolder.Key[dom.ConceptKey],
   override val target: ResourceHolder[StandardResource])
   extends StandardRelationship(arc, source, target) {
 
@@ -207,7 +207,7 @@ sealed abstract class ConceptResourceRelationship(
 
 final case class ConceptLabelRelationship(
   override val arc: dom.LabelArc,
-  override val source: ResourceHolder[dom.ConceptKey],
+  override val source: ResourceHolder.Key[dom.ConceptKey],
   override val target: ResourceHolder[dom.ConceptLabelResource])
   extends ConceptResourceRelationship(arc, source, target) {
 
@@ -225,7 +225,7 @@ final case class ConceptLabelRelationship(
 
 final case class ConceptReferenceRelationship(
   override val arc: dom.ReferenceArc,
-  override val source: ResourceHolder[dom.ConceptKey],
+  override val source: ResourceHolder.Key[dom.ConceptKey],
   override val target: ResourceHolder[dom.ConceptReferenceResource])
   extends ConceptResourceRelationship(arc, source, target) {
 
@@ -241,77 +241,77 @@ final case class ConceptReferenceRelationship(
  */
 sealed abstract class PresentationRelationship(
   override val arc: dom.PresentationArc,
-  source: ResourceHolder[dom.ConceptKey],
-  target: ResourceHolder[dom.ConceptKey]) extends InterConceptRelationship(arc, source, target)
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends InterConceptRelationship(arc, source, target)
 
 final case class ParentChildRelationship(
   override val arc: dom.PresentationArc,
-  override val source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends PresentationRelationship(arc, source, target)
+  override val source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends PresentationRelationship(arc, source, target)
 
 final case class OtherPresentationRelationship(
   override val arc: dom.PresentationArc,
-  override val source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends PresentationRelationship(arc, source, target)
+  override val source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends PresentationRelationship(arc, source, target)
 
 /**
  * Calculation relationship in the locator-free model.
  */
 sealed abstract class CalculationRelationship(
   override val arc: dom.CalculationArc,
-  source: ResourceHolder[dom.ConceptKey],
-  target: ResourceHolder[dom.ConceptKey]) extends InterConceptRelationship(arc, source, target)
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends InterConceptRelationship(arc, source, target)
 
 final case class SummationItemRelationship(
   override val arc: dom.CalculationArc,
-  override val source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends CalculationRelationship(arc, source, target)
+  override val source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends CalculationRelationship(arc, source, target)
 
 final case class OtherCalculationRelationship(
   override val arc: dom.CalculationArc,
-  override val source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends CalculationRelationship(arc, source, target)
+  override val source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends CalculationRelationship(arc, source, target)
 
 /**
  * Definition relationship in the locator-free model.
  */
 sealed abstract class DefinitionRelationship(
   override val arc: dom.DefinitionArc,
-  source: ResourceHolder[dom.ConceptKey],
-  target: ResourceHolder[dom.ConceptKey]) extends InterConceptRelationship(arc, source, target)
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends InterConceptRelationship(arc, source, target)
 
 final case class GeneralSpecialRelationship(
   override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
+  override val source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
 
 final case class EssenceAliasRelationship(
   override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
+  override val source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
 
 final case class SimilarTuplesRelationship(
   override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
+  override val source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
 
 final case class RequiresElementRelationship(
   override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
+  override val source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
 
 /**
  * Dimensional (definition) relationship in the locator-free model.
  */
 sealed abstract class DimensionalRelationship(
   arc: dom.DefinitionArc,
-  source: ResourceHolder[dom.ConceptKey],
-  target: ResourceHolder[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
 
 sealed abstract class HasHypercubeRelationship(
   arc: dom.DefinitionArc,
-  source: ResourceHolder[dom.ConceptKey],
-  target: ResourceHolder[dom.ConceptKey]) extends DimensionalRelationship(arc, source, target) {
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends DimensionalRelationship(arc, source, target) {
 
   final def primary: EName = sourceConcept
 
@@ -343,24 +343,24 @@ sealed abstract class HasHypercubeRelationship(
 
 final case class AllRelationship(
   override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends HasHypercubeRelationship(arc, source, target) {
+  override val source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends HasHypercubeRelationship(arc, source, target) {
 
   def isAllRelationship: Boolean = true
 }
 
 final case class NotAllRelationship(
   override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends HasHypercubeRelationship(arc, source, target) {
+  override val source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends HasHypercubeRelationship(arc, source, target) {
 
   def isAllRelationship: Boolean = false
 }
 
 final case class HypercubeDimensionRelationship(
   override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends DimensionalRelationship(arc, source, target) {
+  override val source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DimensionalRelationship(arc, source, target) {
 
   def hypercube: EName = sourceConcept
 
@@ -377,8 +377,8 @@ final case class HypercubeDimensionRelationship(
 
 sealed abstract class DomainAwareRelationship(
   arc: dom.DefinitionArc,
-  source: ResourceHolder[dom.ConceptKey],
-  target: ResourceHolder[dom.ConceptKey]) extends DimensionalRelationship(arc, source, target) {
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends DimensionalRelationship(arc, source, target) {
 
   final def usable: Boolean = {
     arc.attrOption(ENames.XbrldtUsableEName).map(v => XsBooleans.parseBoolean(v)).getOrElse(true)
@@ -395,8 +395,8 @@ sealed abstract class DomainAwareRelationship(
 
 final case class DimensionDomainRelationship(
   override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends DomainAwareRelationship(arc, source, target) {
+  override val source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DomainAwareRelationship(arc, source, target) {
 
   def dimension: EName = sourceConcept
 
@@ -405,8 +405,8 @@ final case class DimensionDomainRelationship(
 
 final case class DomainMemberRelationship(
   override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends DomainAwareRelationship(arc, source, target) {
+  override val source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DomainAwareRelationship(arc, source, target) {
 
   def domain: EName = sourceConcept
 
@@ -415,8 +415,8 @@ final case class DomainMemberRelationship(
 
 final case class DimensionDefaultRelationship(
   override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends DimensionalRelationship(arc, source, target) {
+  override val source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DimensionalRelationship(arc, source, target) {
 
   def dimension: EName = sourceConcept
 
@@ -428,5 +428,5 @@ final case class DimensionDefaultRelationship(
  */
 final case class OtherDefinitionRelationship(
   override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
+  override val source: ResourceHolder.Key[dom.ConceptKey],
+  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
