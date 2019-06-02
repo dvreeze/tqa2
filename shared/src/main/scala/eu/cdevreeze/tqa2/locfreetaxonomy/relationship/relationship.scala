@@ -26,12 +26,14 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.common.StandardLabelRoles
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.StandardReferenceRoles
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.Use
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.StandardResource
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.yaidom2.core.EName
 
 /**
  * Relationship in a locator-free taxonomy. The relationship source and target is always an XLink resource, and more
- * often than not a taxonomy element key in particular.
+ * often than not a taxonomy element key in particular. The source and target is always the direct source and target
+ * pointed to by the underlying arc, even if the source or target is a key pointing to a remote resource.
  *
  * Fast efficient creation of relationship instances is very important for performance.
  *
@@ -60,6 +62,10 @@ sealed abstract class Relationship(
     require(target.findParentElem() == arc.findParentElem(), s"An arc and its target are not in the same extended link in $docUri")
     this
   }
+
+  def effectiveSource: dom.XLinkResource
+
+  def effectiveTarget: dom.XLinkResource
 
   final def docUri: URI = arc.docUri
 
@@ -95,6 +101,8 @@ sealed abstract class StandardRelationship(
   override val source: dom.ConceptKey,
   target: dom.XLinkResource) extends Relationship(arc, source, target) {
 
+  final def effectiveSource: dom.ConceptKey = source
+
   final def sourceConcept: EName = source.key
 }
 
@@ -102,11 +110,17 @@ sealed abstract class StandardRelationship(
  * Non-standard relationship in the locator-free model, so typically a generic relationship.
  *
  * TODO Open up this class for extension
+ * TODO Use LocalOrRemoteNonKeyResource on sub-types for element label/reference relationships etc.
  */
 final case class NonStandardRelationship(
   override val arc: dom.XLinkArc,
   override val source: dom.XLinkResource,
-  override val target: dom.XLinkResource) extends Relationship(arc, source, target)
+  override val target: dom.XLinkResource) extends Relationship(arc, source, target) {
+
+  def effectiveSource: dom.XLinkResource = source
+
+  def effectiveTarget: dom.XLinkResource = target
+}
 
 /**
  * Unknown relationship. Possibly an invalid relationship.
@@ -114,7 +128,12 @@ final case class NonStandardRelationship(
 final case class UnknownRelationship(
   override val arc: dom.XLinkArc,
   override val source: dom.XLinkResource,
-  override val target: dom.XLinkResource) extends Relationship(arc, source, target)
+  override val target: dom.XLinkResource) extends Relationship(arc, source, target) {
+
+  def effectiveSource: dom.XLinkResource = source
+
+  def effectiveTarget: dom.XLinkResource = target
+}
 
 /**
  * Inter-concept relationship in the locator-free model.
@@ -123,6 +142,8 @@ sealed abstract class InterConceptRelationship(
   override val arc: dom.InterConceptArc,
   source: dom.ConceptKey,
   override val target: dom.ConceptKey) extends StandardRelationship(arc, source, target) {
+
+  final def effectiveTarget: dom.ConceptKey = target
 
   final def targetConcept: EName = target.key
 
@@ -162,37 +183,47 @@ sealed abstract class InterConceptRelationship(
  * Concept-resource relationship in the locator-free model.
  *
  * Note that in regular taxonomies concept-resource relationships may use a locator to a resource for prohibition/overriding.
- * In the locator-free model this means that the locator must have been "resolved" as standard resource, in order to create an
- * instance of this relationship class. Prohibition then typically implies repeating the same standard resource in the prohibited
- * arc as the one prohibited elsewhere in another extended link (and typically in another document).
+ * Hence the use of a LocalOrRemoteNonKeyResource object.
  */
 sealed abstract class ConceptResourceRelationship(
   override val arc: dom.ConceptResourceArc,
   source: dom.ConceptKey,
-  override val target: dom.StandardResource) extends StandardRelationship(arc, source, target)
+  val localOrRemoteTarget: LocalOrRemoteNonKeyResource[StandardResource])
+  extends StandardRelationship(arc, source, localOrRemoteTarget.directResource) {
+
+  final override val target: dom.XLinkResource = localOrRemoteTarget.directResource
+
+  def effectiveTarget: dom.StandardResource = localOrRemoteTarget.effectiveResource
+}
 
 final case class ConceptLabelRelationship(
   override val arc: dom.LabelArc,
   override val source: dom.ConceptKey,
-  override val target: dom.ConceptLabelResource) extends ConceptResourceRelationship(arc, source, target) {
+  override val localOrRemoteTarget: LocalOrRemoteNonKeyResource[dom.ConceptLabelResource])
+  extends ConceptResourceRelationship(arc, source, localOrRemoteTarget) {
 
-  def resourceRole: String = target.roleOption.getOrElse(StandardLabelRoles.StandardLabel)
+  override def effectiveTarget: dom.ConceptLabelResource = localOrRemoteTarget.effectiveResource
+
+  def resourceRole: String = effectiveTarget.roleOption.getOrElse(StandardLabelRoles.StandardLabel)
 
   def language: String = {
-    target.attrOption(ENames.XmlLangEName).getOrElse(sys.error(s"Missing xml:lang in ${target.name} in ${target.docUri}"))
+    effectiveTarget.attrOption(ENames.XmlLangEName).getOrElse(sys.error(s"Missing xml:lang in ${target.name} in ${target.docUri}"))
   }
 
-  def labelText: String = target.text
+  def labelText: String = effectiveTarget.text
 }
 
 final case class ConceptReferenceRelationship(
   override val arc: dom.ReferenceArc,
   override val source: dom.ConceptKey,
-  override val target: dom.ConceptReferenceResource) extends ConceptResourceRelationship(arc, source, target) {
+  override val localOrRemoteTarget: LocalOrRemoteNonKeyResource[dom.ConceptReferenceResource])
+  extends ConceptResourceRelationship(arc, source, localOrRemoteTarget) {
 
-  def resourceRole: String = target.roleOption.getOrElse(StandardReferenceRoles.StandardReference)
+  override def effectiveTarget: dom.ConceptReferenceResource = localOrRemoteTarget.effectiveResource
 
-  def referenceElems: Seq[TaxonomyElem] = target.findAllChildElems
+  def resourceRole: String = effectiveTarget.roleOption.getOrElse(StandardReferenceRoles.StandardReference)
+
+  def referenceElems: Seq[TaxonomyElem] = effectiveTarget.findAllChildElems
 }
 
 /**

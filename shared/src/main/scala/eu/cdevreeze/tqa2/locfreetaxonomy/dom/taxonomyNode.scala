@@ -549,7 +549,12 @@ final case class ReferenceArc(
   requireName(ENames.CLinkReferenceArcEName)
 }
 
-sealed trait StandardResource extends ElemInCLinkNamespace with XLinkResource with CLinkDialect.StandardResource
+/**
+ * XLink resource that is not a TaxonomyElemKey. It has direct sub-types StandardResource and NonStandardResource.
+ */
+sealed trait NonKeyResource extends XLinkResource
+
+sealed trait StandardResource extends ElemInCLinkNamespace with NonKeyResource with CLinkDialect.StandardResource
 
 final case class ConceptLabelResource(
   override val underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace(underlyingElem)
@@ -691,7 +696,7 @@ final case class NonStandardArc(
  * Non-standard resource, which is also not a taxonomy element key
  */
 final case class NonStandardResource(
-  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with XLinkResource
+  override val underlyingElem: BackingNodes.Elem) extends TaxonomyElem(underlyingElem) with NonKeyResource
 
 /**
  * Any other non-XLink element, not in the "xs", "clink" or "link" namespaces.
