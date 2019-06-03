@@ -26,8 +26,6 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.common.StandardLabelRoles
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.StandardReferenceRoles
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.Use
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.StandardResource
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.yaidom2.core.EName
 
 /**
@@ -124,7 +122,7 @@ sealed abstract class StandardRelationship(
  * TODO Open up this class for extension
  */
 final case class NonStandardRelationship(
-  override val arc: dom.XLinkArc,
+  override val arc: dom.NonStandardArc,
   override val source: ResourceHolder[dom.XLinkResource],
   override val target: ResourceHolder[dom.XLinkResource]) extends Relationship(arc, source, target) {
 
@@ -199,7 +197,7 @@ sealed abstract class InterConceptRelationship(
 sealed abstract class ConceptResourceRelationship(
   override val arc: dom.ConceptResourceArc,
   source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder[StandardResource])
+  override val target: ResourceHolder[dom.StandardResource])
   extends StandardRelationship(arc, source, target) {
 
   def effectiveTarget: dom.StandardResource = target.effectiveResource
@@ -233,7 +231,7 @@ final case class ConceptReferenceRelationship(
 
   def resourceRole: String = effectiveTarget.roleOption.getOrElse(StandardReferenceRoles.StandardReference)
 
-  def referenceElems: Seq[TaxonomyElem] = effectiveTarget.findAllChildElems
+  def referenceElems: Seq[dom.TaxonomyElem] = effectiveTarget.findAllChildElems
 }
 
 /**
@@ -430,3 +428,132 @@ final case class OtherDefinitionRelationship(
   override val arc: dom.DefinitionArc,
   override val source: ResourceHolder.Key[dom.ConceptKey],
   override val target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
+
+// Companion objects
+
+object Relationship {
+
+  def apply(
+    arc: dom.XLinkArc,
+    source: ResourceHolder[dom.XLinkResource],
+    target: ResourceHolder[dom.XLinkResource]): Relationship = {
+
+    require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
+
+    (arc, source.effectiveResource) match {
+      case (arc: dom.StandardArc, _: dom.ConceptKey) =>
+        StandardRelationship.opt(arc, source.asInstanceOf[ResourceHolder.Key[dom.ConceptKey]], target)
+          .getOrElse(new UnknownRelationship(arc, source, target))
+      case (arc: dom.NonStandardArc, _) =>
+        NonStandardRelationship.opt(arc, source, target).getOrElse(new UnknownRelationship(arc, source, target))
+      case _ =>
+        new UnknownRelationship(arc, source, target)
+    }
+  }
+}
+
+object StandardRelationship {
+
+  def opt(
+    arc: dom.StandardArc,
+    source: ResourceHolder.Key[dom.ConceptKey],
+    target: ResourceHolder[dom.XLinkResource]): Option[StandardRelationship] = {
+
+    require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
+
+    (arc, target.effectiveResource) match {
+      case (arc: dom.InterConceptArc, _: dom.ConceptKey) =>
+        InterConceptRelationship.opt(arc, source, target.asInstanceOf[ResourceHolder.Key[dom.ConceptKey]])
+      case (arc: dom.ConceptResourceArc, _: dom.StandardResource) =>
+        ConceptResourceRelationship.opt(arc, source, target.asInstanceOf[ResourceHolder[dom.StandardResource]])
+      case _ =>
+        None
+    }
+  }
+}
+
+object NonStandardRelationship {
+
+  def opt(
+    arc: dom.NonStandardArc,
+    source: ResourceHolder[dom.XLinkResource],
+    target: ResourceHolder[dom.XLinkResource]): Option[NonStandardRelationship] = {
+
+    require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
+
+    Some(NonStandardRelationship(arc, source, target))
+  }
+}
+
+object UnknownRelationship {
+
+  def opt(
+    arc: dom.XLinkArc,
+    source: ResourceHolder[dom.XLinkResource],
+    target: ResourceHolder[dom.XLinkResource]): Option[UnknownRelationship] = {
+
+    require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
+
+    Some(UnknownRelationship(arc, source, target))
+  }
+}
+
+object InterConceptRelationship {
+
+  def opt(
+    arc: dom.InterConceptArc,
+    source: ResourceHolder.Key[dom.ConceptKey],
+    target: ResourceHolder.Key[dom.ConceptKey]): Option[InterConceptRelationship] = {
+
+    require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
+
+    arc match {
+      case arc: dom.PresentationArc =>
+        arc.arcrole match {
+          case "http://www.xbrl.org/2003/arcrole/parent-child" => Some(ParentChildRelationship(arc, source, target))
+          case _ => Some(OtherPresentationRelationship(arc, source, target))
+        }
+      case arc: dom.DefinitionArc =>
+        arc.arcrole match {
+          case "http://xbrl.org/int/dim/arcrole/hypercube-dimension" => Some(HypercubeDimensionRelationship(arc, source, target))
+          case "http://xbrl.org/int/dim/arcrole/dimension-domain" => Some(DimensionDomainRelationship(arc, source, target))
+          case "http://xbrl.org/int/dim/arcrole/domain-member" => Some(DomainMemberRelationship(arc, source, target))
+          case "http://xbrl.org/int/dim/arcrole/dimension-default" => Some(DimensionDefaultRelationship(arc, source, target))
+          case "http://xbrl.org/int/dim/arcrole/all" => Some(AllRelationship(arc, source, target))
+          case "http://xbrl.org/int/dim/arcrole/notAll" => Some(NotAllRelationship(arc, source, target))
+          case "http://www.xbrl.org/2003/arcrole/general-special" => Some(GeneralSpecialRelationship(arc, source, target))
+          case "http://www.xbrl.org/2003/arcrole/essence-alias" => Some(EssenceAliasRelationship(arc, source, target))
+          case "http://www.xbrl.org/2003/arcrole/similar-tuples" => Some(SimilarTuplesRelationship(arc, source, target))
+          case "http://www.xbrl.org/2003/arcrole/requires-element" => Some(RequiresElementRelationship(arc, source, target))
+          case _ => Some(OtherDefinitionRelationship(arc, source, target))
+        }
+      case arc: dom.CalculationArc =>
+        arc.arcrole match {
+          case "http://www.xbrl.org/2003/arcrole/summation-item" => Some(SummationItemRelationship(arc, source, target))
+          case _ => Some(OtherCalculationRelationship(arc, source, target))
+        }
+      case _ =>
+        None
+    }
+  }
+}
+
+object ConceptResourceRelationship {
+
+  def opt(
+    arc: dom.ConceptResourceArc,
+    source: ResourceHolder.Key[dom.ConceptKey],
+    target: ResourceHolder[dom.StandardResource]): Option[ConceptResourceRelationship] = {
+
+    require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
+
+    (arc, target.effectiveResource) match {
+      case (arc: dom.LabelArc, _: dom.ConceptLabelResource) =>
+        Some(ConceptLabelRelationship(arc, source, target.asInstanceOf[ResourceHolder[dom.ConceptLabelResource]]))
+      case (arc: dom.ReferenceArc, _: dom.ConceptReferenceResource) =>
+        Some(ConceptReferenceRelationship(arc, source, target.asInstanceOf[ResourceHolder[dom.ConceptReferenceResource]]))
+      case _ =>
+        None
+    }
+  }
+}
