@@ -25,14 +25,14 @@ import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.node.saxon
 import eu.cdevreeze.yaidom2.node.saxon.SaxonDocument
 import net.sf.saxon.s9api.Processor
-import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.FunSuite
 
 /**
  * Test of extracting and querying relationhips.
  *
  * @author Chris de Vreeze
  */
-class RelationshipTest extends AnyFunSuite {
+class RelationshipTest extends FunSuite {
 
   test("testExtractAndQueryStandardLabelRelationships") {
     val linkbase = Linkbase(getTaxonomyElement("/testfiles/venj-bw2-axes-lab-fr.xml").underlyingElem)

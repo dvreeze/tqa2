@@ -25,14 +25,14 @@ import eu.cdevreeze.yaidom2.node.saxon
 import eu.cdevreeze.yaidom2.node.saxon.SaxonDocument
 import eu.cdevreeze.yaidom2.queryapi.named
 import net.sf.saxon.s9api.Processor
-import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.FunSuite
 
 /**
  * Test of parsing and querying taxonomy elements.
  *
  * @author Chris de Vreeze
  */
-class TaxonomyElemTest extends AnyFunSuite {
+class TaxonomyElemTest extends FunSuite {
 
   test("testParseAndQuerySchema") {
     val schema = XsSchema(getTaxonomyElement("/testfiles/kvk-data.xsd").underlyingElem)
