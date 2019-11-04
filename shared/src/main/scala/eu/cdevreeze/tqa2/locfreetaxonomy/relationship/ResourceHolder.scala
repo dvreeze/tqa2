@@ -28,7 +28,7 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkResource
  * the holder only contains the resource (key or local resource).
  *
  * Due to the notion of a "resource holder", and in particular of a "local/remote non-key resource", we can support equivalent
- * concept label relationships where one points to a local label resource and the other the same remote label resource.
+ * concept label relationships where one relationship points to a local label resource and the other to the same remote label resource.
  *
  * @author Chris de Vreeze
  */
@@ -72,10 +72,12 @@ object ResourceHolder {
     def effectiveResource: E = key
   }
 
+  sealed trait NonKeyResourceHolder[+E <: NonKeyResource] extends ResourceHolder[E]
+
   /**
    * A local non-key XLink resource. The direct resource and effective resource are the same.
    */
-  final case class LocalNonKeyResource[+E <: NonKeyResource](resource: E) extends ResourceHolder[E] {
+  final case class LocalNonKeyResource[+E <: NonKeyResource](resource: E) extends NonKeyResourceHolder[E] {
 
     def directResource: E = resource
 
@@ -88,5 +90,5 @@ object ResourceHolder {
   final case class RemoteNonKeyResource[+E <: NonKeyResource](
     directResource: AnyElementKey,
     effectiveResource: E
-  ) extends ResourceHolder[E]
+  ) extends NonKeyResourceHolder[E]
 }

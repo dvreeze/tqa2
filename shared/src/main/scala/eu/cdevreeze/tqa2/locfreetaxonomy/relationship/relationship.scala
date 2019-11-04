@@ -26,6 +26,8 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.common.StandardLabelRoles
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.StandardReferenceRoles
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.Use
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.NonStandardResource
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ResourceHolder.NonKeyResourceHolder
 import eu.cdevreeze.yaidom2.core.EName
 
 /**
@@ -45,16 +47,24 @@ import eu.cdevreeze.yaidom2.core.EName
  * @author Chris de Vreeze
  */
 // scalastyle:off number.of.types
-sealed abstract class Relationship(
-  val arc: dom.XLinkArc,
-  val source: ResourceHolder[dom.XLinkResource],
-  val target: ResourceHolder[dom.XLinkResource]) {
+sealed trait Relationship {
 
-  require(arc.from == source.directResource.xlinkLabel, s"Arc and 'source' not matching on XLink label in $docUri")
-  require(arc.to == target.directResource.xlinkLabel, s"Arc and 'target' not matching on XLink label in $docUri")
-  require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in $docUri")
+  def arc: dom.XLinkArc
+
+  def source: ResourceHolder[dom.XLinkResource]
+
+  def target: ResourceHolder[dom.XLinkResource]
+
+  final def partiallyValidated: this.type = {
+    require(arc.from == source.directResource.xlinkLabel, s"Arc and 'source' not matching on XLink label in $docUri")
+    require(arc.to == target.directResource.xlinkLabel, s"Arc and 'target' not matching on XLink label in $docUri")
+    require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in $docUri")
+    this
+  }
 
   final def validated: this.type = {
+    partiallyValidated
+
     require(arc.findParentElem().nonEmpty, s"Missing parent (exended link) element of an arc in $docUri")
     require(
       source.directResource.findParentElem() == arc.findParentElem(),
@@ -106,10 +116,11 @@ sealed abstract class Relationship(
 /**
  * Standard relationship in the locator-free model, so either an inter-concept relationship or a concept-resource relationship.
  */
-sealed abstract class StandardRelationship(
-  override val arc: dom.StandardArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder[dom.XLinkResource]) extends Relationship(arc, source, target) {
+sealed trait StandardRelationship extends Relationship {
+
+  def arc: dom.StandardArc
+
+  def source: ResourceHolder.Key[dom.ConceptKey]
 
   final def effectiveSource: dom.ConceptKey = source.effectiveResource
 
@@ -118,26 +129,65 @@ sealed abstract class StandardRelationship(
 
 /**
  * Non-standard relationship in the locator-free model, so typically a generic relationship.
+ */
+sealed trait NonStandardRelationship extends Relationship {
+
+  def arc: dom.NonStandardArc
+
+  final def effectiveSource: dom.XLinkResource = source.effectiveResource
+
+  final def effectiveTarget: dom.XLinkResource = target.effectiveResource
+}
+
+/**
+ * Either an element-label relationship or element-reference relationship.
+ */
+sealed trait ElementResourceRelationship extends NonStandardRelationship {
+
+  def target: NonKeyResourceHolder[NonStandardResource]
+}
+
+/**
+ * Element-label relationship, with arcrole "http://xbrl.org/arcrole/2008/element-label".
+ */
+final case class ElementLabelRelationship(
+  arc: dom.NonStandardArc,
+  source: ResourceHolder[dom.XLinkResource],
+  target: NonKeyResourceHolder[NonStandardResource]) extends ElementResourceRelationship
+
+/**
+ * Element-reference relationship, with arcrole "http://xbrl.org/arcrole/2008/element-reference".
+ */
+final case class ElementReferenceRelationship(
+  arc: dom.NonStandardArc,
+  source: ResourceHolder[dom.XLinkResource],
+  target: NonKeyResourceHolder[NonStandardResource]) extends ElementResourceRelationship
+
+/**
+ * Element-message relationship, with a msg:message as target.
+ */
+final case class ElementMessageRelationship(
+  arc: dom.NonStandardArc,
+  source: ResourceHolder[dom.XLinkResource],
+  target: ResourceHolder[dom.XLinkResource]) extends NonStandardRelationship
+
+/**
+ * Other non-standard relationship in the locator-free model, so typically some generic relationship.
  *
  * TODO Open up this class for extension
  */
-final case class NonStandardRelationship(
-  override val arc: dom.NonStandardArc,
-  override val source: ResourceHolder[dom.XLinkResource],
-  override val target: ResourceHolder[dom.XLinkResource]) extends Relationship(arc, source, target) {
-
-  def effectiveSource: dom.XLinkResource = source.effectiveResource
-
-  def effectiveTarget: dom.XLinkResource = target.effectiveResource
-}
+final case class OtherNonStandardRelationship(
+  arc: dom.NonStandardArc,
+  source: ResourceHolder[dom.XLinkResource],
+  target: ResourceHolder[dom.XLinkResource]) extends NonStandardRelationship
 
 /**
  * Unknown relationship. Possibly an invalid relationship.
  */
 final case class UnknownRelationship(
-  override val arc: dom.XLinkArc,
-  override val source: ResourceHolder[dom.XLinkResource],
-  override val target: ResourceHolder[dom.XLinkResource]) extends Relationship(arc, source, target) {
+  arc: dom.XLinkArc,
+  source: ResourceHolder[dom.XLinkResource],
+  target: ResourceHolder[dom.XLinkResource]) extends Relationship {
 
   def effectiveSource: dom.XLinkResource = source.effectiveResource
 
@@ -147,10 +197,11 @@ final case class UnknownRelationship(
 /**
  * Inter-concept relationship in the locator-free model.
  */
-sealed abstract class InterConceptRelationship(
-  override val arc: dom.InterConceptArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends StandardRelationship(arc, source, target) {
+sealed trait InterConceptRelationship extends StandardRelationship {
+
+  def arc: dom.InterConceptArc
+
+  def target: ResourceHolder.Key[dom.ConceptKey]
 
   final def effectiveTarget: dom.ConceptKey = target.effectiveResource
 
@@ -194,20 +245,20 @@ sealed abstract class InterConceptRelationship(
  * Note that in regular taxonomies concept-resource relationships may use a locator to a resource for prohibition/overriding.
  * Hence the use of a ResourceHolder object for local or remote standard resources.
  */
-sealed abstract class ConceptResourceRelationship(
-  override val arc: dom.ConceptResourceArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder[dom.StandardResource])
-  extends StandardRelationship(arc, source, target) {
+sealed trait ConceptResourceRelationship extends StandardRelationship {
+
+  def arc: dom.ConceptResourceArc
+
+  def target: ResourceHolder[dom.StandardResource]
 
   def effectiveTarget: dom.StandardResource = target.effectiveResource
 }
 
 final case class ConceptLabelRelationship(
-  override val arc: dom.LabelArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptLabelResource])
-  extends ConceptResourceRelationship(arc, source, target) {
+  arc: dom.LabelArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder[dom.ConceptLabelResource])
+  extends ConceptResourceRelationship {
 
   override def effectiveTarget: dom.ConceptLabelResource = target.effectiveResource
 
@@ -222,10 +273,10 @@ final case class ConceptLabelRelationship(
 }
 
 final case class ConceptReferenceRelationship(
-  override val arc: dom.ReferenceArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder[dom.ConceptReferenceResource])
-  extends ConceptResourceRelationship(arc, source, target) {
+  arc: dom.ReferenceArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder[dom.ConceptReferenceResource])
+  extends ConceptResourceRelationship {
 
   override def effectiveTarget: dom.ConceptReferenceResource = target.effectiveResource
 
@@ -237,79 +288,73 @@ final case class ConceptReferenceRelationship(
 /**
  * Presentation relationship in the locator-free model.
  */
-sealed abstract class PresentationRelationship(
-  override val arc: dom.PresentationArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends InterConceptRelationship(arc, source, target)
+sealed trait PresentationRelationship extends InterConceptRelationship {
+
+  def arc: dom.PresentationArc
+}
 
 final case class ParentChildRelationship(
-  override val arc: dom.PresentationArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends PresentationRelationship(arc, source, target)
+  arc: dom.PresentationArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends PresentationRelationship
 
 final case class OtherPresentationRelationship(
-  override val arc: dom.PresentationArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends PresentationRelationship(arc, source, target)
+  arc: dom.PresentationArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends PresentationRelationship
 
 /**
  * Calculation relationship in the locator-free model.
  */
-sealed abstract class CalculationRelationship(
-  override val arc: dom.CalculationArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends InterConceptRelationship(arc, source, target)
+sealed trait CalculationRelationship extends InterConceptRelationship {
+
+  def arc: dom.CalculationArc
+}
 
 final case class SummationItemRelationship(
-  override val arc: dom.CalculationArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends CalculationRelationship(arc, source, target)
+  arc: dom.CalculationArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends CalculationRelationship
 
 final case class OtherCalculationRelationship(
-  override val arc: dom.CalculationArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends CalculationRelationship(arc, source, target)
+  arc: dom.CalculationArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends CalculationRelationship
 
 /**
  * Definition relationship in the locator-free model.
  */
-sealed abstract class DefinitionRelationship(
-  override val arc: dom.DefinitionArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends InterConceptRelationship(arc, source, target)
+sealed trait DefinitionRelationship extends InterConceptRelationship {
+
+  def arc: dom.DefinitionArc
+}
 
 final case class GeneralSpecialRelationship(
-  override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
+  arc: dom.DefinitionArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship
 
 final case class EssenceAliasRelationship(
-  override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
+  arc: dom.DefinitionArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship
 
 final case class SimilarTuplesRelationship(
-  override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
+  arc: dom.DefinitionArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship
 
 final case class RequiresElementRelationship(
-  override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
+  arc: dom.DefinitionArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship
 
 /**
  * Dimensional (definition) relationship in the locator-free model.
  */
-sealed abstract class DimensionalRelationship(
-  arc: dom.DefinitionArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
+sealed trait DimensionalRelationship extends DefinitionRelationship
 
-sealed abstract class HasHypercubeRelationship(
-  arc: dom.DefinitionArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends DimensionalRelationship(arc, source, target) {
+sealed trait HasHypercubeRelationship extends DimensionalRelationship {
 
   final def primary: EName = sourceConcept
 
@@ -340,25 +385,25 @@ sealed abstract class HasHypercubeRelationship(
 }
 
 final case class AllRelationship(
-  override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends HasHypercubeRelationship(arc, source, target) {
+  arc: dom.DefinitionArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends HasHypercubeRelationship {
 
   def isAllRelationship: Boolean = true
 }
 
 final case class NotAllRelationship(
-  override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends HasHypercubeRelationship(arc, source, target) {
+  arc: dom.DefinitionArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends HasHypercubeRelationship {
 
   def isAllRelationship: Boolean = false
 }
 
 final case class HypercubeDimensionRelationship(
-  override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DimensionalRelationship(arc, source, target) {
+  arc: dom.DefinitionArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends DimensionalRelationship {
 
   def hypercube: EName = sourceConcept
 
@@ -373,10 +418,7 @@ final case class HypercubeDimensionRelationship(
   }
 }
 
-sealed abstract class DomainAwareRelationship(
-  arc: dom.DefinitionArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends DimensionalRelationship(arc, source, target) {
+sealed trait DomainAwareRelationship extends DimensionalRelationship {
 
   final def usable: Boolean = {
     arc.attrOption(ENames.XbrldtUsableEName).map(v => XsBooleans.parseBoolean(v)).getOrElse(true)
@@ -392,9 +434,9 @@ sealed abstract class DomainAwareRelationship(
 }
 
 final case class DimensionDomainRelationship(
-  override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DomainAwareRelationship(arc, source, target) {
+  arc: dom.DefinitionArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends DomainAwareRelationship {
 
   def dimension: EName = sourceConcept
 
@@ -402,9 +444,9 @@ final case class DimensionDomainRelationship(
 }
 
 final case class DomainMemberRelationship(
-  override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DomainAwareRelationship(arc, source, target) {
+  arc: dom.DefinitionArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends DomainAwareRelationship {
 
   def domain: EName = sourceConcept
 
@@ -412,9 +454,9 @@ final case class DomainMemberRelationship(
 }
 
 final case class DimensionDefaultRelationship(
-  override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DimensionalRelationship(arc, source, target) {
+  arc: dom.DefinitionArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends DimensionalRelationship {
 
   def dimension: EName = sourceConcept
 
@@ -425,9 +467,9 @@ final case class DimensionDefaultRelationship(
  * Definition relationship that is not one of the known standard or dimensional ones.
  */
 final case class OtherDefinitionRelationship(
-  override val arc: dom.DefinitionArc,
-  override val source: ResourceHolder.Key[dom.ConceptKey],
-  override val target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship(arc, source, target)
+  arc: dom.DefinitionArc,
+  source: ResourceHolder.Key[dom.ConceptKey],
+  target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship
 
 // Companion objects
 
@@ -481,7 +523,18 @@ object NonStandardRelationship {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
-    Some(NonStandardRelationship(arc, source, target))
+    (arc, arc.arcrole, target.effectiveResource) match {
+      case (arc: dom.NonStandardArc, "http://xbrl.org/arcrole/2008/element-label", _: NonStandardResource) =>
+        Some(ElementLabelRelationship(arc, source, target.asInstanceOf[NonKeyResourceHolder[NonStandardResource]]))
+      case (arc: dom.NonStandardArc, "http://xbrl.org/arcrole/2008/element-reference", _: NonStandardResource) =>
+        Some(ElementReferenceRelationship(arc, source, target.asInstanceOf[NonKeyResourceHolder[NonStandardResource]]))
+      case (arc: dom.NonStandardArc, _, e: dom.XLinkResource) if e.name == ENames.MsgMessageEName =>
+        Some(ElementMessageRelationship(arc, source, target))
+      case (arc: dom.NonStandardArc, _, _) =>
+        Some(OtherNonStandardRelationship(arc, source, target))
+      case _ =>
+        None
+    }
   }
 }
 

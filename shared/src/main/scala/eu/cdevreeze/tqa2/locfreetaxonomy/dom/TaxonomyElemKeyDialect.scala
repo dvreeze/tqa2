@@ -22,6 +22,7 @@ import scala.util.Try
 
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.locfreexlink
+import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys
 import eu.cdevreeze.yaidom2.core.EName
 
 /**
@@ -40,7 +41,11 @@ object TaxonomyElemKeyDialect {
 
     type KeyType
 
+    type TaxoElemKeyType <: TaxonomyElemKeys.TaxonomyElemKey
+
     def key: KeyType
+
+    def taxoElemKey: TaxoElemKeyType
   }
 
   // General categories of taxonomy element keys
@@ -61,17 +66,32 @@ object TaxonomyElemKeyDialect {
   /**
    * ConceptKey element, holding the target EName (as QName, resolved by the containing element's scope) of the concept in its key attribute.
    */
-  trait ConceptKey extends SchemaComponentKey
+  trait ConceptKey extends SchemaComponentKey {
+
+    type TaxoElemKeyType = TaxonomyElemKeys.ConceptKey
+
+    def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.ConceptKey(key)
+  }
 
   /**
    * ElementKey element, holding the target EName (as QName, resolved by the containing element's scope) of the element in its key attribute.
    */
-  trait ElementKey extends SchemaComponentKey
+  trait ElementKey extends SchemaComponentKey {
+
+    type TaxoElemKeyType = TaxonomyElemKeys.ElementKey
+
+    def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.ElementKey(key)
+  }
 
   /**
    * TypeKey element, holding the target EName (as QName, resolved by the containing element's scope) of the type in its key attribute.
    */
-  trait TypeKey extends SchemaComponentKey
+  trait TypeKey extends SchemaComponentKey {
+
+    type TaxoElemKeyType = TaxonomyElemKeys.TypeKey
+
+    def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.TypeKey(key)
+  }
 
   /**
    * RoleKey element, holding the role URI of the role type in its key attribute.
@@ -80,9 +100,13 @@ object TaxonomyElemKeyDialect {
 
     type KeyType = String
 
+    type TaxoElemKeyType = TaxonomyElemKeys.RoleKey
+
     final def key: KeyType = {
       attrOption(ENames.KeyEName).getOrElse(sys.error(s"Missing key attribute. Document: $docUri. Element: $name"))
     }
+
+    def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.RoleKey(key)
   }
 
   /**
@@ -92,9 +116,13 @@ object TaxonomyElemKeyDialect {
 
     type KeyType = String
 
+    type TaxoElemKeyType = TaxonomyElemKeys.ArcroleKey
+
     final def key: KeyType = {
       attrOption(ENames.KeyEName).getOrElse(sys.error(s"Missing key attribute. Document: $docUri. Element: $name"))
     }
+
+    def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.ArcroleKey(key)
   }
 
   /**
@@ -111,10 +139,14 @@ object TaxonomyElemKeyDialect {
 
     type KeyType = URI
 
+    type TaxoElemKeyType = TaxonomyElemKeys.AnyElementKey
+
     final def key: KeyType = {
       attrOption(ENames.KeyEName).flatMap(u => Try(URI.create(u)).toOption)
         .getOrElse(sys.error(s"Missing key attribute. Document: $docUri. Element: $name"))
     }
+
+    def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.AnyElementKey(key)
 
     /**
      * Optional element EName (as QName, resolved by the containing element's scope) of the element pointed to by the key.
