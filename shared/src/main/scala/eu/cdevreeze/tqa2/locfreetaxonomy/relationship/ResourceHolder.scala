@@ -30,6 +30,8 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkResource
  * Due to the notion of a "resource holder", and in particular of a "local/remote non-key resource", we can support equivalent
  * concept label relationships where one relationship points to a local label resource and the other to the same remote label resource.
  *
+ * TODO Replace by type Endpoint, which is far more meaningful.
+ *
  * @author Chris de Vreeze
  */
 sealed trait ResourceHolder[+E <: XLinkResource] {
