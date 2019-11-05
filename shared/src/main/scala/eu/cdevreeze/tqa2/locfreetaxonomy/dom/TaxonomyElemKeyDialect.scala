@@ -43,6 +43,9 @@ object TaxonomyElemKeyDialect {
 
     type TaxoElemKeyType <: TaxonomyElemKeys.TaxonomyElemKey
 
+    /**
+     * Returns the key. It is equal to `taxoElemKey.key`.
+     */
     def key: KeyType
 
     def taxoElemKey: TaxoElemKeyType

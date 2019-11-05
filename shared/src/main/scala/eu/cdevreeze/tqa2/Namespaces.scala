@@ -65,7 +65,7 @@ object Namespaces {
   val XfiNamespace = "http://www.xbrl.org/2008/function/instance"
   val CfiNamespace = "http://xbrl.org/2010/custom-function"
 
-  val FormulaFilterNamespaces =
+  val FormulaFilterNamespaces: Set[String] =
     Set(
       CfNamespace,
       BfNamespace,

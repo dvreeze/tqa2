@@ -22,8 +22,8 @@ import java.net.URI
  * Unique fragment key of an XML element, consisting of an absolute document URI along with the element's navigation path
  * from the root element, according to function `BackingElemApi.ownNavigationPathRelativeToRootElem`.
  *
- * The own navigation path relative to the root element is defined as follows. For example, if it is Seq(3, 5, 0), this means that
- * this element can be found from the root element as follows: from the root, take the child element with zero-based
+ * The own navigation path relative to the root element can be explained as follows. For example, if it is Seq(3, 5, 0), this means
+ * that this element can be found from the root element like this: from the root, take the child element with zero-based
  * element index 3, from there take its child element with zero-based element index 5, and finally from there take its
  * child element with zero-based element index 0.
  *

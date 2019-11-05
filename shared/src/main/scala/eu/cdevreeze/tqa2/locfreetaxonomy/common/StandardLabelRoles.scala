@@ -23,33 +23,33 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.common
  */
 object StandardLabelRoles {
 
-  val Label = makeLabelRole("label")
-  val TerseLabel = makeLabelRole("terseLabel")
-  val VerboseLabel = makeLabelRole("verboseLabel")
-  val PositiveLabel = makeLabelRole("positiveLabel")
-  val PositiveTerseLabel = makeLabelRole("positiveTerseLabel")
-  val PositiveVerboseLabel = makeLabelRole("positiveVerboseLabel")
-  val NegativeLabel = makeLabelRole("negativeLabel")
-  val NegativeTerseLabel = makeLabelRole("negativeTerseLabel")
-  val NegativeVerboseLabel = makeLabelRole("negativeVerboseLabel")
-  val ZeroLabel = makeLabelRole("zeroLabel")
-  val ZeroTerseLabel = makeLabelRole("zeroTerseLabel")
-  val ZeroVerboseLabel = makeLabelRole("zeroVerboseLabel")
-  val TotalLabel = makeLabelRole("totalLabel")
-  val PeriodStartLabel = makeLabelRole("periodStartLabel")
-  val PeriodEndLabel = makeLabelRole("periodEndLabel")
-  val Documentation = makeLabelRole("documentation")
-  val DefinitionGuidance = makeLabelRole("definitionGuidance")
-  val DisclosureGuidance = makeLabelRole("disclosureGuidance")
-  val PresentationGuidance = makeLabelRole("presentationGuidance")
-  val MeasurementGuidance = makeLabelRole("measurementGuidance")
-  val CommentaryGuidance = makeLabelRole("commentaryGuidance")
-  val ExampleGuidance = makeLabelRole("exampleGuidance")
+  val Label: String = makeLabelRole("label")
+  val TerseLabel: String = makeLabelRole("terseLabel")
+  val VerboseLabel: String = makeLabelRole("verboseLabel")
+  val PositiveLabel: String = makeLabelRole("positiveLabel")
+  val PositiveTerseLabel: String = makeLabelRole("positiveTerseLabel")
+  val PositiveVerboseLabel: String = makeLabelRole("positiveVerboseLabel")
+  val NegativeLabel: String = makeLabelRole("negativeLabel")
+  val NegativeTerseLabel: String = makeLabelRole("negativeTerseLabel")
+  val NegativeVerboseLabel: String = makeLabelRole("negativeVerboseLabel")
+  val ZeroLabel: String = makeLabelRole("zeroLabel")
+  val ZeroTerseLabel: String = makeLabelRole("zeroTerseLabel")
+  val ZeroVerboseLabel: String = makeLabelRole("zeroVerboseLabel")
+  val TotalLabel: String = makeLabelRole("totalLabel")
+  val PeriodStartLabel: String = makeLabelRole("periodStartLabel")
+  val PeriodEndLabel: String = makeLabelRole("periodEndLabel")
+  val Documentation: String = makeLabelRole("documentation")
+  val DefinitionGuidance: String = makeLabelRole("definitionGuidance")
+  val DisclosureGuidance: String = makeLabelRole("disclosureGuidance")
+  val PresentationGuidance: String = makeLabelRole("presentationGuidance")
+  val MeasurementGuidance: String = makeLabelRole("measurementGuidance")
+  val CommentaryGuidance: String = makeLabelRole("commentaryGuidance")
+  val ExampleGuidance: String = makeLabelRole("exampleGuidance")
 
   /**
    * Alias for Label. It is the default label role, or, in other words, the standard label role.
    */
-  val StandardLabel = Label
+  val StandardLabel: String = Label
 
   private def makeLabelRole(suffix: String): String = {
     s"http://www.xbrl.org/2003/role/$suffix"

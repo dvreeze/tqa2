@@ -23,21 +23,21 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.common
  */
 object StandardReferenceRoles {
 
-  val Reference = makeReferenceRole("reference")
-  val DefinitionRef = makeReferenceRole("definitionRef")
-  val DisclosureRef = makeReferenceRole("disclosureRef")
-  val MandatoryDisclosureRef = makeReferenceRole("mandatoryDisclosureRef")
-  val RecommendedDisclosureRef = makeReferenceRole("recommendedDisclosureRef")
-  val UnspecifiedDisclosureRef = makeReferenceRole("unspecifiedDisclosureRef ")
-  val PresentationRef = makeReferenceRole("presentationRef")
-  val MeasurementRef = makeReferenceRole("measurementRef")
-  val CommentaryRef = makeReferenceRole("commentaryRef")
-  val ExampleRef = makeReferenceRole("exampleRef")
+  val Reference: String = makeReferenceRole("reference")
+  val DefinitionRef: String = makeReferenceRole("definitionRef")
+  val DisclosureRef: String = makeReferenceRole("disclosureRef")
+  val MandatoryDisclosureRef: String = makeReferenceRole("mandatoryDisclosureRef")
+  val RecommendedDisclosureRef: String = makeReferenceRole("recommendedDisclosureRef")
+  val UnspecifiedDisclosureRef: String = makeReferenceRole("unspecifiedDisclosureRef ")
+  val PresentationRef: String = makeReferenceRole("presentationRef")
+  val MeasurementRef: String = makeReferenceRole("measurementRef")
+  val CommentaryRef: String = makeReferenceRole("commentaryRef")
+  val ExampleRef: String = makeReferenceRole("exampleRef")
 
   /**
    * Alias for Reference. It is the default reference role, or, in other words, the standard reference role.
    */
-  val StandardReference = Reference
+  val StandardReference: String = Reference
 
   private def makeReferenceRole(suffix: String): String = {
     s"http://www.xbrl.org/2003/role/$suffix"

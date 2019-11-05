@@ -40,7 +40,9 @@ import eu.cdevreeze.yaidom2.queryapi.BackingNodes
  *
  * @author Chris de Vreeze
  */
-sealed abstract class ConceptDeclaration private[dom] (val globalElementDeclaration: GlobalElementDeclaration) {
+sealed trait ConceptDeclaration {
+
+  def globalElementDeclaration: GlobalElementDeclaration
 
   final def key: FragmentKey = {
     globalElementDeclaration.fragmentKey
@@ -79,7 +81,7 @@ sealed abstract class ConceptDeclaration private[dom] (val globalElementDeclarat
 /**
  * Item declaration. It must be in the xbrli:item substitution group, directly or indirectly.
  */
-sealed abstract class ItemDeclaration private[dom] (globalElementDeclaration: GlobalElementDeclaration) extends ConceptDeclaration(globalElementDeclaration) {
+sealed trait ItemDeclaration extends ConceptDeclaration {
 
   final def periodType: PeriodType = {
     globalElementDeclaration.periodTypeOption.getOrElse(sys.error(s"Missing xbrli:periodType attribute"))
@@ -89,7 +91,7 @@ sealed abstract class ItemDeclaration private[dom] (globalElementDeclaration: Gl
 /**
  * Tuple declaration. It must be in the xbrli:tuple substitution group, directly or indirectly.
  */
-final class TupleDeclaration private[dom] (globalElementDeclaration: GlobalElementDeclaration) extends ConceptDeclaration(globalElementDeclaration)
+final class TupleDeclaration private[dom] (val globalElementDeclaration: GlobalElementDeclaration) extends ConceptDeclaration
 
 /**
  * Primary item declaration. It must be in the xbrli:item substitution group but neither in the xbrldt:hypercubeItem nor in the xbrldt:dimensionItem substitution groups.
@@ -100,12 +102,12 @@ final class TupleDeclaration private[dom] (globalElementDeclaration: GlobalEleme
  * definition! Although in a taxonomy the dimensional relationships make clear whether an item plays the role of primary item
  * or of domain-member, here we call each such item declaration a primary item declaration.
  */
-final class PrimaryItemDeclaration private[dom] (globalElementDeclaration: GlobalElementDeclaration) extends ItemDeclaration(globalElementDeclaration)
+final class PrimaryItemDeclaration private[dom] (val globalElementDeclaration: GlobalElementDeclaration) extends ItemDeclaration
 
 /**
  * Hypercube declaration. It must be an abstract item declaration in the xbrldt:hypercubeItem substitution group.
  */
-final class HypercubeDeclaration private[dom] (globalElementDeclaration: GlobalElementDeclaration) extends ItemDeclaration(globalElementDeclaration) {
+final class HypercubeDeclaration private[dom] (val globalElementDeclaration: GlobalElementDeclaration) extends ItemDeclaration {
 
   def hypercubeEName: EName = {
     targetEName
@@ -115,7 +117,7 @@ final class HypercubeDeclaration private[dom] (globalElementDeclaration: GlobalE
 /**
  * Dimension declaration. It must be an abstract item declaration in the xbrldt:dimensionItem substitution group.
  */
-sealed abstract class DimensionDeclaration private[dom] (globalElementDeclaration: GlobalElementDeclaration) extends ItemDeclaration(globalElementDeclaration) {
+sealed trait DimensionDeclaration extends ItemDeclaration {
 
   final def isTyped: Boolean = {
     globalElementDeclaration.attrOption(ENames.XbrldtTypedDomainRefEName).isDefined
@@ -129,14 +131,14 @@ sealed abstract class DimensionDeclaration private[dom] (globalElementDeclaratio
 /**
  * Explicit dimension declaration. It must be a dimension declaration without attribute xbrldt:typedDomainRef, among other requirements.
  */
-final class ExplicitDimensionDeclaration private[dom] (globalElementDeclaration: GlobalElementDeclaration) extends DimensionDeclaration(globalElementDeclaration) {
+final class ExplicitDimensionDeclaration private[dom] (val globalElementDeclaration: GlobalElementDeclaration) extends DimensionDeclaration {
   require(!isTyped, s"${globalElementDeclaration.targetEName} is typed and therefore not an explicit dimension")
 }
 
 /**
  * Typed dimension declaration. It must be a dimension declaration with an attribute xbrldt:typedDomainRef, among other requirements.
  */
-final class TypedDimensionDeclaration private[dom] (globalElementDeclaration: GlobalElementDeclaration) extends DimensionDeclaration(globalElementDeclaration) {
+final class TypedDimensionDeclaration private[dom] (val globalElementDeclaration: GlobalElementDeclaration) extends DimensionDeclaration {
   require(isTyped, s"${globalElementDeclaration.targetEName} is not typed and therefore not a typed dimension")
 
   /**

@@ -1,0 +1,247 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema"
+        xmlns:clink="http://www.locfreexbrl.org/2003/linkbase"
+        xmlns:xl="http://www.xbrl.org/2003/XLink"
+        xmlns:cxl="http://www.locfreexbrl.org/2019/extendedlink"
+        xmlns:link="http://www.xbrl.org/2003/linkbase"
+        xmlns:ckey="http://www.locfreexbrl.org/2019/key"
+        targetNamespace="http://www.locfreexbrl.org/2003/linkbase"
+        elementFormDefault="qualified"
+        attributeFormDefault="unqualified">
+
+    <!-- Mirroring a lot of xbrl-linkbase-2003-12-31.xsd, but leaving out XLink locators and simple links. -->
+
+    <!-- Important differences with namespace "http://www.xbrl.org/2003/linkbase": -->
+    <!-- Element link:loc has no counterpart, other than xl:resource restricted to "keys" (like conceptKey). -->
+    <!-- The extended links like presentationLink are restricted in the sense that they have no locators.  -->
+    <!-- Element linkbase is restricted to not having any XLink simple links (like linkbaseRef).  -->
+    <!-- Simple links like linkbaseRef and schemaRef have no counterpart in this namespace. -->
+    <!-- Element link:part is not mirrored but used as-is. -->
+    <!-- Elements link:definition, link:usedOn, link:roleType and link:arcroleType are not mirrored but used as-is.  -->
+    <!-- There are no footnoteArcs or footnotes or footnoteLinks defined in this namespace.  -->
+   <import namespace="http://www.xbrl.org/2003/XLink"
+           schemaLocation="http://www.xbrl.org/2003/xl-2003-12-31.xsd"/>
+   <import namespace="http://www.xbrl.org/2003/linkbase"
+           schemaLocation="http://www.xbrl.org/2003/xbrl-linkbase-2003-12-31.xsd"/>
+   <import namespace="http://www.locfreexbrl.org/2019/key"
+           schemaLocation="http://www.locfreexbrl.org/2019/locatorfreexbrl-elementkey-2019.xsd"/>
+   <import namespace="http://www.locfreexbrl.org/2019/extendedlink"
+           schemaLocation="http://www.locfreexbrl.org/2019/locatorfreexbrl-extended-link.xsd"/>
+   <element name="documentation"
+            type="xl:documentationType"
+            substitutionGroup="xl:documentation">
+      <annotation>
+         <documentation>
+                Concrete element to use for documentation of extended links and linkbases.
+            </documentation>
+      </annotation>
+   </element>
+   <element name="labelArc" type="xl:arcType" substitutionGroup="xl:arc">
+      <annotation>
+         <documentation>
+                Concrete arc for use in label extended links.
+            </documentation>
+      </annotation>
+   </element>
+   <element name="referenceArc" type="xl:arcType" substitutionGroup="xl:arc">
+      <annotation>
+         <documentation>
+                Concrete arc for use in reference extended links.
+            </documentation>
+      </annotation>
+   </element>
+   <element name="definitionArc" type="xl:arcType" substitutionGroup="xl:arc">
+      <annotation>
+         <documentation>
+                Concrete arc for use in definition extended links.
+            </documentation>
+      </annotation>
+   </element>
+   <element name="presentationArc" substitutionGroup="xl:arc">
+      <complexType>
+         <annotation>
+            <documentation>
+                    Extension of the extended link arc type for presentation arcs. Adds a preferredLabel attribute that documents the role attribute value of preferred labels (as they occur in label extended links).
+                </documentation>
+         </annotation>
+         <complexContent>
+            <extension base="xl:arcType">
+               <attribute name="preferredLabel" use="optional">
+                  <simpleType>
+                     <restriction base="anyURI">
+                        <minLength value="1"/>
+                     </restriction>
+                  </simpleType>
+               </attribute>
+            </extension>
+         </complexContent>
+      </complexType>
+   </element>
+   <element name="calculationArc" substitutionGroup="xl:arc">
+      <complexType>
+         <annotation>
+            <documentation>
+                    Extension of the extended link arc type for calculation arcs. Adds a weight attribute to track weights on contributions to summations.
+                </documentation>
+         </annotation>
+         <complexContent>
+            <extension base="xl:arcType">
+               <attribute name="weight" type="decimal" use="required"/>
+            </extension>
+         </complexContent>
+      </complexType>
+   </element>
+   <element name="label" substitutionGroup="xl:resource">
+      <annotation>
+         <documentation>
+                Definition of the label resource element.
+            </documentation>
+      </annotation>
+      <complexType mixed="true">
+         <complexContent mixed="true">
+            <extension base="xl:resourceType">
+               <sequence>
+                  <any namespace="http://www.w3.org/1999/xhtml"
+                       processContents="skip"
+                       minOccurs="0"
+                       maxOccurs="unbounded"/>
+               </sequence>
+               <anyAttribute namespace="http://www.w3.org/XML/1998/namespace" processContents="lax"/>
+            </extension>
+         </complexContent>
+      </complexType>
+   </element>
+   <element name="reference" substitutionGroup="xl:resource">
+      <annotation>
+         <documentation>
+                Definition of the reference resource element.
+            </documentation>
+      </annotation>
+      <complexType mixed="true">
+         <complexContent mixed="true">
+            <extension base="xl:resourceType">
+               <sequence>
+                  <element ref="link:part" minOccurs="0" maxOccurs="unbounded"/>
+               </sequence>
+            </extension>
+         </complexContent>
+      </complexType>
+   </element>
+   <element name="presentationLink" substitutionGroup="cxl:extended">
+      <annotation>
+         <documentation>
+                presentation extended link element definition.
+            </documentation>
+      </annotation>
+      <complexType>
+         <complexContent>
+            <restriction base="cxl:extendedType">
+               <choice minOccurs="0" maxOccurs="unbounded">
+                  <element ref="xl:title"/>
+                  <element ref="clink:documentation"/>
+                  <element ref="ckey:conceptKey"/>
+                  <element ref="clink:presentationArc"/>
+               </choice>
+               <anyAttribute namespace="http://www.w3.org/XML/1998/namespace" processContents="lax"/>
+            </restriction>
+         </complexContent>
+      </complexType>
+   </element>
+   <element name="definitionLink" substitutionGroup="cxl:extended">
+      <annotation>
+         <documentation>
+                definition extended link element definition
+            </documentation>
+      </annotation>
+      <complexType>
+         <complexContent>
+            <restriction base="cxl:extendedType">
+               <choice minOccurs="0" maxOccurs="unbounded">
+                  <element ref="xl:title"/>
+                  <element ref="clink:documentation"/>
+                  <element ref="ckey:conceptKey"/>
+                  <element ref="clink:definitionArc"/>
+               </choice>
+               <anyAttribute namespace="http://www.w3.org/XML/1998/namespace" processContents="lax"/>
+            </restriction>
+         </complexContent>
+      </complexType>
+   </element>
+   <element name="calculationLink" substitutionGroup="cxl:extended">
+      <annotation>
+         <documentation>
+                calculation extended link element definition
+            </documentation>
+      </annotation>
+      <complexType>
+         <complexContent>
+            <restriction base="cxl:extendedType">
+               <choice minOccurs="0" maxOccurs="unbounded">
+                  <element ref="xl:title"/>
+                  <element ref="clink:documentation"/>
+                  <element ref="ckey:conceptKey"/>
+                  <element ref="clink:calculationArc"/>
+               </choice>
+               <anyAttribute namespace="http://www.w3.org/XML/1998/namespace" processContents="lax"/>
+            </restriction>
+         </complexContent>
+      </complexType>
+   </element>
+   <element name="labelLink" substitutionGroup="cxl:extended">
+      <annotation>
+         <documentation>
+                label extended link element definition
+            </documentation>
+      </annotation>
+      <complexType>
+         <complexContent>
+            <restriction base="cxl:extendedType">
+               <choice minOccurs="0" maxOccurs="unbounded">
+                  <element ref="xl:title"/>
+                  <element ref="clink:documentation"/>
+                  <element ref="ckey:conceptKey"/>
+                  <element ref="clink:labelArc"/>
+                  <element ref="clink:label"/>
+               </choice>
+               <anyAttribute namespace="http://www.w3.org/XML/1998/namespace" processContents="lax"/>
+            </restriction>
+         </complexContent>
+      </complexType>
+   </element>
+   <element name="referenceLink" substitutionGroup="cxl:extended">
+      <annotation>
+         <documentation>
+                reference extended link element definition
+            </documentation>
+      </annotation>
+      <complexType>
+         <complexContent>
+            <restriction base="cxl:extendedType">
+               <choice minOccurs="0" maxOccurs="unbounded">
+                  <element ref="xl:title"/>
+                  <element ref="clink:documentation"/>
+                  <element ref="ckey:conceptKey"/>
+                  <element ref="clink:referenceArc"/>
+                  <element ref="clink:reference"/>
+               </choice>
+               <anyAttribute namespace="http://www.w3.org/XML/1998/namespace" processContents="lax"/>
+            </restriction>
+         </complexContent>
+      </complexType>
+   </element>
+   <element name="linkbase">
+      <annotation>
+         <documentation>
+                Definition of the linkbase element. Used to contain a set of zero or more extended link elements.
+            </documentation>
+      </annotation>
+      <complexType>
+         <choice minOccurs="0" maxOccurs="unbounded">
+            <element ref="clink:documentation"/>
+            <element ref="cxl:extended"/>
+         </choice>
+         <attribute name="id" type="ID" use="optional"/>
+         <anyAttribute namespace="http://www.w3.org/XML/1998/namespace" processContents="lax"/>
+      </complexType>
+   </element>
+</schema>

@@ -28,10 +28,10 @@ import eu.cdevreeze.yaidom2.core.EName
  * @author Chris de Vreeze
  */
 final case class BaseSetKey(
-  val arcEName: EName,
-  val arcrole: String,
-  val extLinkEName: EName,
-  val extLinkRole: String) {
+  arcEName: EName,
+  arcrole: String,
+  extLinkEName: EName,
+  extLinkRole: String) {
 
   /**
    * Returns true if this key is for a standard arc in a standard extended link. This check looks at

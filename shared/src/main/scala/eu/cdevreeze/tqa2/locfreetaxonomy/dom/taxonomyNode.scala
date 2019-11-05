@@ -284,7 +284,7 @@ final case class GlobalElementDeclaration(
    * This method may fail with an exception if the taxonomy is not schema-valid.
    */
   def hasSubstitutionGroup(substGroup: EName, substitutionGroupMap: SubstitutionGroupMap): Boolean = {
-    (substitutionGroupOption.contains(substGroup)) || {
+    substitutionGroupOption.contains(substGroup) || {
       val derivedSubstGroups = substitutionGroupMap.substitutionGroupDerivations.getOrElse(substGroup, Set.empty)
 
       // Recursive calls
@@ -307,7 +307,7 @@ final case class GlobalElementDeclaration(
   /**
    * Returns the optional xbrli:periodType attribute, as `PeriodType`.
    */
-  final def periodTypeOption: Option[PeriodType] = {
+  def periodTypeOption: Option[PeriodType] = {
     attrOption(ENames.XbrliPeriodTypeEName).map(v => PeriodType.fromString(v))
   }
 }
@@ -910,10 +910,10 @@ object TaxonomyElem {
           ENames.CKeyArcroleKeyEName -> (e => ArcroleKey(e)),
           ENames.CKeyAnyElemKeyEName -> (e => AnyElementKey(e))
         ),
-        fallbackElem _
+        fallbackElem
       ),
-      Namespaces.CGenNamespace -> new ElemFactoryWithFallback(fallbackElem _),
-      Namespaces.GenNamespace -> new ElemFactoryWithFallback(fallbackElem _)
+      Namespaces.CGenNamespace -> new ElemFactoryWithFallback(fallbackElem),
+      Namespaces.GenNamespace -> new ElemFactoryWithFallback(fallbackElem)
     )
 
   private[TaxonomyElem] final class ElemFactoryWithFallback(
@@ -923,8 +923,7 @@ object TaxonomyElem {
     def this(fallback: BackingNodes.Elem => TaxonomyElem) = this(Map.empty, fallback)
 
     def forName(name: EName): BackingNodes.Elem => TaxonomyElem = {
-      elemFactory.get(name).getOrElse(fallback)
+      elemFactory.getOrElse(name, fallback)
     }
   }
-
 }
