@@ -50,7 +50,7 @@ class RelationshipTest extends FunSuite {
     assertResult(1) {
       relationships.collect { case rel: ConceptLabelRelationship => rel }.count { rel =>
         rel.sourceConcept == EName(venjBw2DimNs, "ClassesOfDirectorsAndPersonnelAxis") &&
-          rel.effectiveTarget.text == "Classes des administrateurs et du personnel [axe]"
+          rel.target.resource.text == "Classes des administrateurs et du personnel [axe]"
       }
     }
   }

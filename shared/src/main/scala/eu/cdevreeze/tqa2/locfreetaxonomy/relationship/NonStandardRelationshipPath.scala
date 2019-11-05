@@ -16,9 +16,6 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.relationship
 
-import eu.cdevreeze.tqa2.common.FragmentKey
-
-
 /**
  * Non-standard relationship path. Subsequent relationships in the path must match in target and
  * source XML element (key), respectively. It is not required that the arc role remains the same, or that
@@ -29,32 +26,32 @@ import eu.cdevreeze.tqa2.common.FragmentKey
  *
  * @author Chris de Vreeze
  */
-final case class NonStandardRelationshipPath[A <: NonStandardRelationship] private (val relationships: Seq[A]) {
-  require(relationships.size >= 1, s"A relationship path must have at least one relationship")
+final case class NonStandardRelationshipPath[A <: NonStandardRelationship] private (relationships: Seq[A]) {
+  require(relationships.nonEmpty, s"A relationship path must have at least one relationship")
 
-  def sourceKey: FragmentKey = firstRelationship.source.directResource.fragmentKey
+  def sourceKey: Endpoint = firstRelationship.source // TODO Rename
 
-  def targetKey: FragmentKey = lastRelationship.target.directResource.fragmentKey
+  def targetKey: Endpoint = lastRelationship.target // TODO Rename
 
   def firstRelationship: A = relationships.head
 
   def lastRelationship: A = relationships.last
 
-  def elementKeys: Seq[FragmentKey] = {
-    relationships.map(_.source.directResource.fragmentKey) :+ relationships.last.target.directResource.fragmentKey
+  def elementKeys: Seq[Endpoint] = {
+    relationships.map(_.source) :+ relationships.last.target
   }
 
-  def relationshipTargetElementKeys: Seq[FragmentKey] = {
-    relationships.map(_.target.directResource.fragmentKey)
+  def relationshipTargetElementKeys: Seq[Endpoint] = {
+    relationships.map(_.target)
   }
 
   def hasCycle: Boolean = {
-    val keys = relationships.map(_.source.directResource.fragmentKey) :+ relationships.last.target.directResource.fragmentKey
+    val keys = relationships.map(_.source) :+ relationships.last.target
     keys.distinct.size < elementKeys.size
   }
 
   def isMinimalIfHavingCycle: Boolean = {
-    initOption.map(p => !p.hasCycle).getOrElse(true)
+    initOption.forall(p => !p.hasCycle)
   }
 
   def append(relationship: A): NonStandardRelationshipPath[A] = {
@@ -68,11 +65,11 @@ final case class NonStandardRelationshipPath[A <: NonStandardRelationship] priva
   }
 
   def canAppend(relationship: A): Boolean = {
-    this.targetKey == relationship.source.directResource.fragmentKey
+    this.targetKey == relationship.source
   }
 
   def canPrepend(relationship: A): Boolean = {
-    this.sourceKey == relationship.target.directResource.fragmentKey
+    this.sourceKey == relationship.target
   }
 
   def inits: Seq[NonStandardRelationshipPath[A]] = {
@@ -115,6 +112,6 @@ object NonStandardRelationshipPath {
   }
 
   private def haveMatchingElementKeys[A <: NonStandardRelationship](relationship1: A, relationship2: A): Boolean = {
-    relationship1.target.directResource.fragmentKey == relationship2.source.directResource.fragmentKey
+    relationship1.target == relationship2.source
   }
 }

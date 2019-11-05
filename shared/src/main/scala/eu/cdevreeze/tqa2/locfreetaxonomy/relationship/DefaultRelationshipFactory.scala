@@ -19,7 +19,7 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.relationship
 import java.net.URI
 
 import eu.cdevreeze.tqa2.common.xpointer.XPointer
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.AnyElementKey
+import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.ExtendedLink
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.NonKeyResource
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
@@ -85,25 +85,38 @@ class DefaultRelationshipFactory extends RelationshipFactory {
 
     for {
       sourceResource <- sourceResources
-      sourceResourceHolder = makeResourceHolder(sourceResource, taxonomy)
+      source = makeEndpoint(sourceResource, taxonomy)
       targetResource <- targetResources
-      targetResourceHolder = makeResourceHolder(targetResource, taxonomy)
+      target = makeEndpoint(targetResource, taxonomy)
     } yield {
-      Relationship(arc, sourceResourceHolder, targetResourceHolder)
+      Relationship(arc, source, target)
     }
   }
 
-  private def makeResourceHolder(resource: XLinkResource, taxonomy: Map[URI, TaxonomyElem]): ResourceHolder[XLinkResource] = {
-    val rawResult: ResourceHolder[XLinkResource] =
+  private def makeEndpoint(resource: XLinkResource, taxonomy: Map[URI, TaxonomyElem]): Endpoint = {
+    // First ignore "locators" to "resources"
+
+    val rawResult: Endpoint =
       resource match {
-        case key: TaxonomyElemKey => ResourceHolder.key(key)
-        case nonKey: NonKeyResource => ResourceHolder.localResource(nonKey)
+        case key: TaxonomyElemKey =>
+          Endpoint.KeyEndpoint(key.taxoElemKey)
+        case nonKey: NonKeyResource =>
+          // TODO Improve. What if the element is a root element, for example? So we need a URI fragment then?
+          val docUri: URI = nonKey.docUri
+          val xpointer: XPointer = XPointer.toXPointer(nonKey.underlyingElem)
+          val ownUri: URI = new URI(docUri.getScheme, docUri.getSchemeSpecificPart, xpointer.toString)
+
+          val ownKey: TaxonomyElemKeys.AnyElementKey = TaxonomyElemKeys.AnyElementKey(ownUri)
+
+          Endpoint.LocalResource(ownKey, nonKey)
       }
 
     // TODO Improve performance
 
-    rawResult.directResource match {
-      case key: AnyElementKey =>
+    // Now fix "locators" to "resources"
+
+    rawResult.taxonomyElemKey match {
+      case key: TaxonomyElemKeys.AnyElementKey =>
         val docUri = withoutFragment(key.key)
         val docElem = taxonomy.getOrElse(docUri, sys.error(s"Missing document $docUri"))
         val elem = XPointer.findElem(docElem, XPointer.parseXPointers(key.key.getFragment))
@@ -111,7 +124,7 @@ class DefaultRelationshipFactory extends RelationshipFactory {
 
         elem match {
           case res: NonKeyResource =>
-            ResourceHolder.remoteResource(key, res)
+            Endpoint.RemoteResource(key, res)
           case _ =>
             rawResult
         }

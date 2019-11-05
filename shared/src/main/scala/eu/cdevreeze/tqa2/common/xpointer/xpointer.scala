@@ -87,7 +87,7 @@ final case class IdPointer(id: String) extends ElementSchemePointer with XPointe
     IdChildSequencePointer(id, List(oneBasedIndex))
   }
 
-  override def toString: String = s"element(${id})"
+  override def toString: String = s"element($id)"
 }
 
 /**
@@ -108,8 +108,8 @@ final case class IdChildSequencePointer(
   }
 
   override def toString: String = {
-    val dataString = s"${id}/" + childSequence.mkString("/")
-    s"element(${dataString})"
+    val dataString = s"$id/" + childSequence.mkString("/")
+    s"element($dataString)"
   }
 }
 
@@ -117,7 +117,7 @@ final case class IdChildSequencePointer(
  * Element-scheme XPointer containing (only) a child sequence. The indexes in the child sequence are 1-based.
  */
 final case class ChildSequencePointer(childSequence: List[Int]) extends ElementSchemePointer {
-  require(childSequence.size >= 1, "Empty child sequence not allowed")
+  require(childSequence.nonEmpty, "Empty child sequence not allowed")
 
   def findElem[E <: ScopedElemApi.Aux[E]](rootElem: E): Option[E] = {
     if (childSequence.headOption.contains(1)) findElem(rootElem, childSequence.tail) else None
@@ -139,7 +139,7 @@ final case class ChildSequencePointer(childSequence: List[Int]) extends ElementS
 
   override def toString: String = {
     val dataString = "/" + childSequence.mkString("/")
-    s"element(${dataString})"
+    s"element($dataString)"
   }
 }
 
@@ -204,7 +204,7 @@ object XPointer {
    *
    * This method assumes that the element type has a well-defined (and inexpensive) equality defined on it.
    */
-  def toXPointer[E <: BackingElemApi.Aux[E]](elem: E): XPointer = {
+  def toXPointer[E <: BackingElemApi](elem: E): XPointer = {
     val idOption = elem.attrOption(ENames.IdEName)
 
     idOption.map(id => ShorthandPointer(id)).getOrElse {
@@ -220,15 +220,15 @@ object XPointer {
   }
 
   private def parseElementSchemeData(s: String): String = {
-    require(s.startsWith("element("), s"Expected element scheme pointer, but got '${s}'")
-    require(s.endsWith(")"), s"Expected element scheme pointer, but got '${s}'")
+    require(s.startsWith("element("), s"Expected element scheme pointer, but got '$s'")
+    require(s.endsWith(")"), s"Expected element scheme pointer, but got '$s'")
 
     val withoutPrefix = s.substring("element(".length)
     val result = withoutPrefix.substring(0, withoutPrefix.length - 1)
     result
   }
 
-  private def zeroBasedElemIndex[E <: BackingElemApi.Aux[E]](elem: E, parent: E): Int = {
+  private def zeroBasedElemIndex[E <: BackingElemApi](elem: E, parent: E): Int = {
     parent.findAllChildElems.zipWithIndex.find { case (che, idx) => che == elem }.get._2
   }
 }

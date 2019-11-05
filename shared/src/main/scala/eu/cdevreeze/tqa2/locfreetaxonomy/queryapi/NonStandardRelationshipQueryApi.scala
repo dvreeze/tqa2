@@ -18,7 +18,7 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.queryapi
 
 import scala.reflect.ClassTag
 
-import eu.cdevreeze.tqa2.common.FragmentKey
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.NonStandardRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.NonStandardRelationshipPath
 
@@ -44,52 +44,52 @@ trait NonStandardRelationshipQueryApi {
    * Finds all non-standard relationships that are outgoing from the given XML element.
    */
   def findAllOutgoingNonStandardRelationships(
-    sourceKey: FragmentKey): Seq[NonStandardRelationship]
+    source: Endpoint): Seq[NonStandardRelationship]
 
   /**
    * Filters non-standard relationships that are outgoing from the given XML element.
    */
   def filterOutgoingNonStandardRelationships(
-    sourceKey: FragmentKey)(p: NonStandardRelationship => Boolean): Seq[NonStandardRelationship]
+    source: Endpoint)(p: NonStandardRelationship => Boolean): Seq[NonStandardRelationship]
 
   /**
    * Finds all non-standard relationships of the given type that are outgoing from the given XML element.
    */
   def findAllOutgoingNonStandardRelationshipsOfType[A <: NonStandardRelationship](
-    sourceKey: FragmentKey,
+    source: Endpoint,
     relationshipType: ClassTag[A]): Seq[A]
 
   /**
    * Filters non-standard relationships of the given type that are outgoing from the given XML element.
    */
   def filterOutgoingNonStandardRelationshipsOfType[A <: NonStandardRelationship](
-    sourceKey: FragmentKey,
+    source: Endpoint,
     relationshipType: ClassTag[A])(p: A => Boolean): Seq[A]
 
   /**
    * Finds all non-standard relationships that are incoming to the given XML element.
    */
   def findAllIncomingNonStandardRelationships(
-    targetKey: FragmentKey): Seq[NonStandardRelationship]
+    target: Endpoint): Seq[NonStandardRelationship]
 
   /**
    * Filters non-standard relationships that are incoming to the given XML element.
    */
   def filterIncomingNonStandardRelationships(
-    targetKey: FragmentKey)(p: NonStandardRelationship => Boolean): Seq[NonStandardRelationship]
+    target: Endpoint)(p: NonStandardRelationship => Boolean): Seq[NonStandardRelationship]
 
   /**
    * Finds all non-standard relationships of the given type that are incoming to the given XML element.
    */
   def findAllIncomingNonStandardRelationshipsOfType[A <: NonStandardRelationship](
-    targetKey: FragmentKey,
+    target: Endpoint,
     relationshipType: ClassTag[A]): Seq[A]
 
   /**
    * Filters non-standard relationships of the given type that are incoming to the given XML element.
    */
   def filterIncomingNonStandardRelationshipsOfType[A <: NonStandardRelationship](
-    targetKey: FragmentKey,
+    target: Endpoint,
     relationshipType: ClassTag[A])(p: A => Boolean): Seq[A]
 
   /**
@@ -99,7 +99,7 @@ trait NonStandardRelationshipQueryApi {
    * but on encountering a cycle in a path it stops growing.
    */
   def filterOutgoingUnrestrictedNonStandardRelationshipPaths[A <: NonStandardRelationship](
-    sourceKey: FragmentKey,
+    source: Endpoint,
     relationshipType: ClassTag[A])(p: NonStandardRelationshipPath[A] => Boolean): Seq[NonStandardRelationshipPath[A]]
 
   /**
@@ -109,6 +109,6 @@ trait NonStandardRelationshipQueryApi {
    * but on encountering a cycle in a path it stops growing.
    */
   def filterIncomingUnrestrictedNonStandardRelationshipPaths[A <: NonStandardRelationship](
-    targetKey: FragmentKey,
+    target: Endpoint,
     relationshipType: ClassTag[A])(p: NonStandardRelationshipPath[A] => Boolean): Seq[NonStandardRelationshipPath[A]]
 }
