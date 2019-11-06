@@ -22,7 +22,7 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.InterConceptRelationshipPa
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ParentChildRelationship
 
 /**
- * Taxonomy query API.
+ * Taxonomy query API, for querying locator-free DOM content and relationships.
  *
  * @author Chris de Vreeze
  */
