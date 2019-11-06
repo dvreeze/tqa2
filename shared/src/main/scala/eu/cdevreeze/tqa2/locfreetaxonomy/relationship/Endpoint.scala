@@ -26,7 +26,7 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkResource
  * taxonomy should have fast indexes on the taxonomy element key of the endpoint.
  *
  * There are 3 kinds of endpoints: keys (other than those to XLink resources), non-key XLink resources, and keys to non-key
- * XLink resources. In terms of XBRL taxonomies, they represent XLink locators (other than those to XLink resources), XLink
+ * XLink resources. In terms of standard XBRL taxonomies, they represent XLink locators (other than those to XLink resources), XLink
  * resources, and locators to XLink resources, respectively.
  *
  * Type Endpoint and its sub-types strike a balance between keeping too much state on the one hand, and too little state to
@@ -47,13 +47,13 @@ sealed trait Endpoint {
   /**
    * Returns None for key endpoints, and returns the resource (wrapped in an Option) for regular resources.
    */
-  def resourceOption: Option[XLinkResource]
+  def targetResourceOption: Option[XLinkResource]
 }
 
 object Endpoint {
 
   /**
-   * An endpoint that is a key.
+   * An endpoint that is a key, even if it is a key to a resource.
    */
   sealed trait Key extends Endpoint
 
@@ -62,7 +62,7 @@ object Endpoint {
    */
   final case class KeyEndpoint[A <: TaxonomyElemKeys.TaxonomyElemKey](taxonomyElemKey: A) extends Key {
 
-    def resourceOption: Option[XLinkResource] = None
+    def targetResourceOption: Option[XLinkResource] = None
   }
 
   /**
@@ -72,14 +72,22 @@ object Endpoint {
 
     def resource: A
 
-    final def resourceOption: Option[XLinkResource] = Some(resource)
+    final def targetResourceOption: Option[XLinkResource] = Some(resource)
   }
 
+  /**
+   * Local regular resource, corresponding to an XLink resource in a standard XBRL taxonomy document.
+   * Note that this case class may have poor value equality, due to poor equality on the resource elements.
+   */
   final case class LocalResource[+A <: XLinkResource](
     taxonomyElemKey: TaxonomyElemKeys.TaxonomyElemKey,
     resource: A
   ) extends RegularResource[A] with Key
 
+  /**
+   * Remote regular resource, corresponding to an XLink locator to an XLink resource in a standard XBRL taxonomy document.
+   * Note that this case class may have poor value equality, due to poor equality on the resource elements.
+   */
   final case class RemoteResource[+A <: XLinkResource](
     taxonomyElemKey: TaxonomyElemKeys.TaxonomyElemKey,
     resource: A

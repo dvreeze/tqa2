@@ -115,7 +115,7 @@ class DefaultRelationshipFactory extends RelationshipFactory {
 
     // Now fix "locators" to "resources"
 
-    (rawResult.taxonomyElemKey, rawResult.resourceOption) match {
+    (rawResult.taxonomyElemKey, rawResult.targetResourceOption) match {
       case (key: TaxonomyElemKeys.AnyElementKey, None) =>
         val docUri = withoutFragment(key.key)
         val docElem = taxonomy.getOrElse(docUri, sys.error(s"Missing document $docUri"))

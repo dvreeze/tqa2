@@ -456,7 +456,7 @@ object StandardRelationship {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
-    (arc, target.taxonomyElemKey, target.resourceOption) match {
+    (arc, target.taxonomyElemKey, target.targetResourceOption) match {
       case (arc: dom.InterConceptArc, _: TaxonomyElemKeys.ConceptKey, None) =>
         InterConceptRelationship.opt(arc, source, target.asInstanceOf[Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]])
       case (arc: dom.ConceptResourceArc, _, Some(_: dom.StandardResource)) =>
@@ -476,7 +476,7 @@ object NonStandardRelationship {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
-    (arc, arc.arcrole, target.resourceOption) match {
+    (arc, arc.arcrole, target.targetResourceOption) match {
       case (arc: dom.NonStandardArc, "http://xbrl.org/arcrole/2008/element-label", Some(_: NonStandardResource)) =>
         Some(ElementLabelRelationship(arc, source, target.asInstanceOf[Endpoint.RegularResource[NonStandardResource]]))
       case (arc: dom.NonStandardArc, "http://xbrl.org/arcrole/2008/element-reference", Some(_: NonStandardResource)) =>

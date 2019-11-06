@@ -57,12 +57,17 @@ object TaxonomyElemKeyDialect {
 
     type KeyType = EName
 
+    type TaxoElemKeyType <: TaxonomyElemKeys.SchemaComponentKey
+
     final def key: KeyType = {
       attrAsResolvedQNameOption(ENames.KeyEName).getOrElse(sys.error(s"Missing key attribute. Document: $docUri. Element: $name"))
     }
   }
 
-  trait AppinfoContentKey extends TaxonomyElemKey
+  trait AppinfoContentKey extends TaxonomyElemKey {
+
+    type TaxoElemKeyType <: TaxonomyElemKeys.AppinfoContentKey
+  }
 
   // Specific taxonomy element keys
 
