@@ -24,7 +24,6 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.common.BaseSetKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.ContextElement
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.StandardLabelRoles
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.StandardReferenceRoles
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.Use
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.NonStandardResource
@@ -43,6 +42,12 @@ import eu.cdevreeze.yaidom2.core.EName
  * DOM model is not schema-valid. It is required for a relationship to have an arcrole attribute on the underlying arc,
  * however, or else relationship creation fails. The arcrole is very fundamental to a relationship; hence this requirement.
  *
+ * Prohibition/overriding resolution and computation of networks of relationships are possible without needing any context other
+ * than the relationships themselves. For caveats, see the documentation of class Endpoint. Note that base sets are found
+ * by grouping relationships on the base set keys of the relationships. For finding equivalent relationships and resolving
+ * prohibition/overriding, note that each relationship contains the arc, with its ancestry (like the parent extended link).
+ * Along with the endpoints (which can be compared for identity of XML fragments) this is enough data to resolve prohibition/overriding.
+ *
  * @author Chris de Vreeze
  */
 // scalastyle:off number.of.types
@@ -56,7 +61,7 @@ sealed trait Relationship {
 
   final def validated: this.type = {
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in $docUri")
-    require(arc.findParentElem().nonEmpty, s"Missing parent (exended link) element of an arc in $docUri")
+    require(arc.findParentElem().nonEmpty, s"Missing parent (extended link) element of an arc in $docUri")
     this
   }
 
@@ -436,14 +441,14 @@ object Relationship {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
-    (arc, source.taxonomyElemKey) match {
-      case (arc: dom.StandardArc, _: TaxonomyElemKeys.ConceptKey) =>
-        StandardRelationship.opt(arc, source.asInstanceOf[ConceptKeyEndpoint], target)
-          .getOrElse(new UnknownRelationship(arc, source, target))
+    (arc, source) match {
+      case (arc: dom.StandardArc, source: ConceptKeyEndpoint) =>
+        StandardRelationship.opt(arc, source, target)
+          .getOrElse(UnknownRelationship(arc, source, target))
       case (arc: dom.NonStandardArc, _) =>
-        NonStandardRelationship.opt(arc, source, target).getOrElse(new UnknownRelationship(arc, source, target))
+        NonStandardRelationship.opt(arc, source, target).getOrElse(UnknownRelationship(arc, source, target))
       case _ =>
-        new UnknownRelationship(arc, source, target)
+        UnknownRelationship(arc, source, target)
     }
   }
 }
@@ -457,10 +462,10 @@ object StandardRelationship {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
-    (arc, target.taxonomyElemKey, target.targetResourceOption) match {
-      case (arc: dom.InterConceptArc, _: TaxonomyElemKeys.ConceptKey, None) =>
-        InterConceptRelationship.opt(arc, source, target.asInstanceOf[ConceptKeyEndpoint])
-      case (arc: dom.ConceptResourceArc, _, Some(_: dom.StandardResource)) =>
+    (arc, target, target.targetResourceOption) match {
+      case (arc: dom.InterConceptArc, target: ConceptKeyEndpoint, None) =>
+        InterConceptRelationship.opt(arc, source, target)
+      case (arc: dom.ConceptResourceArc, target: RegularResource[_], Some(_: dom.StandardResource)) =>
         ConceptResourceRelationship.opt(arc, source, target.asInstanceOf[RegularResource[dom.StandardResource]])
       case _ =>
         None
@@ -477,14 +482,17 @@ object NonStandardRelationship {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
-    (arc, arc.arcrole, target.targetResourceOption) match {
-      case (arc: dom.NonStandardArc, "http://xbrl.org/arcrole/2008/element-label", Some(_: NonStandardResource)) =>
+    val ElementLabelArcrole = "http://xbrl.org/arcrole/2008/element-label"
+    val ElementReferenceArcrole = "http://xbrl.org/arcrole/2008/element-reference"
+
+    (arc, arc.arcrole, target, target.targetResourceOption) match {
+      case (arc: dom.NonStandardArc, ElementLabelArcrole, target: RegularResource[_], Some(_: NonStandardResource)) =>
         Some(ElementLabelRelationship(arc, source, target.asInstanceOf[RegularResource[NonStandardResource]]))
-      case (arc: dom.NonStandardArc, "http://xbrl.org/arcrole/2008/element-reference", Some(_: NonStandardResource)) =>
+      case (arc: dom.NonStandardArc, ElementReferenceArcrole, target: RegularResource[_], Some(_: NonStandardResource)) =>
         Some(ElementReferenceRelationship(arc, source, target.asInstanceOf[RegularResource[NonStandardResource]]))
-      case (arc: dom.NonStandardArc, _, Some(e: dom.XLinkResource)) if e.name == ENames.MsgMessageEName =>
+      case (arc: dom.NonStandardArc, _, _, Some(e: dom.XLinkResource)) if e.name == ENames.MsgMessageEName =>
         Some(ElementMessageRelationship(arc, source, target))
-      case (arc: dom.NonStandardArc, _, _) =>
+      case (arc: dom.NonStandardArc, _, _, _) =>
         Some(OtherNonStandardRelationship(arc, source, target))
       case _ =>
         None
@@ -492,21 +500,9 @@ object NonStandardRelationship {
   }
 }
 
-object UnknownRelationship {
-
-  def opt(
-    arc: dom.XLinkArc,
-    source: Endpoint,
-    target: Endpoint): Option[UnknownRelationship] = {
-
-    require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
-
-    Some(UnknownRelationship(arc, source, target))
-  }
-}
-
 object InterConceptRelationship {
 
+  // scalastyle:off cyclomatic.complexity
   def opt(
     arc: dom.InterConceptArc,
     source: ConceptKeyEndpoint,

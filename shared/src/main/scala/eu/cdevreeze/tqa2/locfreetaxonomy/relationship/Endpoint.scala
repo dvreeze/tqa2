@@ -22,8 +22,12 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkResource
 /**
  * Endpoint of a relationship, so the source or the target of that relationship.
  *
- * For resolving prohibition/overriding and finding networks of relationships, a "taxonomy" is needed as context, and this
- * taxonomy should have fast indexes on the taxonomy element key of the endpoint.
+ * For resolving prohibition/overriding, the endpoints must be comparable for identity of XML fragments. Moreover, this comparison
+ * must be able to determine that a local resource and a remote resource pointing to the same local resource are equal endpoints.
+ * This is indeed possible, by comparing the taxonomy element keys of both for equality. There is a caveat, though, and that
+ * is that there must be one kind of taxonomy element key for each kind of taxonomy element. So, for example, it must not be
+ * the case that a role type has a RoleKey in one place and an AnyElementKey in another place. If these inconsistencies do not
+ * occur, equality of endpoints based on the taxonomy element key can be trusted.
  *
  * There are 3 kinds of endpoints: keys (other than those to XLink resources), non-key XLink resources, and keys to non-key
  * XLink resources. In terms of standard XBRL taxonomies, they represent XLink locators (other than those to XLink resources), XLink
@@ -155,4 +159,5 @@ object Endpoint {
     taxonomyElemKey: TaxonomyElemKeys.TaxonomyElemKey,
     resource: A
   ) extends RegularResource[A]
+
 }
