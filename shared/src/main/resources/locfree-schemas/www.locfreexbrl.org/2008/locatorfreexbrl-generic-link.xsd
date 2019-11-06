@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:xl="http://www.xbrl.org/2003/XLink"
+           xmlns:cxl="http://www.locfreexbrl.org/2019/extendedlink"
+           xmlns:cgen="http://locfreexbrl.org/2008/generic"
+           xmlns:gen="http://xbrl.org/2008/generic"
+           targetNamespace="http://locfreexbrl.org/2008/generic"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+    <!-- Like link:link, but replacing XLink locators by ckey:taxonomyElementKey. -->
+   <xs:import namespace="http://www.xbrl.org/2003/XLink"
+              schemaLocation="http://www.xbrl.org/2003/xl-2003-12-31.xsd"/>
+   <xs:import namespace="http://xbrl.org/2008/generic"
+              schemaLocation="http://www.xbrl.org/2008/generic-link.xsd"/>
+   <xs:import namespace="http://www.locfreexbrl.org/2019/extendedlink"
+              schemaLocation="http://www.locfreexbrl.org/2019/locatorfreexbrl-extended-link.xsd"/>
+   <xs:import namespace="http://www.locfreexbrl.org/2003/linkbase"
+              schemaLocation="http://www.locfreexbrl.org/2003/locatorfreexbrl-linkbase-2003-12-31.xsd"/>
+   <!-- TODO Needed? -->
+   <xs:complexType name="linkType">
+      <xs:complexContent>
+         <xs:restriction base="cxl:extendedType">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+               <xs:element ref="xl:title"/>
+               <xs:element ref="xl:documentation"/>
+               <xs:element ref="gen:arc"/>
+               <!-- The "normal" gen:arc elements can still be used -->
+               <xs:element ref="xl:resource"/>
+               <!-- The XLink resource may be a ckey:taxonomyElementKey -->
+            </xs:choice>
+            <xs:anyAttribute namespace="http://www.w3.org/XML/1998/namespace" processContents="lax"/>
+         </xs:restriction>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:complexType name="linkTypeWithOpenAttrs">
+      <xs:complexContent>
+         <xs:extension base="cgen:linkType">
+            <xs:anyAttribute namespace="##other"/>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:element id="xml-gen-link"
+               name="link"
+               substitutionGroup="cxl:extended"
+               type="cgen:linkTypeWithOpenAttrs"/>
+</xs:schema>

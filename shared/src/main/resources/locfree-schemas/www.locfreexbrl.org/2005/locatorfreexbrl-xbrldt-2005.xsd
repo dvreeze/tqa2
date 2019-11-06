@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           targetNamespace="http://locfreexbrl.org/2005/xbrldt"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+    <!-- Offers the cxbrldt:typedDomainKey attribute, which has no (QName-value) counterpart in xbrldt-2005.xsd. -->
+   <xs:attribute name="typedDomainKey" type="xs:QName"/>
+</xs:schema>

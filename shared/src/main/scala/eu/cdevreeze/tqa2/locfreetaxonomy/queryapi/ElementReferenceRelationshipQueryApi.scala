@@ -16,8 +16,8 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.queryapi
 
-import eu.cdevreeze.tqa2.common.FragmentKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ElementReferenceRelationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint
 
 /**
  * Purely abstract trait offering an element-reference (non-standard) relationship query API.
@@ -39,11 +39,11 @@ trait ElementReferenceRelationshipQueryApi {
    * Finds all element-reference relationships that are outgoing from the given XML element.
    */
   def findAllOutgoingElementReferenceRelationships(
-    sourceKey: FragmentKey): Seq[ElementReferenceRelationship]
+    source: Endpoint): Seq[ElementReferenceRelationship]
 
   /**
    * Filters element-reference relationships that are outgoing from the given XML element.
    */
   def filterOutgoingElementReferenceRelationships(
-    sourceKey: FragmentKey)(p: ElementReferenceRelationship => Boolean): Seq[ElementReferenceRelationship]
+    source: Endpoint)(p: ElementReferenceRelationship => Boolean): Seq[ElementReferenceRelationship]
 }

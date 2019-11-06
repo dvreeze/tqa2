@@ -1,0 +1,84 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:xl="http://www.xbrl.org/2003/XLink"
+           xmlns:ckey="http://www.locfreexbrl.org/2019/key"
+           targetNamespace="http://www.locfreexbrl.org/2019/key"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+    <!-- Introduces substitution group "taxonomyElementKey". -->
+   <xs:import namespace="http://www.xbrl.org/2003/XLink"
+              schemaLocation="http://www.xbrl.org/2003/xl-2003-12-31.xsd"/>
+   <xs:complexType name="taxonomyElementKeyType">
+      <xs:complexContent mixed="true">
+         <xs:extension base="xl:resourceType">
+            <xs:anyAttribute namespace="http://www.w3.org/XML/1998/namespace" processContents="lax"/>
+         </xs:extension>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:element name="taxonomyElementKey"
+               substitutionGroup="xl:resource"
+               type="ckey:taxonomyElementKeyType"
+               abstract="true">
+      <xs:annotation>
+         <xs:documentation>
+                Key identifying some taxonomy element.
+            </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+   <!-- Taxonomy element keys -->
+   <xs:element name="conceptKey" substitutionGroup="ckey:taxonomyElementKey">
+      <xs:complexType mixed="true">
+         <xs:complexContent mixed="true">
+            <xs:extension base="ckey:taxonomyElementKeyType">
+               <xs:attribute name="key" type="xs:QName" use="required"/>
+            </xs:extension>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="roleKey" substitutionGroup="ckey:taxonomyElementKey">
+      <xs:complexType mixed="true">
+         <xs:complexContent mixed="true">
+            <xs:extension base="ckey:taxonomyElementKeyType">
+               <xs:attribute name="key" type="xl:nonEmptyURI" use="required"/>
+            </xs:extension>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="arcroleKey" substitutionGroup="ckey:taxonomyElementKey">
+      <xs:complexType mixed="true">
+         <xs:complexContent mixed="true">
+            <xs:extension base="ckey:taxonomyElementKeyType">
+               <xs:attribute name="key" type="xl:nonEmptyURI" use="required"/>
+            </xs:extension>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="elementKey" substitutionGroup="ckey:taxonomyElementKey">
+      <xs:complexType mixed="true">
+         <xs:complexContent mixed="true">
+            <xs:extension base="ckey:taxonomyElementKeyType">
+               <xs:attribute name="key" type="xs:QName" use="required"/>
+            </xs:extension>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="typeKey" substitutionGroup="ckey:taxonomyElementKey">
+      <xs:complexType mixed="true">
+         <xs:complexContent mixed="true">
+            <xs:extension base="ckey:taxonomyElementKeyType">
+               <xs:attribute name="key" type="xs:QName" use="required"/>
+            </xs:extension>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+   <xs:element name="anyElemKey" substitutionGroup="ckey:taxonomyElementKey">
+      <xs:complexType mixed="true">
+         <xs:complexContent mixed="true">
+            <xs:extension base="ckey:taxonomyElementKeyType">
+               <xs:attribute name="key" type="xl:nonEmptyURI" use="required"/>
+            </xs:extension>
+         </xs:complexContent>
+      </xs:complexType>
+   </xs:element>
+</xs:schema>

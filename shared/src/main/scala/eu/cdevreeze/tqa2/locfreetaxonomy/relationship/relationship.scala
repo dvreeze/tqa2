@@ -24,16 +24,14 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.common.BaseSetKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.ContextElement
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.StandardLabelRoles
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.StandardReferenceRoles
+import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.Use
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.NonStandardResource
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ResourceHolder.NonKeyResourceHolder
 import eu.cdevreeze.yaidom2.core.EName
 
 /**
- * Relationship in a locator-free taxonomy. The relationship source and target is always an XLink resource, and more
- * often than not a taxonomy element key in particular. The source and target is always the direct source and target
- * pointed to by the underlying arc, even if the source or target is a key pointing to a remote resource.
+ * Relationship in a locator-free taxonomy. The relationship source and target are Endpoint objects.
  *
  * Fast efficient creation of relationship instances is very important for performance.
  *
@@ -51,41 +49,15 @@ sealed trait Relationship {
 
   def arc: dom.XLinkArc
 
-  def source: ResourceHolder[dom.XLinkResource]
+  def source: Endpoint
 
-  def target: ResourceHolder[dom.XLinkResource]
-
-  final def partiallyValidated: this.type = {
-    require(arc.from == source.directResource.xlinkLabel, s"Arc and 'source' not matching on XLink label in $docUri")
-    require(arc.to == target.directResource.xlinkLabel, s"Arc and 'target' not matching on XLink label in $docUri")
-    require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in $docUri")
-    this
-  }
+  def target: Endpoint
 
   final def validated: this.type = {
-    partiallyValidated
-
+    require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in $docUri")
     require(arc.findParentElem().nonEmpty, s"Missing parent (exended link) element of an arc in $docUri")
-    require(
-      source.directResource.findParentElem() == arc.findParentElem(),
-      s"An arc and its source are not in the same extended link in $docUri")
-    require(
-      target.directResource.findParentElem() == arc.findParentElem(),
-      s"An arc and its target are not in the same extended link in $docUri")
     this
   }
-
-  /**
-   * If the source points to a remote resource, returns the remote resource, and otherwise returns the source itself
-   * (which is a taxonomy element key or local resource).
-   */
-  def effectiveSource: dom.XLinkResource
-
-  /**
-   * If the target points to a remote resource, returns the remote resource, and otherwise returns the target itself
-   * (which is a taxonomy element key or local resource).
-   */
-  def effectiveTarget: dom.XLinkResource
 
   final def docUri: URI = arc.docUri
 
@@ -120,11 +92,9 @@ sealed trait StandardRelationship extends Relationship {
 
   def arc: dom.StandardArc
 
-  def source: ResourceHolder.Key[dom.ConceptKey]
+  def source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]
 
-  final def effectiveSource: dom.ConceptKey = source.effectiveResource
-
-  final def sourceConcept: EName = source.effectiveResource.key
+  final def sourceConcept: EName = source.taxonomyElemKey.key
 }
 
 /**
@@ -133,10 +103,6 @@ sealed trait StandardRelationship extends Relationship {
 sealed trait NonStandardRelationship extends Relationship {
 
   def arc: dom.NonStandardArc
-
-  final def effectiveSource: dom.XLinkResource = source.effectiveResource
-
-  final def effectiveTarget: dom.XLinkResource = target.effectiveResource
 }
 
 /**
@@ -144,7 +110,7 @@ sealed trait NonStandardRelationship extends Relationship {
  */
 sealed trait ElementResourceRelationship extends NonStandardRelationship {
 
-  def target: NonKeyResourceHolder[NonStandardResource]
+  def target: Endpoint.RegularResource[NonStandardResource]
 }
 
 /**
@@ -152,24 +118,24 @@ sealed trait ElementResourceRelationship extends NonStandardRelationship {
  */
 final case class ElementLabelRelationship(
   arc: dom.NonStandardArc,
-  source: ResourceHolder[dom.XLinkResource],
-  target: NonKeyResourceHolder[NonStandardResource]) extends ElementResourceRelationship
+  source: Endpoint,
+  target: Endpoint.RegularResource[NonStandardResource]) extends ElementResourceRelationship
 
 /**
  * Element-reference relationship, with arcrole "http://xbrl.org/arcrole/2008/element-reference".
  */
 final case class ElementReferenceRelationship(
   arc: dom.NonStandardArc,
-  source: ResourceHolder[dom.XLinkResource],
-  target: NonKeyResourceHolder[NonStandardResource]) extends ElementResourceRelationship
+  source: Endpoint,
+  target: Endpoint.RegularResource[NonStandardResource]) extends ElementResourceRelationship
 
 /**
  * Element-message relationship, with a msg:message as target.
  */
 final case class ElementMessageRelationship(
   arc: dom.NonStandardArc,
-  source: ResourceHolder[dom.XLinkResource],
-  target: ResourceHolder[dom.XLinkResource]) extends NonStandardRelationship
+  source: Endpoint,
+  target: Endpoint) extends NonStandardRelationship
 
 /**
  * Other non-standard relationship in the locator-free model, so typically some generic relationship.
@@ -178,21 +144,16 @@ final case class ElementMessageRelationship(
  */
 final case class OtherNonStandardRelationship(
   arc: dom.NonStandardArc,
-  source: ResourceHolder[dom.XLinkResource],
-  target: ResourceHolder[dom.XLinkResource]) extends NonStandardRelationship
+  source: Endpoint,
+  target: Endpoint) extends NonStandardRelationship
 
 /**
  * Unknown relationship. Possibly an invalid relationship.
  */
 final case class UnknownRelationship(
   arc: dom.XLinkArc,
-  source: ResourceHolder[dom.XLinkResource],
-  target: ResourceHolder[dom.XLinkResource]) extends Relationship {
-
-  def effectiveSource: dom.XLinkResource = source.effectiveResource
-
-  def effectiveTarget: dom.XLinkResource = target.effectiveResource
-}
+  source: Endpoint,
+  target: Endpoint) extends Relationship
 
 /**
  * Inter-concept relationship in the locator-free model.
@@ -201,11 +162,9 @@ sealed trait InterConceptRelationship extends StandardRelationship {
 
   def arc: dom.InterConceptArc
 
-  def target: ResourceHolder.Key[dom.ConceptKey]
+  def target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]
 
-  final def effectiveTarget: dom.ConceptKey = target.effectiveResource
-
-  final def targetConcept: EName = target.effectiveResource.key
+  final def targetConcept: EName = target.taxonomyElemKey.key
 
   /**
    * For non-dimensional relationships, returns true if the target concept of this relationship matches the source
@@ -243,46 +202,40 @@ sealed trait InterConceptRelationship extends StandardRelationship {
  * Concept-resource relationship in the locator-free model.
  *
  * Note that in regular taxonomies concept-resource relationships may use a locator to a resource for prohibition/overriding.
- * Hence the use of a ResourceHolder object for local or remote standard resources.
+ * Hence the use of a RegularResource object for local or remote standard resources.
  */
 sealed trait ConceptResourceRelationship extends StandardRelationship {
 
   def arc: dom.ConceptResourceArc
 
-  def target: ResourceHolder[dom.StandardResource]
-
-  def effectiveTarget: dom.StandardResource = target.effectiveResource
+  def target: Endpoint.RegularResource[dom.StandardResource]
 }
 
 final case class ConceptLabelRelationship(
   arc: dom.LabelArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder[dom.ConceptLabelResource])
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.RegularResource[dom.ConceptLabelResource])
   extends ConceptResourceRelationship {
 
-  override def effectiveTarget: dom.ConceptLabelResource = target.effectiveResource
-
-  def resourceRole: String = effectiveTarget.roleOption.getOrElse(StandardLabelRoles.StandardLabel)
+  def resourceRole: String = target.resource.roleOption.getOrElse(StandardLabelRoles.StandardLabel)
 
   def language: String = {
-    effectiveTarget.attrOption(ENames.XmlLangEName)
-      .getOrElse(sys.error(s"Missing xml:lang in ${effectiveTarget.name} in ${effectiveTarget.docUri}"))
+    target.resource.attrOption(ENames.XmlLangEName)
+      .getOrElse(sys.error(s"Missing xml:lang in ${target.resource.name} in ${target.resource.docUri}"))
   }
 
-  def labelText: String = effectiveTarget.text
+  def labelText: String = target.resource.text
 }
 
 final case class ConceptReferenceRelationship(
   arc: dom.ReferenceArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder[dom.ConceptReferenceResource])
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.RegularResource[dom.ConceptReferenceResource])
   extends ConceptResourceRelationship {
 
-  override def effectiveTarget: dom.ConceptReferenceResource = target.effectiveResource
+  def resourceRole: String = target.resource.roleOption.getOrElse(StandardReferenceRoles.StandardReference)
 
-  def resourceRole: String = effectiveTarget.roleOption.getOrElse(StandardReferenceRoles.StandardReference)
-
-  def referenceElems: Seq[dom.TaxonomyElem] = effectiveTarget.findAllChildElems
+  def referenceElems: Seq[dom.TaxonomyElem] = target.resource.findAllChildElems
 }
 
 /**
@@ -295,13 +248,13 @@ sealed trait PresentationRelationship extends InterConceptRelationship {
 
 final case class ParentChildRelationship(
   arc: dom.PresentationArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends PresentationRelationship
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]) extends PresentationRelationship
 
 final case class OtherPresentationRelationship(
   arc: dom.PresentationArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends PresentationRelationship
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]) extends PresentationRelationship
 
 /**
  * Calculation relationship in the locator-free model.
@@ -313,13 +266,13 @@ sealed trait CalculationRelationship extends InterConceptRelationship {
 
 final case class SummationItemRelationship(
   arc: dom.CalculationArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends CalculationRelationship
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]) extends CalculationRelationship
 
 final case class OtherCalculationRelationship(
   arc: dom.CalculationArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends CalculationRelationship
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]) extends CalculationRelationship
 
 /**
  * Definition relationship in the locator-free model.
@@ -331,23 +284,23 @@ sealed trait DefinitionRelationship extends InterConceptRelationship {
 
 final case class GeneralSpecialRelationship(
   arc: dom.DefinitionArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]) extends DefinitionRelationship
 
 final case class EssenceAliasRelationship(
   arc: dom.DefinitionArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]) extends DefinitionRelationship
 
 final case class SimilarTuplesRelationship(
   arc: dom.DefinitionArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]) extends DefinitionRelationship
 
 final case class RequiresElementRelationship(
   arc: dom.DefinitionArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]) extends DefinitionRelationship
 
 /**
  * Dimensional (definition) relationship in the locator-free model.
@@ -365,7 +318,7 @@ sealed trait HasHypercubeRelationship extends DimensionalRelationship {
   final def isNotAllRelationship: Boolean = !isAllRelationship
 
   final def closed: Boolean = {
-    arc.attrOption(ENames.XbrldtClosedEName).map(v => XsBooleans.parseBoolean(v)).getOrElse(false)
+    arc.attrOption(ENames.XbrldtClosedEName).exists(v => XsBooleans.parseBoolean(v))
   }
 
   final def contextElement: ContextElement = {
@@ -386,24 +339,24 @@ sealed trait HasHypercubeRelationship extends DimensionalRelationship {
 
 final case class AllRelationship(
   arc: dom.DefinitionArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends HasHypercubeRelationship {
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]) extends HasHypercubeRelationship {
 
   def isAllRelationship: Boolean = true
 }
 
 final case class NotAllRelationship(
   arc: dom.DefinitionArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends HasHypercubeRelationship {
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]) extends HasHypercubeRelationship {
 
   def isAllRelationship: Boolean = false
 }
 
 final case class HypercubeDimensionRelationship(
   arc: dom.DefinitionArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends DimensionalRelationship {
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]) extends DimensionalRelationship {
 
   def hypercube: EName = sourceConcept
 
@@ -421,7 +374,7 @@ final case class HypercubeDimensionRelationship(
 sealed trait DomainAwareRelationship extends DimensionalRelationship {
 
   final def usable: Boolean = {
-    arc.attrOption(ENames.XbrldtUsableEName).map(v => XsBooleans.parseBoolean(v)).getOrElse(true)
+    arc.attrOption(ENames.XbrldtUsableEName).forall(v => XsBooleans.parseBoolean(v))
   }
 
   final override def effectiveTargetRole: String = {
@@ -435,8 +388,8 @@ sealed trait DomainAwareRelationship extends DimensionalRelationship {
 
 final case class DimensionDomainRelationship(
   arc: dom.DefinitionArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends DomainAwareRelationship {
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]) extends DomainAwareRelationship {
 
   def dimension: EName = sourceConcept
 
@@ -445,8 +398,8 @@ final case class DimensionDomainRelationship(
 
 final case class DomainMemberRelationship(
   arc: dom.DefinitionArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends DomainAwareRelationship {
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]) extends DomainAwareRelationship {
 
   def domain: EName = sourceConcept
 
@@ -455,8 +408,8 @@ final case class DomainMemberRelationship(
 
 final case class DimensionDefaultRelationship(
   arc: dom.DefinitionArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends DimensionalRelationship {
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]) extends DimensionalRelationship {
 
   def dimension: EName = sourceConcept
 
@@ -468,8 +421,8 @@ final case class DimensionDefaultRelationship(
  */
 final case class OtherDefinitionRelationship(
   arc: dom.DefinitionArc,
-  source: ResourceHolder.Key[dom.ConceptKey],
-  target: ResourceHolder.Key[dom.ConceptKey]) extends DefinitionRelationship
+  source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+  target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]) extends DefinitionRelationship
 
 // Companion objects
 
@@ -477,14 +430,14 @@ object Relationship {
 
   def apply(
     arc: dom.XLinkArc,
-    source: ResourceHolder[dom.XLinkResource],
-    target: ResourceHolder[dom.XLinkResource]): Relationship = {
+    source: Endpoint,
+    target: Endpoint): Relationship = {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
-    (arc, source.effectiveResource) match {
-      case (arc: dom.StandardArc, _: dom.ConceptKey) =>
-        StandardRelationship.opt(arc, source.asInstanceOf[ResourceHolder.Key[dom.ConceptKey]], target)
+    (arc, source.taxonomyElemKey) match {
+      case (arc: dom.StandardArc, _: TaxonomyElemKeys.ConceptKey) =>
+        StandardRelationship.opt(arc, source.asInstanceOf[Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]], target)
           .getOrElse(new UnknownRelationship(arc, source, target))
       case (arc: dom.NonStandardArc, _) =>
         NonStandardRelationship.opt(arc, source, target).getOrElse(new UnknownRelationship(arc, source, target))
@@ -498,16 +451,16 @@ object StandardRelationship {
 
   def opt(
     arc: dom.StandardArc,
-    source: ResourceHolder.Key[dom.ConceptKey],
-    target: ResourceHolder[dom.XLinkResource]): Option[StandardRelationship] = {
+    source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+    target: Endpoint): Option[StandardRelationship] = {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
-    (arc, target.effectiveResource) match {
-      case (arc: dom.InterConceptArc, _: dom.ConceptKey) =>
-        InterConceptRelationship.opt(arc, source, target.asInstanceOf[ResourceHolder.Key[dom.ConceptKey]])
-      case (arc: dom.ConceptResourceArc, _: dom.StandardResource) =>
-        ConceptResourceRelationship.opt(arc, source, target.asInstanceOf[ResourceHolder[dom.StandardResource]])
+    (arc, target.taxonomyElemKey, target.resourceOption) match {
+      case (arc: dom.InterConceptArc, _: TaxonomyElemKeys.ConceptKey, None) =>
+        InterConceptRelationship.opt(arc, source, target.asInstanceOf[Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]])
+      case (arc: dom.ConceptResourceArc, _, Some(_: dom.StandardResource)) =>
+        ConceptResourceRelationship.opt(arc, source, target.asInstanceOf[Endpoint.RegularResource[dom.StandardResource]])
       case _ =>
         None
     }
@@ -518,17 +471,17 @@ object NonStandardRelationship {
 
   def opt(
     arc: dom.NonStandardArc,
-    source: ResourceHolder[dom.XLinkResource],
-    target: ResourceHolder[dom.XLinkResource]): Option[NonStandardRelationship] = {
+    source: Endpoint,
+    target: Endpoint): Option[NonStandardRelationship] = {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
-    (arc, arc.arcrole, target.effectiveResource) match {
-      case (arc: dom.NonStandardArc, "http://xbrl.org/arcrole/2008/element-label", _: NonStandardResource) =>
-        Some(ElementLabelRelationship(arc, source, target.asInstanceOf[NonKeyResourceHolder[NonStandardResource]]))
-      case (arc: dom.NonStandardArc, "http://xbrl.org/arcrole/2008/element-reference", _: NonStandardResource) =>
-        Some(ElementReferenceRelationship(arc, source, target.asInstanceOf[NonKeyResourceHolder[NonStandardResource]]))
-      case (arc: dom.NonStandardArc, _, e: dom.XLinkResource) if e.name == ENames.MsgMessageEName =>
+    (arc, arc.arcrole, target.resourceOption) match {
+      case (arc: dom.NonStandardArc, "http://xbrl.org/arcrole/2008/element-label", Some(_: NonStandardResource)) =>
+        Some(ElementLabelRelationship(arc, source, target.asInstanceOf[Endpoint.RegularResource[NonStandardResource]]))
+      case (arc: dom.NonStandardArc, "http://xbrl.org/arcrole/2008/element-reference", Some(_: NonStandardResource)) =>
+        Some(ElementReferenceRelationship(arc, source, target.asInstanceOf[Endpoint.RegularResource[NonStandardResource]]))
+      case (arc: dom.NonStandardArc, _, Some(e: dom.XLinkResource)) if e.name == ENames.MsgMessageEName =>
         Some(ElementMessageRelationship(arc, source, target))
       case (arc: dom.NonStandardArc, _, _) =>
         Some(OtherNonStandardRelationship(arc, source, target))
@@ -542,8 +495,8 @@ object UnknownRelationship {
 
   def opt(
     arc: dom.XLinkArc,
-    source: ResourceHolder[dom.XLinkResource],
-    target: ResourceHolder[dom.XLinkResource]): Option[UnknownRelationship] = {
+    source: Endpoint,
+    target: Endpoint): Option[UnknownRelationship] = {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
@@ -555,8 +508,8 @@ object InterConceptRelationship {
 
   def opt(
     arc: dom.InterConceptArc,
-    source: ResourceHolder.Key[dom.ConceptKey],
-    target: ResourceHolder.Key[dom.ConceptKey]): Option[InterConceptRelationship] = {
+    source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+    target: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey]): Option[InterConceptRelationship] = {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
@@ -595,16 +548,16 @@ object ConceptResourceRelationship {
 
   def opt(
     arc: dom.ConceptResourceArc,
-    source: ResourceHolder.Key[dom.ConceptKey],
-    target: ResourceHolder[dom.StandardResource]): Option[ConceptResourceRelationship] = {
+    source: Endpoint.KeyEndpoint[TaxonomyElemKeys.ConceptKey],
+    target: Endpoint.RegularResource[dom.StandardResource]): Option[ConceptResourceRelationship] = {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
-    (arc, target.effectiveResource) match {
+    (arc, target.resource) match {
       case (arc: dom.LabelArc, _: dom.ConceptLabelResource) =>
-        Some(ConceptLabelRelationship(arc, source, target.asInstanceOf[ResourceHolder[dom.ConceptLabelResource]]))
+        Some(ConceptLabelRelationship(arc, source, target.asInstanceOf[Endpoint.RegularResource[dom.ConceptLabelResource]]))
       case (arc: dom.ReferenceArc, _: dom.ConceptReferenceResource) =>
-        Some(ConceptReferenceRelationship(arc, source, target.asInstanceOf[ResourceHolder[dom.ConceptReferenceResource]]))
+        Some(ConceptReferenceRelationship(arc, source, target.asInstanceOf[Endpoint.RegularResource[dom.ConceptReferenceResource]]))
       case _ =>
         None
     }

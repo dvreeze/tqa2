@@ -43,6 +43,9 @@ object TaxonomyElemKeyDialect {
 
     type TaxoElemKeyType <: TaxonomyElemKeys.TaxonomyElemKey
 
+    /**
+     * Returns the key. It is equal to `taxoElemKey.key`.
+     */
     def key: KeyType
 
     def taxoElemKey: TaxoElemKeyType
@@ -70,7 +73,7 @@ object TaxonomyElemKeyDialect {
 
     type TaxoElemKeyType = TaxonomyElemKeys.ConceptKey
 
-    def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.ConceptKey(key)
+    final def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.ConceptKey(key)
   }
 
   /**
@@ -80,7 +83,7 @@ object TaxonomyElemKeyDialect {
 
     type TaxoElemKeyType = TaxonomyElemKeys.ElementKey
 
-    def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.ElementKey(key)
+    final def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.ElementKey(key)
   }
 
   /**
@@ -90,7 +93,7 @@ object TaxonomyElemKeyDialect {
 
     type TaxoElemKeyType = TaxonomyElemKeys.TypeKey
 
-    def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.TypeKey(key)
+    final def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.TypeKey(key)
   }
 
   /**
@@ -106,7 +109,7 @@ object TaxonomyElemKeyDialect {
       attrOption(ENames.KeyEName).getOrElse(sys.error(s"Missing key attribute. Document: $docUri. Element: $name"))
     }
 
-    def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.RoleKey(key)
+    final def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.RoleKey(key)
   }
 
   /**
@@ -122,7 +125,7 @@ object TaxonomyElemKeyDialect {
       attrOption(ENames.KeyEName).getOrElse(sys.error(s"Missing key attribute. Document: $docUri. Element: $name"))
     }
 
-    def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.ArcroleKey(key)
+    final def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.ArcroleKey(key)
   }
 
   /**
@@ -146,7 +149,7 @@ object TaxonomyElemKeyDialect {
         .getOrElse(sys.error(s"Missing key attribute. Document: $docUri. Element: $name"))
     }
 
-    def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.AnyElementKey(key)
+    final def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.AnyElementKey(key)
 
     /**
      * Optional element EName (as QName, resolved by the containing element's scope) of the element pointed to by the key.

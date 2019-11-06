@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema"
+           xmlns:xl="http://www.xbrl.org/2003/XLink"
+           xmlns:xlink="http://www.w3.org/1999/xlink"
+           xmlns:cxl="http://www.locfreexbrl.org/2019/extendedlink"
+           targetNamespace="http://www.locfreexbrl.org/2019/extendedlink"
+           elementFormDefault="qualified"
+           attributeFormDefault="unqualified">
+
+    <!-- Elements xl:link restricted by prohibiting the use of XLink locators. -->
+   <xs:import namespace="http://www.xbrl.org/2003/XLink"
+              schemaLocation="http://www.xbrl.org/2003/xl-2003-12-31.xsd"/>
+   <xs:import namespace="http://www.w3.org/1999/xlink"/>
+   <xs:complexType name="extendedType">
+      <xs:annotation>
+         <xs:documentation>
+                Generic extended link type, without XLink locators
+            </xs:documentation>
+      </xs:annotation>
+      <xs:complexContent>
+         <xs:restriction base="xl:extendedType">
+            <xs:choice minOccurs="0" maxOccurs="unbounded">
+               <xs:element ref="xl:title"/>
+               <xs:element ref="xl:documentation"/>
+               <xs:element ref="xl:arc"/>
+               <xs:element ref="xl:resource"/>
+            </xs:choice>
+            <xs:attribute ref="xlink:type" use="required" fixed="extended"/>
+            <xs:attribute ref="xlink:role" use="required"/>
+            <xs:attribute ref="xlink:title" use="optional"/>
+            <xs:attribute name="id" type="xs:ID" use="optional"/>
+            <xs:anyAttribute namespace="http://www.w3.org/XML/1998/namespace" processContents="lax"/>
+         </xs:restriction>
+      </xs:complexContent>
+   </xs:complexType>
+   <xs:element name="extended" type="cxl:extendedType" abstract="true">
+      <xs:annotation>
+         <xs:documentation>
+                Abstract extended link element containing no XLink locators at head of extended link substitution group.
+            </xs:documentation>
+      </xs:annotation>
+   </xs:element>
+</xs:schema>

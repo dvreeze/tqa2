@@ -34,9 +34,9 @@ import eu.cdevreeze.yaidom2.core.EName
  *
  * @author Chris de Vreeze
  */
-final case class SubstitutionGroupMap(val mappings: Map[EName, EName]) {
+final case class SubstitutionGroupMap(mappings: Map[EName, EName]) {
   require(
-    mappings.keySet.filter(SubstitutionGroupMap.StandardConceptSubstitutionGroups).isEmpty,
+    !mappings.keySet.exists(SubstitutionGroupMap.StandardConceptSubstitutionGroups),
     s"No standard substitution groups allowed as mapping keys")
 
   import eu.cdevreeze.tqa2.ENames._
@@ -66,7 +66,7 @@ final case class SubstitutionGroupMap(val mappings: Map[EName, EName]) {
 
   /**
    * Finds all transitively inherited substitution groups from the given substitution group, as found in this mapping.
-   * The result is returned in order of ancestry, this substitution group first.
+   * The result is returned in order of ancestry, this substitution group's own substitution group first.
    */
   def transitivelyInheritedSubstitutionGroups(substGroup: EName): Seq[EName] = {
     val effMappings: Map[EName, EName] = effectiveMappings
