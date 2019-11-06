@@ -59,10 +59,73 @@ object Endpoint {
 
   /**
    * Endpoint that is a key to an element that is not a resource, like a concept key.
+   *
+   * The taxonomy element key type hierarchy is mirrored in this key endpoint type hierarchy, for ease of use, even if
+   * this means code duplication and less orthogonality.
    */
-  final case class KeyEndpoint[A <: TaxonomyElemKeys.TaxonomyElemKey](taxonomyElemKey: A) extends Key {
+  sealed trait KeyEndpoint extends Key {
 
-    def targetResourceOption: Option[XLinkResource] = None
+    type TaxoElemKeyType <: TaxonomyElemKeys.TaxonomyElemKey
+
+    def taxonomyElemKey: TaxoElemKeyType
+
+    final def targetResourceOption: Option[XLinkResource] = None
+  }
+
+  sealed trait SchemaComponentKeyEndpoint extends KeyEndpoint {
+
+    type TaxoElemKeyType <: TaxonomyElemKeys.SchemaComponentKey
+  }
+
+  sealed trait AppinfoContentKeyEndpoint extends KeyEndpoint {
+
+    type TaxoElemKeyType <: TaxonomyElemKeys.AppinfoContentKey
+  }
+
+  final case class ConceptKeyEndpoint(taxonomyElemKey: TaxonomyElemKeys.ConceptKey) extends SchemaComponentKeyEndpoint {
+
+    type TaxoElemKeyType = TaxonomyElemKeys.ConceptKey
+  }
+
+  final case class ElementKeyEndpoint(taxonomyElemKey: TaxonomyElemKeys.ElementKey) extends SchemaComponentKeyEndpoint {
+
+    type TaxoElemKeyType = TaxonomyElemKeys.ElementKey
+  }
+
+  final case class TypeKeyEndpoint(taxonomyElemKey: TaxonomyElemKeys.TypeKey) extends SchemaComponentKeyEndpoint {
+
+    type TaxoElemKeyType = TaxonomyElemKeys.TypeKey
+  }
+
+  final case class RoleKeyEndpoint(taxonomyElemKey: TaxonomyElemKeys.RoleKey) extends AppinfoContentKeyEndpoint {
+
+    type TaxoElemKeyType = TaxonomyElemKeys.RoleKey
+  }
+
+  final case class ArcroleKeyEndpoint(taxonomyElemKey: TaxonomyElemKeys.ArcroleKey) extends AppinfoContentKeyEndpoint {
+
+    type TaxoElemKeyType = TaxonomyElemKeys.ArcroleKey
+  }
+
+  final case class AnyElementKeyEndpoint(taxonomyElemKey: TaxonomyElemKeys.AnyElementKey) extends KeyEndpoint {
+
+    type TaxoElemKeyType = TaxonomyElemKeys.AnyElementKey
+  }
+
+  object KeyEndpoint {
+
+    def apply(taxonomyElemKey: TaxonomyElemKeys.TaxonomyElemKey): KeyEndpoint = {
+      import TaxonomyElemKeys._
+
+      taxonomyElemKey match {
+        case k: ConceptKey => ConceptKeyEndpoint(k)
+        case k: ElementKey => ElementKeyEndpoint(k)
+        case k: TypeKey => TypeKeyEndpoint(k)
+        case k: RoleKey => RoleKeyEndpoint(k)
+        case k: ArcroleKey => ArcroleKeyEndpoint(k)
+        case k: AnyElementKey => AnyElementKeyEndpoint(k)
+      }
+    }
   }
 
   /**
