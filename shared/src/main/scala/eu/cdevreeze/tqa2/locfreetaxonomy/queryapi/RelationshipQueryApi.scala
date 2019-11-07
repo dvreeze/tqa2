@@ -20,7 +20,6 @@ import scala.reflect.ClassTag
 
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.TaxonomyElemKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Relationship
-import eu.cdevreeze.yaidom2.core.EName
 
 /**
  * Purely abstract trait offering a (general) relationship query API. This is not only a public query API, but also
@@ -76,7 +75,7 @@ trait RelationshipQueryApi {
   /**
    * Filters relationships that are incoming to the given endpoint. This must be a fast method.
    */
-  def filterIncomingRelationships(targetKey: EName)(p: Relationship => Boolean): Seq[Relationship]
+  def filterIncomingRelationships(targetKey: TaxonomyElemKey)(p: Relationship => Boolean): Seq[Relationship]
 
   /**
    * Finds all relationships of the given type that are incoming to the given endpoint. This must be a fast method.
