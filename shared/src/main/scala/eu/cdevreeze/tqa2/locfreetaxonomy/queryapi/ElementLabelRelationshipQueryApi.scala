@@ -16,8 +16,8 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.queryapi
 
+import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.TaxonomyElemKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ElementLabelRelationship
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint
 
 /**
  * Purely abstract trait offering an element-label (non-standard) relationship query API.
@@ -39,11 +39,11 @@ trait ElementLabelRelationshipQueryApi {
    * Finds all element-label relationships that are outgoing from the given XML element.
    */
   def findAllOutgoingElementLabelRelationships(
-    source: Endpoint): Seq[ElementLabelRelationship]
+    sourceKey: TaxonomyElemKey): Seq[ElementLabelRelationship]
 
   /**
    * Filters element-label relationships that are outgoing from the given XML element.
    */
   def filterOutgoingElementLabelRelationships(
-    source: Endpoint)(p: ElementLabelRelationship => Boolean): Seq[ElementLabelRelationship]
+    sourceKey: TaxonomyElemKey)(p: ElementLabelRelationship => Boolean): Seq[ElementLabelRelationship]
 }

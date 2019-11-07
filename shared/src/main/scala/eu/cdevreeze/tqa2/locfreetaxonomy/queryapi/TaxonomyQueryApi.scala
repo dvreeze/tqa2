@@ -26,25 +26,26 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Relationship
  */
 trait TaxonomyQueryApi
   extends TaxonomySchemaQueryApi
-  with StandardRelationshipQueryApi
-  with NonStandardRelationshipQueryApi
-  with InterConceptRelationshipQueryApi
-  with PresentationRelationshipQueryApi
-  with ConceptLabelRelationshipQueryApi
-  with ConceptReferenceRelationshipQueryApi
-  with ElementLabelRelationshipQueryApi
-  with ElementReferenceRelationshipQueryApi
-  with DimensionalRelationshipQueryApi {
+    with RelationshipQueryApi
+    with StandardRelationshipQueryApi
+    with NonStandardRelationshipQueryApi
+    with InterConceptRelationshipQueryApi
+    with PresentationRelationshipQueryApi
+    with ConceptLabelRelationshipQueryApi
+    with ConceptReferenceRelationshipQueryApi
+    with ElementLabelRelationshipQueryApi
+    with ElementReferenceRelationshipQueryApi
+    with DimensionalRelationshipQueryApi {
 
   /**
    * Returns all relationships in the taxonomy
    */
   def relationships: Seq[Relationship]
 
-//  /**
-//   * Returns all taxonomy documents.
-//   */
-//  def taxonomyDocs: Seq[TaxonomyDocument]
+  //  /**
+  //   * Returns all taxonomy documents.
+  //   */
+  //  def taxonomyDocs: Seq[TaxonomyDocument]
 
   /**
    * Returns all (document) root elements. To find certain taxonomy elements across the taxonomy,

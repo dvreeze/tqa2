@@ -18,6 +18,7 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.relationship
 
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkResource
+import eu.cdevreeze.yaidom2.core.EName
 
 /**
  * Endpoint of a relationship, so the source or the target of that relationship.
@@ -129,6 +130,13 @@ object Endpoint {
         case k: ArcroleKey => ArcroleKeyEndpoint(k)
         case k: AnyElementKey => AnyElementKeyEndpoint(k)
       }
+    }
+  }
+
+  object ConceptKeyEndpoint {
+
+    def apply(conceptName: EName): ConceptKeyEndpoint = {
+      ConceptKeyEndpoint(TaxonomyElemKeys.ConceptKey(conceptName))
     }
   }
 

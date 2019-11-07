@@ -21,7 +21,8 @@ import java.net.URI
 import eu.cdevreeze.yaidom2.core.EName
 
 /**
- * Taxonomy element keys in a locator-free taxonomy as case class instances.
+ * Taxonomy element keys in a locator-free taxonomy as case class instances. It is important that they are immutable
+ * objects with well-defined efficient equality, which makes them good Map keys.
  *
  * @author Chris de Vreeze
  */
