@@ -123,7 +123,8 @@ trait DefaultInterConceptRelationshipQueryApi
 
     val nextRelationships = filterOutgoingInterConceptRelationshipsOfType(sourceConcept, relationshipType)(rel => p(InterConceptRelationshipPath(rel)))
 
-    val paths = nextRelationships.flatMap(rel => filterOutgoingUnrestrictedInterConceptRelationshipPaths(InterConceptRelationshipPath(rel), relationshipType)(p))
+    val paths =
+      nextRelationships.flatMap(rel => filterOutgoingUnrestrictedInterConceptRelationshipPaths(InterConceptRelationshipPath(rel), relationshipType)(p))
     paths
   }
 
@@ -132,13 +133,15 @@ trait DefaultInterConceptRelationshipQueryApi
 
     val prevRelationships = filterIncomingInterConceptRelationshipsOfType(targetConcept, relationshipType)(rel => p(InterConceptRelationshipPath(rel)))
 
-    val paths = prevRelationships.flatMap(rel => filterIncomingUnrestrictedInterConceptRelationshipPaths(InterConceptRelationshipPath(rel), relationshipType)(p))
+    val paths =
+      prevRelationships.flatMap(rel => filterIncomingUnrestrictedInterConceptRelationshipPaths(InterConceptRelationshipPath(rel), relationshipType)(p))
     paths
   }
 
   // Private methods
 
-  private def filterOutgoingUnrestrictedInterConceptRelationshipPaths[A <: InterConceptRelationship](path: InterConceptRelationshipPath[A], relationshipType: ClassTag[A])(
+  private def filterOutgoingUnrestrictedInterConceptRelationshipPaths[A <: InterConceptRelationship](
+    path: InterConceptRelationshipPath[A], relationshipType: ClassTag[A])(
     p: InterConceptRelationshipPath[A] => Boolean): Seq[InterConceptRelationshipPath[A]] = {
 
     val nextRelationships: Seq[A] =
@@ -154,12 +157,13 @@ trait DefaultInterConceptRelationshipQueryApi
     } else {
       nextPaths.flatMap { nextPath =>
         // Recursive calls
-        filterOutgoingUnrestrictedInterConceptRelationshipPaths(nextPath, relationshipType)(p)
+        filterOutgoingUnrestrictedInterConceptRelationshipPaths[A](nextPath, relationshipType)(p)
       }
     }
   }
 
-  private def filterIncomingUnrestrictedInterConceptRelationshipPaths[A <: InterConceptRelationship](path: InterConceptRelationshipPath[A], relationshipType: ClassTag[A])(
+  private def filterIncomingUnrestrictedInterConceptRelationshipPaths[A <: InterConceptRelationship](
+    path: InterConceptRelationshipPath[A], relationshipType: ClassTag[A])(
     p: InterConceptRelationshipPath[A] => Boolean): Seq[InterConceptRelationshipPath[A]] = {
 
     val prevRelationships: Seq[A] =
@@ -175,7 +179,7 @@ trait DefaultInterConceptRelationshipQueryApi
     } else {
       prevPaths.flatMap { prevPath =>
         // Recursive calls
-        filterIncomingUnrestrictedInterConceptRelationshipPaths(prevPath, relationshipType)(p)
+        filterIncomingUnrestrictedInterConceptRelationshipPaths[A](prevPath, relationshipType)(p)
       }
     }
   }
