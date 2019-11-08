@@ -33,6 +33,26 @@ import eu.cdevreeze.yaidom2.core.EName
  */
 trait InterConceptRelationshipQueryApi {
 
+  // Input strategies, used by relationship path query methods
+
+  /**
+   * Strategy used by methods like filterOutgoingConsecutiveInterConceptRelationshipPaths to stop appending relationships
+   * to relationship paths when desired. Typically this method is used as stop condition when cycles are found.
+   * If a cycle is allowed in the path, but it should stop growing beyond that, the second method parameter can be
+   * ignored.
+   */
+  def stopAppending[A <: InterConceptRelationship](path: InterConceptRelationshipPath[A], next: A): Boolean
+
+  /**
+   * Strategy used by methods like filterIncomingConsecutiveInterConceptRelationshipPaths to stop prepending relationships
+   * to relationship paths when desired. Typically this method is used as stop condition when cycles are found.
+   * If a cycle is allowed in the path, but it should stop growing beyond that, the second method parameter can be
+   * ignored.
+   */
+  def stopPrepending[A <: InterConceptRelationship](path: InterConceptRelationshipPath[A], prev: A): Boolean
+
+  // Query API methods
+
   def findAllInterConceptRelationships: Seq[InterConceptRelationship]
 
   def filterInterConceptRelationships(
@@ -139,7 +159,7 @@ trait InterConceptRelationshipQueryApi {
    * Filters the inter-concept relationship paths that are outgoing from the given concept and
    * whose relationships are of the given type. Only relationship paths for which all (non-empty) "inits"
    * pass the predicate are accepted by the filter! The relationship paths are as long as possible,
-   * but on encountering a cycle in a path it stops growing.
+   * but on method stopAppending returning true it stops growing.
    *
    * This method can be useful for finding relationship paths that are not consecutive and therefore
    * not allowed, when we do not yet know that the taxonomy is XBRL-valid.
@@ -155,7 +175,7 @@ trait InterConceptRelationshipQueryApi {
    * Filters the inter-concept relationship paths that are incoming to the given concept and
    * whose relationships are of the given type. Only relationship paths for which all (non-empty) "tails"
    * pass the predicate are accepted by the filter! The relationship paths are as long as possible,
-   * but on encountering a cycle in a path it stops growing.
+   * but on stopPrepending returning true it stops growing.
    *
    * This method can be useful for finding relationship paths that are not consecutive and therefore
    * not allowed, when we do not yet know that the taxonomy is XBRL-valid.
@@ -166,6 +186,4 @@ trait InterConceptRelationshipQueryApi {
   def filterIncomingUnrestrictedInterConceptRelationshipPaths[A <: InterConceptRelationship](
     targetConcept: EName,
     relationshipType: ClassTag[A])(p: InterConceptRelationshipPath[A] => Boolean): Seq[InterConceptRelationshipPath[A]]
-
-  // TODO Methods to validate some closure properties, such as closure under DTS discovery rules
 }

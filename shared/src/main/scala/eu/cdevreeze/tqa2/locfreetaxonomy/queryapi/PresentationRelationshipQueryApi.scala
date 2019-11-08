@@ -29,6 +29,26 @@ import eu.cdevreeze.yaidom2.core.EName
  */
 trait PresentationRelationshipQueryApi {
 
+  // Input strategies, used by relationship path query methods
+
+  /**
+   * Strategy used by methods like findAllOutgoingConsecutiveParentChildRelationshipPaths to stop appending relationships
+   * to relationship paths when desired. Typically this method is used as stop condition when cycles are found.
+   * If a cycle is allowed in the path, but it should stop growing beyond that, the second method parameter can be
+   * ignored.
+   */
+  def stopAppending(path: ParentChildRelationshipPath, next: ParentChildRelationship): Boolean
+
+  /**
+   * Strategy used by methods like findAllIncomingConsecutiveParentChildRelationshipPaths to stop prepending relationships
+   * to relationship paths when desired. Typically this method is used as stop condition when cycles are found.
+   * If a cycle is allowed in the path, but it should stop growing beyond that, the second method parameter can be
+   * ignored.
+   */
+  def stopPrepending(path: ParentChildRelationshipPath, prev: ParentChildRelationship): Boolean
+
+  // Query API methods
+
   // Finding and filtering relationships without looking at source or target concept
 
   def findAllPresentationRelationshipsOfType[A <: PresentationRelationship](
@@ -100,7 +120,7 @@ trait PresentationRelationshipQueryApi {
   /**
    * Filters the consecutive (!) parent-child relationship paths that are outgoing from the given concept.
    * Only relationship paths for which all (non-empty) "inits" pass the predicate are accepted by the filter!
-   * The relationship paths are as long as possible, but on encountering a cycle in a path it stops growing.
+   * The relationship paths are as long as possible, but on method stopAppending returning true it stops growing.
    */
   def filterOutgoingConsecutiveParentChildRelationshipPaths(
     sourceConcept: EName)(
@@ -115,7 +135,7 @@ trait PresentationRelationshipQueryApi {
   /**
    * Filters the consecutive (!) parent-child relationship paths that are incoming to the given concept.
    * Only relationship paths for which all (non-empty) "tails" pass the predicate are accepted by the filter!
-   * The relationship paths are as long as possible, but on encountering a cycle in a path it stops growing.
+   * The relationship paths are as long as possible, but on method stopPrepending returning true it stops growing.
    */
   def filterIncomingConsecutiveParentChildRelationshipPaths(
     targetConcept: EName)(p: ParentChildRelationshipPath => Boolean): Seq[ParentChildRelationshipPath]

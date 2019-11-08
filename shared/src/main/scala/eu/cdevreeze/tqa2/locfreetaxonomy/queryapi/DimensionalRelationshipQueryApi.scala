@@ -34,6 +34,42 @@ import eu.cdevreeze.yaidom2.core.EName
  */
 trait DimensionalRelationshipQueryApi {
 
+  // Input strategies, used by relationship path query methods
+
+  /**
+   * Strategy used by methods like findAllOutgoingConsecutiveDomainAwareRelationshipPaths to stop appending relationships
+   * to relationship paths when desired. Typically this method is used as stop condition when cycles are found.
+   * If a cycle is allowed in the path, but it should stop growing beyond that, the second method parameter can be
+   * ignored.
+   */
+  def stopAppending(path: DomainAwareRelationshipPath, next: DomainAwareRelationship): Boolean
+
+  /**
+   * Strategy used by methods like findAllIncomingConsecutiveDomainAwareRelationshipPaths to stop prepending relationships
+   * to relationship paths when desired. Typically this method is used as stop condition when cycles are found.
+   * If a cycle is allowed in the path, but it should stop growing beyond that, the second method parameter can be
+   * ignored.
+   */
+  def stopPrepending(path: DomainAwareRelationshipPath, prev: DomainAwareRelationship): Boolean
+
+  /**
+   * Strategy used by methods like findAllOutgoingConsecutiveDomainMemberRelationshipPaths to stop appending relationships
+   * to relationship paths when desired. Typically this method is used as stop condition when cycles are found.
+   * If a cycle is allowed in the path, but it should stop growing beyond that, the second method parameter can be
+   * ignored.
+   */
+  def stopAppending(path: DomainMemberRelationshipPath, next: DomainMemberRelationship): Boolean
+
+  /**
+   * Strategy used by methods like findAllIncomingConsecutiveDomainMemberRelationshipPaths to stop prepending relationships
+   * to relationship paths when desired. Typically this method is used as stop condition when cycles are found.
+   * If a cycle is allowed in the path, but it should stop growing beyond that, the second method parameter can be
+   * ignored.
+   */
+  def stopPrepending(path: DomainMemberRelationshipPath, prev: DomainMemberRelationship): Boolean
+
+  // Query API methods
+
   // Finding and filtering relationships without looking at source or target concept
 
   def findAllDimensionalRelationships: Seq[DimensionalRelationship]
@@ -264,7 +300,7 @@ trait DimensionalRelationshipQueryApi {
   /**
    * Filters the consecutive (!) dimension-domain-or-domain-member relationship paths that are outgoing from the given concept.
    * Only relationship paths for which all (non-empty) "inits" pass the predicate are accepted by the filter!
-   * The relationship paths are as long as possible, but on encountering a cycle in a path it stops growing.
+   * The relationship paths are as long as possible, but on method stopAppending returning true it stops growing.
    */
   def filterOutgoingConsecutiveDomainAwareRelationshipPaths(
     sourceConcept: EName)(
@@ -279,7 +315,7 @@ trait DimensionalRelationshipQueryApi {
   /**
    * Filters the consecutive (!) domain-member relationship paths that are outgoing from the given concept.
    * Only relationship paths for which all (non-empty) "inits" pass the predicate are accepted by the filter!
-   * The relationship paths are as long as possible, but on encountering a cycle in a path it stops growing.
+   * The relationship paths are as long as possible, but on method stopAppending returning true it stops growing.
    */
   def filterOutgoingConsecutiveDomainMemberRelationshipPaths(
     sourceConcept: EName)(
@@ -294,7 +330,7 @@ trait DimensionalRelationshipQueryApi {
   /**
    * Filters the consecutive (!) dimension-domain-or-domain-member relationship paths that are incoming to the given concept.
    * Only relationship paths for which all (non-empty) "tails" pass the predicate are accepted by the filter!
-   * The relationship paths are as long as possible, but on encountering a cycle in a path it stops growing.
+   * The relationship paths are as long as possible, but on method stopPrepending returning true it stops growing.
    */
   def filterIncomingConsecutiveDomainAwareRelationshipPaths(
     targetConcept: EName)(p: DomainAwareRelationshipPath => Boolean): Seq[DomainAwareRelationshipPath]
@@ -308,7 +344,7 @@ trait DimensionalRelationshipQueryApi {
   /**
    * Filters the consecutive (!) domain-member relationship paths that are incoming to the given concept.
    * Only relationship paths for which all (non-empty) "tails" pass the predicate are accepted by the filter!
-   * The relationship paths are as long as possible, but on encountering a cycle in a path it stops growing.
+   * The relationship paths are as long as possible, but on method stopPrepending returning true it stops growing.
    */
   def filterIncomingConsecutiveDomainMemberRelationshipPaths(
     targetConcept: EName)(p: DomainMemberRelationshipPath => Boolean): Seq[DomainMemberRelationshipPath]

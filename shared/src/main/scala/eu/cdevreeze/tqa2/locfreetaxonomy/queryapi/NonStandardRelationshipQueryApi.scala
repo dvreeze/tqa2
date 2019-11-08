@@ -29,6 +29,26 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.NonStandardRelationshipPat
  */
 trait NonStandardRelationshipQueryApi {
 
+  // Input strategies, used by relationship path query methods
+
+  /**
+   * Strategy used by methods like filterOutgoingUnrestrictedNonStandardRelationshipPaths to stop appending relationships
+   * to relationship paths when desired. Typically this method is used as stop condition when cycles are found.
+   * If a cycle is allowed in the path, but it should stop growing beyond that, the second method parameter can be
+   * ignored.
+   */
+  def stopAppending[A <: NonStandardRelationship](path: NonStandardRelationshipPath[A], next: A): Boolean
+
+  /**
+   * Strategy used by methods like filterIncomingUnrestrictedNonStandardRelationshipPaths to stop prepending relationships
+   * to relationship paths when desired. Typically this method is used as stop condition when cycles are found.
+   * If a cycle is allowed in the path, but it should stop growing beyond that, the second method parameter can be
+   * ignored.
+   */
+  def stopPrepending[A <: NonStandardRelationship](path: NonStandardRelationshipPath[A], prev: A): Boolean
+
+  // Query API methods
+
   def findAllNonStandardRelationships: Seq[NonStandardRelationship]
 
   def filterNonStandardRelationships(
@@ -96,7 +116,7 @@ trait NonStandardRelationshipQueryApi {
    * Filters the non-standard relationship paths that are outgoing from the given XML element and
    * whose relationships are of the given type. Only relationship paths for which all (non-empty) "inits"
    * pass the predicate are accepted by the filter! The relationship paths are as long as possible,
-   * but on encountering a cycle in a path it stops growing.
+   * but on method stopAppending returning true it stops growing.
    */
   def filterOutgoingUnrestrictedNonStandardRelationshipPaths[A <: NonStandardRelationship](
     sourceKey: TaxonomyElemKey,
@@ -106,7 +126,7 @@ trait NonStandardRelationshipQueryApi {
    * Filters the non-standard relationship paths that are incoming to the given XML element and
    * whose relationships are of the given type. Only relationship paths for which all (non-empty) "tails"
    * pass the predicate are accepted by the filter! The relationship paths are as long as possible,
-   * but on encountering a cycle in a path it stops growing.
+   * but on method stopPrepending returning true it stops growing.
    */
   def filterIncomingUnrestrictedNonStandardRelationshipPaths[A <: NonStandardRelationship](
     targetKey: TaxonomyElemKey,
