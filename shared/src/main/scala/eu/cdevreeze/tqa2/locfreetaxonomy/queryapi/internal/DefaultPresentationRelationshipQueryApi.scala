@@ -20,9 +20,9 @@ import scala.reflect.classTag
 import scala.reflect.ClassTag
 
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.InterConceptRelationshipQueryApi
-import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.ParentChildRelationshipPath
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.PresentationRelationshipQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ParentChildRelationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ParentChildRelationshipPath
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.PresentationRelationship
 import eu.cdevreeze.yaidom2.core.EName
 
@@ -33,6 +33,14 @@ import eu.cdevreeze.yaidom2.core.EName
  * @author Chris de Vreeze
  */
 trait DefaultPresentationRelationshipQueryApi extends PresentationRelationshipQueryApi with InterConceptRelationshipQueryApi {
+
+  def stopAppending(path: ParentChildRelationshipPath, next: ParentChildRelationship): Boolean = {
+    stopAppending[ParentChildRelationship](path, next)
+  }
+
+  def stopPrepending(path: ParentChildRelationshipPath, prev: ParentChildRelationship): Boolean = {
+    stopPrepending[ParentChildRelationship](path, prev)
+  }
 
   // Finding and filtering relationships without looking at source or target concept
 

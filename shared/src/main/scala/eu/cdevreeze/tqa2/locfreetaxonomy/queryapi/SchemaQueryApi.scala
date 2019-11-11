@@ -16,8 +16,6 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.queryapi
 
-import java.net.URI
-
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.GlobalAttributeDeclaration
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.GlobalElementDeclaration
@@ -32,6 +30,7 @@ import eu.cdevreeze.yaidom2.core.EName
  *
  * @author Chris de Vreeze
  */
+// scalastyle:off number.of.methods
 trait SchemaQueryApi {
 
   // Schema root elements
@@ -86,13 +85,16 @@ trait SchemaQueryApi {
 
   def findGlobalElementDeclaration(p: GlobalElementDeclaration => Boolean): Option[GlobalElementDeclaration]
 
+  /**
+   * Finds the optional global element declaration with the given target EName, if any. This must be a fast operation,
+   * probably backed by a mapping from ENames to global element declarations.
+   */
   def findGlobalElementDeclaration(ename: EName): Option[GlobalElementDeclaration]
 
+  /**
+   * Returns the equivalent of `findGlobalElementDeclaration(ename).get`, throwing an exception if not found.
+   */
   def getGlobalElementDeclaration(ename: EName): GlobalElementDeclaration
-
-  def findGlobalElementDeclarationByUri(uri: URI): Option[GlobalElementDeclaration]
-
-  def getGlobalElementDeclarationByUri(uri: URI): GlobalElementDeclaration
 
   /**
    * Finds the named type of the global element declaration with the given target EName, recursively trying to obtain the
@@ -108,8 +110,15 @@ trait SchemaQueryApi {
 
   def findGlobalAttributeDeclaration(p: GlobalAttributeDeclaration => Boolean): Option[GlobalAttributeDeclaration]
 
+  /**
+   * Finds the optional global attribute declaration with the given target EName, if any. This must be a fast operation,
+   * probably backed by a mapping from ENames to global attribute declarations.
+   */
   def findGlobalAttributeDeclaration(ename: EName): Option[GlobalAttributeDeclaration]
 
+  /**
+   * Returns the equivalent of `findGlobalAttributeDeclaration(ename).get`, throwing an exception if not found.
+   */
   def getGlobalAttributeDeclaration(ename: EName): GlobalAttributeDeclaration
 
   // Named type definitions, across documents
@@ -120,8 +129,15 @@ trait SchemaQueryApi {
 
   def findNamedTypeDefinition(p: NamedTypeDefinition => Boolean): Option[NamedTypeDefinition]
 
+  /**
+   * Finds the optional named type definition with the given target EName, if any. This must be a fast operation,
+   * probably backed by a mapping from ENames to named type definitions.
+   */
   def findNamedTypeDefinition(ename: EName): Option[NamedTypeDefinition]
 
+  /**
+   * Returns the equivalent of `findNamedTypeDefinition(ename).get`, throwing an exception if not found.
+   */
   def getNamedTypeDefinition(ename: EName): NamedTypeDefinition
 
   // Named complex type definitions, across documents
@@ -132,8 +148,15 @@ trait SchemaQueryApi {
 
   def findNamedComplexTypeDefinition(p: NamedComplexTypeDefinition => Boolean): Option[NamedComplexTypeDefinition]
 
+  /**
+   * Finds the optional named complex type definition with the given target EName, if any. This must be a fast operation,
+   * probably backed by a mapping from ENames to named type definitions.
+   */
   def findNamedComplexTypeDefinition(ename: EName): Option[NamedComplexTypeDefinition]
 
+  /**
+   * Returns the equivalent of `findNamedComplexTypeDefinition(ename).get`, throwing an exception if not found.
+   */
   def getNamedComplexTypeDefinition(ename: EName): NamedComplexTypeDefinition
 
   // Named simple type definitions, across documents
@@ -144,8 +167,15 @@ trait SchemaQueryApi {
 
   def findNamedSimpleTypeDefinition(p: NamedSimpleTypeDefinition => Boolean): Option[NamedSimpleTypeDefinition]
 
+  /**
+   * Finds the optional named simple type definition with the given target EName, if any. This must be a fast operation,
+   * probably backed by a mapping from ENames to named type definitions.
+   */
   def findNamedSimpleTypeDefinition(ename: EName): Option[NamedSimpleTypeDefinition]
 
+  /**
+   * Returns the equivalent of `findNamedSimpleTypeDefinition(ename).get`, throwing an exception if not found.
+   */
   def getNamedSimpleTypeDefinition(ename: EName): NamedSimpleTypeDefinition
 
   // Finding ancestry of types, across documents
@@ -156,6 +186,4 @@ trait SchemaQueryApi {
    * until either the predicate holds or no further base type can be found in the taxonomy.
    */
   def findBaseTypeOrSelfUntil(typeEName: EName, p: EName => Boolean): Option[EName]
-
-  // TODO Methods to validate some closure properties, such as closure under DTS discovery rules
 }

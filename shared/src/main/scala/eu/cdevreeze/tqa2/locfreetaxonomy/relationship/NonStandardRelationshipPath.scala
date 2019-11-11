@@ -26,28 +26,32 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.relationship
  *
  * @author Chris de Vreeze
  */
-final case class NonStandardRelationshipPath[A <: NonStandardRelationship] private (relationships: Seq[A]) {
+final case class NonStandardRelationshipPath[A <: NonStandardRelationship] private (relationships: Seq[A])
+  extends RelationshipPath {
+
+  override type RelationshipType = A
+
   require(relationships.nonEmpty, s"A relationship path must have at least one relationship")
 
-  def sourceKey: Endpoint = firstRelationship.source // TODO Rename
+  def source: Endpoint = firstRelationship.source
 
-  def targetKey: Endpoint = lastRelationship.target // TODO Rename
+  def target: Endpoint = lastRelationship.target
 
   def firstRelationship: A = relationships.head
 
   def lastRelationship: A = relationships.last
 
-  def elementKeys: Seq[Endpoint] = {
+  def elements: Seq[Endpoint] = {
     relationships.map(_.source) :+ relationships.last.target
   }
 
-  def relationshipTargetElementKeys: Seq[Endpoint] = {
+  def relationshipTargets: Seq[Endpoint] = {
     relationships.map(_.target)
   }
 
   def hasCycle: Boolean = {
     val keys = relationships.map(_.source) :+ relationships.last.target
-    keys.distinct.size < elementKeys.size
+    keys.distinct.size < elements.size
   }
 
   def isMinimalIfHavingCycle: Boolean = {
@@ -65,11 +69,11 @@ final case class NonStandardRelationshipPath[A <: NonStandardRelationship] priva
   }
 
   def canAppend(relationship: A): Boolean = {
-    this.targetKey == relationship.source
+    this.target == relationship.source
   }
 
   def canPrepend(relationship: A): Boolean = {
-    this.sourceKey == relationship.target
+    this.source == relationship.target
   }
 
   def inits: Seq[NonStandardRelationshipPath[A]] = {

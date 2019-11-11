@@ -22,7 +22,9 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DimensionDefaultRelationsh
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DimensionDomainRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DimensionalRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DomainAwareRelationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DomainAwareRelationshipPath
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DomainMemberRelationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DomainMemberRelationshipPath
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.HasHypercubeRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.HypercubeDimensionRelationship
 import eu.cdevreeze.yaidom2.core.EName

@@ -16,6 +16,7 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.relationship
 
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint.ConceptKeyEndpoint
 import eu.cdevreeze.yaidom2.core.EName
 
 /**
@@ -29,8 +30,16 @@ import eu.cdevreeze.yaidom2.core.EName
  *
  * @author Chris de Vreeze
  */
-final case class InterConceptRelationshipPath[A <: InterConceptRelationship] private (relationships: Seq[A]) {
+final case class InterConceptRelationshipPath[A <: InterConceptRelationship] private (relationships: Seq[A])
+  extends RelationshipPath {
+
+  override type RelationshipType = A
+
   require(relationships.nonEmpty, s"A relationship path must have at least one relationship")
+
+  def source: ConceptKeyEndpoint = firstRelationship.source
+
+  def target: ConceptKeyEndpoint = lastRelationship.target
 
   def sourceConcept: EName = firstRelationship.sourceConcept
 
@@ -40,8 +49,16 @@ final case class InterConceptRelationshipPath[A <: InterConceptRelationship] pri
 
   def lastRelationship: A = relationships.last
 
+  def elements: Seq[Endpoint] = {
+    relationships.map(_.source) :+ relationships.last.target
+  }
+
   def concepts: Seq[EName] = {
     relationships.map(_.sourceConcept) :+ relationships.last.targetConcept
+  }
+
+  def relationshipTargets: Seq[ConceptKeyEndpoint] = {
+    relationships.map(_.target)
   }
 
   def relationshipTargetConcepts: Seq[EName] = {

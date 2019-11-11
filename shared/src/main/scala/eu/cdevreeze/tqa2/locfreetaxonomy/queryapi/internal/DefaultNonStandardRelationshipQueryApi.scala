@@ -129,7 +129,7 @@ trait DefaultNonStandardRelationshipQueryApi extends NonStandardRelationshipQuer
 
     val nextRelationships =
       filterOutgoingNonStandardRelationshipsOfType(
-        path.targetKey.taxonomyElemKey, relationshipType)(relationship => !stopAppending(path, relationship) && p(path.append(relationship)))
+        path.target.taxonomyElemKey, relationshipType)(relationship => !stopAppending(path, relationship) && p(path.append(relationship)))
 
     val nextPaths = nextRelationships.map(rel => path.append(rel))
 
@@ -149,7 +149,7 @@ trait DefaultNonStandardRelationshipQueryApi extends NonStandardRelationshipQuer
 
     val prevRelationships =
       filterIncomingNonStandardRelationshipsOfType(
-        path.sourceKey.taxonomyElemKey, relationshipType)(relationship => !stopPrepending(path, relationship) && p(path.prepend(relationship)))
+        path.source.taxonomyElemKey, relationshipType)(relationship => !stopPrepending(path, relationship) && p(path.prepend(relationship)))
 
     val prevPaths = prevRelationships.map(rel => path.prepend(rel))
 

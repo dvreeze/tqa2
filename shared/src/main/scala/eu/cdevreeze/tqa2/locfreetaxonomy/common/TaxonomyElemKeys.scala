@@ -33,7 +33,7 @@ object TaxonomyElemKeys {
    *
    * It is assumed that the keys obey their schema(s), or else the query methods below may throw an exception.
    */
-  trait TaxonomyElemKey {
+  sealed trait TaxonomyElemKey {
 
     type KeyType
 
@@ -42,12 +42,12 @@ object TaxonomyElemKeys {
 
   // General categories of taxonomy element keys
 
-  trait SchemaComponentKey extends TaxonomyElemKey {
+  sealed trait SchemaComponentKey extends TaxonomyElemKey {
 
     type KeyType = EName
   }
 
-  trait AppinfoContentKey extends TaxonomyElemKey
+  sealed trait AppinfoContentKey extends TaxonomyElemKey
 
   // Specific taxonomy element keys
 

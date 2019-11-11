@@ -19,6 +19,7 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.queryapi
 import scala.reflect.ClassTag
 
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ParentChildRelationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ParentChildRelationshipPath
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.PresentationRelationship
 import eu.cdevreeze.yaidom2.core.EName
 

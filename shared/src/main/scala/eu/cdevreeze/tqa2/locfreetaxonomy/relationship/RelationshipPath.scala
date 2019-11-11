@@ -14,11 +14,30 @@
  * limitations under the License.
  */
 
-package eu.cdevreeze.tqa2.locfreetaxonomy
+package eu.cdevreeze.tqa2.locfreetaxonomy.relationship
 
 /**
- * Taxonomy query API, for querying locator-free DOM content and relationships.
+ * Relationship path API. Subsequent relationships in the path must match in target and source, respectively.
  *
  * @author Chris de Vreeze
  */
-package object queryapi
+trait RelationshipPath {
+
+  type RelationshipType <: Relationship
+
+  def relationships: Seq[RelationshipType]
+
+  def source: Endpoint
+
+  def target: Endpoint
+
+  def firstRelationship: RelationshipType
+
+  def lastRelationship: RelationshipType
+
+  def elements: Seq[Endpoint]
+
+  def relationshipTargets: Seq[Endpoint]
+
+  def hasCycle: Boolean
+}

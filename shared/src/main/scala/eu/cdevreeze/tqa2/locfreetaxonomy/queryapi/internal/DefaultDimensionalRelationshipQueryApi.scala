@@ -20,14 +20,14 @@ import scala.reflect.classTag
 import scala.reflect.ClassTag
 
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.DimensionalRelationshipQueryApi
-import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.DomainAwareRelationshipPath
-import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.DomainMemberRelationshipPath
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.InterConceptRelationshipQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DimensionDefaultRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DimensionDomainRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DimensionalRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DomainAwareRelationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DomainAwareRelationshipPath
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DomainMemberRelationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DomainMemberRelationshipPath
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.HasHypercubeRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.HypercubeDimensionRelationship
 import eu.cdevreeze.yaidom2.core.EName
@@ -39,6 +39,22 @@ import eu.cdevreeze.yaidom2.core.EName
  * @author Chris de Vreeze
  */
 trait DefaultDimensionalRelationshipQueryApi extends DimensionalRelationshipQueryApi with InterConceptRelationshipQueryApi {
+
+  def stopAppending(path: DomainAwareRelationshipPath, next: DomainAwareRelationship): Boolean = {
+    stopAppending[DomainAwareRelationship](path, next)
+  }
+
+  def stopPrepending(path: DomainAwareRelationshipPath, prev: DomainAwareRelationship): Boolean = {
+    stopPrepending[DomainAwareRelationship](path, prev)
+  }
+
+  def stopAppending(path: DomainMemberRelationshipPath, next: DomainMemberRelationship): Boolean = {
+    stopAppending[DomainMemberRelationship](path, next)
+  }
+
+  def stopPrepending(path: DomainMemberRelationshipPath, prev: DomainMemberRelationship): Boolean = {
+    stopPrepending[DomainMemberRelationship](path, prev)
+  }
 
   // Finding and filtering relationships without looking at source or target concept
 

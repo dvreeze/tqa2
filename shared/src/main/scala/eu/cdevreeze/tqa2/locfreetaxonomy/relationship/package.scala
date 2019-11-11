@@ -21,4 +21,11 @@ package eu.cdevreeze.tqa2.locfreetaxonomy
  *
  * @author Chris de Vreeze
  */
-package object relationship
+package object relationship {
+
+  type ParentChildRelationshipPath = InterConceptRelationshipPath[ParentChildRelationship]
+
+  type DomainMemberRelationshipPath = InterConceptRelationshipPath[DomainMemberRelationship]
+
+  type DomainAwareRelationshipPath = InterConceptRelationshipPath[DomainAwareRelationship]
+}
