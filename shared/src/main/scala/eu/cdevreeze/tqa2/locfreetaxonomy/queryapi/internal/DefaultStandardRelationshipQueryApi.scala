@@ -26,7 +26,7 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.StandardRelationship
 import eu.cdevreeze.yaidom2.core.EName
 
 /**
- * Implementation of StandardRelationshipQueryApi. The methods are overridable, which is needed in case more efficient
+ * Implementation of StandardRelationshipQueryApi. The methods are overridable, which can be considered in case more efficient
  * implementations are possible.
  *
  * @author Chris de Vreeze

@@ -91,6 +91,11 @@ sealed trait TaxonomyElem extends AbstractDialectBackingElem with CanBeTaxonomyD
     FragmentKey(underlyingElem.docUri, underlyingElem.ownNavigationPathRelativeToRootElem)
   }
 
+  final def isRootElement: Boolean = this match {
+    case _: RootElement => true
+    case _ => false
+  }
+
   protected[dom] def requireName(elemName: EName): Unit = {
     require(name == elemName, s"Required name: $elemName. Found name $name instead, in document $docUri")
   }
@@ -192,6 +197,15 @@ sealed trait ElemInCLinkNamespace extends TaxonomyElem with CLinkDialect.Elem
 
 sealed trait ElemInLinkNamespace extends TaxonomyElem with LinkDialect.Elem
 
+// Named top-level schema component
+
+/**
+ * Named top-level schema component, such as a global element declaration, global attribute declaration or named type
+ * definition. This trait extends `ElemInXsNamespace` and offers the `XmlSchemaDialect.NamedGlobalDeclOrDef` API.
+ * Hence it offers method `targetEName`.
+ */
+sealed trait NamedGlobalSchemaComponent extends ElemInXsNamespace with XmlSchemaDialect.NamedGlobalDeclOrDef
+
 // Schema root element
 
 final case class XsSchema(
@@ -271,7 +285,7 @@ sealed trait ElementDeclaration extends ElementDeclarationOrReference with XmlSc
  * to determine that in isolation.
  */
 final case class GlobalElementDeclaration(
-  underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace
+  underlyingElem: BackingNodes.Elem) extends NamedGlobalSchemaComponent
   with ElementDeclaration with XmlSchemaDialect.GlobalElementDeclaration {
 
   requireName(ENames.XsElementEName)
@@ -331,7 +345,7 @@ sealed trait AttributeDeclarationOrReference extends ElemInXsNamespace with XmlS
 sealed trait AttributeDeclaration extends AttributeDeclarationOrReference with XmlSchemaDialect.AttributeDeclaration
 
 final case class GlobalAttributeDeclaration(
-  underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace
+  underlyingElem: BackingNodes.Elem) extends NamedGlobalSchemaComponent
   with AttributeDeclaration with XmlSchemaDialect.GlobalAttributeDeclaration {
 
   requireName(ENames.XsAttributeEName)
@@ -353,7 +367,7 @@ final case class AttributeReference(
 
 sealed trait TypeDefinition extends ElemInXsNamespace with XmlSchemaDialect.TypeDefinition
 
-sealed trait NamedTypeDefinition extends TypeDefinition with XmlSchemaDialect.NamedTypeDefinition
+sealed trait NamedTypeDefinition extends TypeDefinition with NamedGlobalSchemaComponent with XmlSchemaDialect.NamedTypeDefinition
 
 sealed trait AnonymousTypeDefinition extends TypeDefinition with XmlSchemaDialect.AnonymousTypeDefinition
 

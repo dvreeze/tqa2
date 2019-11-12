@@ -23,7 +23,7 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.{ElementLabelRelationshipQuery
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ElementLabelRelationship
 
 /**
- * Implementation of ElementLabelRelationshipQueryApi. The methods are overridable, which is needed in case more efficient
+ * Implementation of ElementLabelRelationshipQueryApi. The methods are overridable, which can be considered in case more efficient
  * implementations are possible.
  *
  * @author Chris de Vreeze

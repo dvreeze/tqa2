@@ -16,8 +16,6 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.dom
 
-import java.net.URI
-
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.FragmentKey
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
@@ -120,7 +118,7 @@ final class HypercubeDeclaration private[dom] (val globalElementDeclaration: Glo
 sealed trait DimensionDeclaration extends ItemDeclaration {
 
   final def isTyped: Boolean = {
-    globalElementDeclaration.attrOption(ENames.XbrldtTypedDomainRefEName).isDefined
+    globalElementDeclaration.attrOption(ENames.CXbrldtTypedDomainKeyEName).isDefined
   }
 
   final def dimensionEName: EName = {
@@ -129,34 +127,31 @@ sealed trait DimensionDeclaration extends ItemDeclaration {
 }
 
 /**
- * Explicit dimension declaration. It must be a dimension declaration without attribute xbrldt:typedDomainRef, among other requirements.
+ * Explicit dimension declaration. It must be a dimension declaration without attribute cxbrldt:typedDomainKey, among other requirements.
  */
 final class ExplicitDimensionDeclaration private[dom] (val globalElementDeclaration: GlobalElementDeclaration) extends DimensionDeclaration {
   require(!isTyped, s"${globalElementDeclaration.targetEName} is typed and therefore not an explicit dimension")
 }
 
 /**
- * Typed dimension declaration. It must be a dimension declaration with an attribute xbrldt:typedDomainRef, among other requirements.
+ * Typed dimension declaration. It must be a dimension declaration with an attribute cxbrldt:typedDomainKey, among other requirements.
  */
 final class TypedDimensionDeclaration private[dom] (val globalElementDeclaration: GlobalElementDeclaration) extends DimensionDeclaration {
   require(isTyped, s"${globalElementDeclaration.targetEName} is not typed and therefore not a typed dimension")
 
   /**
-   * Returns the value of the xbrldt:typedDomainRef attribute, as absolute (!) URI.
+   * Returns the value of the cxbrldt:typedDomainKey attribute, as EName.
    */
-  def typedDomainRef: URI = {
-    val rawUri = URI.create(globalElementDeclaration.attr(ENames.XbrldtTypedDomainRefEName))
-    globalElementDeclaration.baseUri.resolve(rawUri)
+  def typedDomainKey: EName = {
+    globalElementDeclaration.attrAsResolvedQName(ENames.CXbrldtTypedDomainKeyEName)
   }
 
   /**
-   * Returns the optional value of the xbrldt:typedDomainRef attribute, as optional absolute (!) URI.
-   * Consider calling this method if the "typed dimension declaration" is not known to be schema-valid.
+   * Returns the optional value of the cxbrldt:typedDomainKey attribute, as optional EName.
+   * Consider calling this method if the "typed dimension declaration" is not known to be schema-valid (in the locator-free model).
    */
-  def typedDomainRefOption: Option[URI] = {
-    val rawUriOption =
-      globalElementDeclaration.attrOption(ENames.XbrldtTypedDomainRefEName).map(u => URI.create(u))
-    rawUriOption.map(u => globalElementDeclaration.baseUri.resolve(u))
+  def typedDomainKeyOption: Option[EName] = {
+    globalElementDeclaration.attrAsResolvedQNameOption(ENames.CXbrldtTypedDomainKeyEName)
   }
 }
 
@@ -191,7 +186,7 @@ object ConceptDeclaration {
         if (isHypercube) {
           Some(new HypercubeDeclaration(elemDecl))
         } else if (isDimension) {
-          if (elemDecl.attrOption(ENames.XbrldtTypedDomainRefEName).isDefined) {
+          if (elemDecl.attrOption(ENames.CXbrldtTypedDomainKeyEName).isDefined) {
             Some(new TypedDimensionDeclaration(elemDecl))
           } else {
             Some(new ExplicitDimensionDeclaration(elemDecl))

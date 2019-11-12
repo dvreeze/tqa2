@@ -18,24 +18,54 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy
 
 import scala.reflect.ClassTag
 
+import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.TaxonomyElemKey
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.NamedGlobalSchemaComponent
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal.DefaultTaxonomyQueryApi
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.InterConceptRelationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.InterConceptRelationshipPath
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.NonStandardRelationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.NonStandardRelationshipPath
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Relationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.RelationshipPath
+import eu.cdevreeze.yaidom2.core.EName
 
 /**
  * Basic taxonomy, and the default implementation of trait TaxonomyQueryApi.
  *
  * @author Chris de Vreeze
  */
-abstract class BasicTaxonomy ( // TODO Make class final and make constructor private!
+final class BasicTaxonomy ( // TODO Make constructor private!
   val rootElems: Seq[TaxonomyElem],
+  val extraProvidedSubstitutionGroupMap: SubstitutionGroupMap,
+  val netSubstitutionGroupMap: SubstitutionGroupMap,
+  val namedGlobalSchemaComponentMap: Map[EName, Seq[NamedGlobalSchemaComponent]],
   val relationshipTypes: Set[ClassTag[_ <: Relationship]],
   val relationshipMap: Map[ClassTag[_ <: Relationship], Seq[Relationship]],
   val outgoingRelationshipMap: Map[ClassTag[_ <: TaxonomyElemKey], Map[TaxonomyElemKey, Seq[Relationship]]],
-  val incomingRelationshipMap: Map[ClassTag[_ <: TaxonomyElemKey], Map[TaxonomyElemKey, Seq[Relationship]]]
+  val incomingRelationshipMap: Map[ClassTag[_ <: TaxonomyElemKey], Map[TaxonomyElemKey, Seq[Relationship]]],
+  val stopAppendingFunction: (RelationshipPath, Relationship) => Boolean,
+  val stopPrependingFunction: (RelationshipPath, Relationship) => Boolean
 ) extends DefaultTaxonomyQueryApi {
 
+  override def stopAppending[A <: InterConceptRelationship](path: InterConceptRelationshipPath[A], next: A): Boolean = {
+    stopAppendingFunction(path, next)
+  }
+
+  override def stopPrepending[A <: InterConceptRelationship](path: InterConceptRelationshipPath[A], prev: A): Boolean = {
+    stopPrependingFunction(path, prev)
+  }
+
+  override def stopAppending[A <: NonStandardRelationship](path: NonStandardRelationshipPath[A], next: A): Boolean = {
+    stopAppendingFunction(path, next)
+  }
+
+  override def stopPrepending[A <: NonStandardRelationship](path: NonStandardRelationshipPath[A], prev: A): Boolean = {
+    stopPrependingFunction(path, prev)
+  }
+
+  override def substitutionGroupMap: SubstitutionGroupMap = netSubstitutionGroupMap
 }
 
 object BasicTaxonomy {

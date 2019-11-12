@@ -23,7 +23,7 @@ import eu.cdevreeze.yaidom2.core.EName
 import scala.reflect.classTag
 
 /**
- * Implementation of ConceptReferenceRelationshipQueryApi. The methods are overridable, which is needed in case more efficient
+ * Implementation of ConceptReferenceRelationshipQueryApi. The methods are overridable, which can be considered in case more efficient
  * implementations are possible.
  *
  * @author Chris de Vreeze

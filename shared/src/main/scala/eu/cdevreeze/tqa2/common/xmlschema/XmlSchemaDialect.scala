@@ -68,7 +68,7 @@ object XmlSchemaDialect {
      * Returns the boolean "abstract" attribute (defaulting to false).
      */
     final def isAbstract: Boolean = {
-      attrOption(ENames.AbstractEName).map(v => XsBooleans.parseBoolean(v)).getOrElse(false)
+      attrOption(ENames.AbstractEName).exists(v => XsBooleans.parseBoolean(v))
     }
 
     final def isConcrete: Boolean = {
@@ -87,6 +87,20 @@ object XmlSchemaDialect {
     final def nameAttributeValue: String = {
       attr(ENames.NameEName)
     }
+  }
+
+  /**
+   * Super-type of top-level schema components that have a name attribute and optional namespace (in the root element).
+   */
+  trait NamedGlobalDeclOrDef extends NamedDeclOrDef {
+
+    def schemaTargetNamespaceOption: Option[String]
+
+    /**
+     * Returns the "target EName". That is, returns the EName composed of the optional target namespace and the
+     * name attribute as local part.
+     */
+    final def targetEName: EName = EName(schemaTargetNamespaceOption, nameAttributeValue)
   }
 
   /**
@@ -166,16 +180,7 @@ object XmlSchemaDialect {
    * Global element declaration. Often a concept declaration, although in general the DOM element has not enough context
    * to determine that in isolation.
    */
-  trait GlobalElementDeclaration extends ElementDeclaration with CanBeAbstract {
-
-    /**
-     * Returns the "target EName". That is, returns the EName composed of the optional target namespace and the
-     * name attribute as local part.
-     */
-    final def targetEName: EName = {
-      val tnsOption = schemaTargetNamespaceOption
-      EName(tnsOption, nameAttributeValue)
-    }
+  trait GlobalElementDeclaration extends ElementDeclaration with NamedGlobalDeclOrDef with CanBeAbstract {
 
     /**
      * Returns the optional substitution group (as EName).
@@ -210,17 +215,7 @@ object XmlSchemaDialect {
   /**
    * Global attribute declaration.
    */
-  trait GlobalAttributeDeclaration extends AttributeDeclaration {
-
-    /**
-     * Returns the "target EName". That is, returns the EName composed of the optional target namespace and the
-     * name attribute as local part.
-     */
-    final def targetEName: EName = {
-      val tnsOption = schemaTargetNamespaceOption
-      EName(tnsOption, nameAttributeValue)
-    }
-  }
+  trait GlobalAttributeDeclaration extends AttributeDeclaration with NamedGlobalDeclOrDef
 
   /**
    * Local attribute declaration.
@@ -249,17 +244,7 @@ object XmlSchemaDialect {
     def baseTypeOption: Option[EName]
   }
 
-  trait NamedTypeDefinition extends TypeDefinition with NamedDeclOrDef {
-
-    /**
-     * Returns the "target EName". That is, returns the EName composed of the optional target namespace and the
-     * name attribute as local part.
-     */
-    final def targetEName: EName = {
-      val tnsOption = schemaTargetNamespaceOption
-      EName(tnsOption, nameAttributeValue)
-    }
-  }
+  trait NamedTypeDefinition extends TypeDefinition with NamedGlobalDeclOrDef
 
   trait AnonymousTypeDefinition extends TypeDefinition
 

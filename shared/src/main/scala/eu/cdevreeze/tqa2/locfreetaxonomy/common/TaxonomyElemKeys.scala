@@ -31,7 +31,10 @@ object TaxonomyElemKeys {
   /**
    * Taxonomy element key in a locator-free taxonomy.
    *
-   * It is assumed that the keys obey their schema(s), or else the query methods below may throw an exception.
+   * Note that taxonomy elements may have more than one kind of taxonomy element key, although only 1 of them will
+   * be considered the "canonical" one for the kind of element. For example, a concept declaration in the taxonomy
+   * has a concept key as canonical key, but it can also be referred to by an element key (like all global element
+   * declarations), and like all taxonomy elements it can also be referred to by an "any element key".
    */
   sealed trait TaxonomyElemKey {
 

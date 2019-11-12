@@ -23,7 +23,7 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ElementReferenceRelationsh
 import scala.reflect.classTag
 
 /**
- * Implementation of ElementReferenceRelationshipQueryApi. The methods are overridable, which is needed in case more efficient
+ * Implementation of ElementReferenceRelationshipQueryApi. The methods are overridable, which can be considered in case more efficient
  * implementations are possible.
  *
  * @author Chris de Vreeze

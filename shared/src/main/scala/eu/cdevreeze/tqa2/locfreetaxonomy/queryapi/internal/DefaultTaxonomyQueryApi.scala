@@ -32,6 +32,8 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Relationship
  */
 // scalastyle:off number.of.methods
 trait DefaultTaxonomyQueryApi extends TaxonomyQueryApi
+  with DefaultSchemaQueryApi
+  with DefaultTaxonomySchemaQueryApi
   with DefaultStandardRelationshipQueryApi
   with DefaultNonStandardRelationshipQueryApi
   with DefaultInterConceptRelationshipQueryApi
@@ -79,7 +81,7 @@ trait DefaultTaxonomyQueryApi extends TaxonomyQueryApi
   }
 
   def filterRelationshipsOfType[A <: Relationship](relationshipType: ClassTag[A])(p: A => Boolean): Seq[A] = {
-    implicit val clsTag = relationshipType
+    implicit val clsTag: ClassTag[A] = relationshipType
 
     val relationshipClassTags: Set[ClassTag[_ <: Relationship]] =
       relationshipTypes.filter(tp => relationshipType.runtimeClass.isAssignableFrom(tp.runtimeClass))
@@ -106,7 +108,7 @@ trait DefaultTaxonomyQueryApi extends TaxonomyQueryApi
     sourceKey: TaxonomyElemKey,
     relationshipType: ClassTag[A])(p: A => Boolean): Seq[A] = {
 
-    implicit val clsTag = relationshipType
+    implicit val clsTag: ClassTag[A] = relationshipType
 
     findAllOutgoingRelationships(sourceKey).collect { case rel: A if p(rel) => rel }
   }
@@ -130,7 +132,7 @@ trait DefaultTaxonomyQueryApi extends TaxonomyQueryApi
     targetKey: TaxonomyElemKey,
     relationshipType: ClassTag[A])(p: A => Boolean): Seq[A] = {
 
-    implicit val clsTag = relationshipType
+    implicit val clsTag: ClassTag[A] = relationshipType
 
     findAllIncomingRelationships(targetKey).collect { case rel: A if p(rel) => rel }
   }
