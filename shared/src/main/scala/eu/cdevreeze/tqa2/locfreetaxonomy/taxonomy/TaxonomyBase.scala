@@ -16,6 +16,8 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy
 
+import java.net.URI
+
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.GlobalElementDeclaration
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.NamedGlobalSchemaComponent
@@ -39,6 +41,10 @@ final class TaxonomyBase private(
 ) extends DefaultTaxonomySchemaQueryApi with DefaultSchemaQueryApi {
 
   override def substitutionGroupMap: SubstitutionGroupMap = netSubstitutionGroupMap
+
+  def rootElemMap: Map[URI, TaxonomyElem] = {
+    rootElems.groupBy(_.docUri).view.mapValues(_.head).toMap
+  }
 }
 
 object TaxonomyBase {

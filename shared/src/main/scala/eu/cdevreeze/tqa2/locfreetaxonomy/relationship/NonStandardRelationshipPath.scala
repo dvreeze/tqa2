@@ -31,6 +31,8 @@ final case class NonStandardRelationshipPath[A <: NonStandardRelationship] priva
 
   override type RelationshipType = A
 
+  override type SelfType = NonStandardRelationshipPath[A]
+
   require(relationships.nonEmpty, s"A relationship path must have at least one relationship")
 
   def source: Endpoint = firstRelationship.source

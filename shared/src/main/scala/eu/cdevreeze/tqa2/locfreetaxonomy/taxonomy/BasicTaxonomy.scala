@@ -22,12 +22,14 @@ import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.TaxonomyElemKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.NamedGlobalSchemaComponent
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkArc
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal.DefaultTaxonomyQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.InterConceptRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.InterConceptRelationshipPath
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.NonStandardRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.NonStandardRelationshipPath
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Relationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.RelationshipFactory
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.RelationshipPath
 import eu.cdevreeze.yaidom2.core.EName
 
@@ -36,7 +38,7 @@ import eu.cdevreeze.yaidom2.core.EName
  *
  * @author Chris de Vreeze
  */
-final class BasicTaxonomy( // TODO Make constructor private!
+final class BasicTaxonomy private(
   val taxonomyBase: TaxonomyBase,
   val relationshipTypes: Set[ClassTag[_ <: Relationship]],
   val relationshipMap: Map[ClassTag[_ <: Relationship], Seq[Relationship]],
@@ -77,11 +79,66 @@ final class BasicTaxonomy( // TODO Make constructor private!
   override def namedGlobalSchemaComponentMap: Map[EName, Seq[NamedGlobalSchemaComponent]] = {
     taxonomyBase.namedGlobalSchemaComponentMap
   }
+
+  def withStopFunctions(
+    newStopAppendingFunction: (RelationshipPath, Relationship) => Boolean,
+    newStopPrependingFunction: (RelationshipPath, Relationship) => Boolean): BasicTaxonomy = {
+
+    new BasicTaxonomy(
+      taxonomyBase,
+      relationshipTypes,
+      relationshipMap,
+      outgoingRelationshipMap,
+      incomingRelationshipMap,
+      newStopAppendingFunction,
+      newStopPrependingFunction
+    )
+  }
 }
 
 object BasicTaxonomy {
 
-  def build(): BasicTaxonomy = {
-    ???
+  def build(taxonomyBase: TaxonomyBase, relationshipFactory: RelationshipFactory): BasicTaxonomy = {
+    build(taxonomyBase, relationshipFactory, _ => true)
+  }
+
+  def build(taxonomyBase: TaxonomyBase, relationshipFactory: RelationshipFactory, arcFilter: XLinkArc => Boolean): BasicTaxonomy = {
+    val relationships = relationshipFactory.extractRelationships(taxonomyBase.rootElemMap, arcFilter)
+
+    build(taxonomyBase, relationships)
+  }
+
+  def build(taxonomyBase: TaxonomyBase, relationships: Seq[Relationship]): BasicTaxonomy = {
+    val relationshipMap: Map[ClassTag[_ <: Relationship], Seq[Relationship]] =
+      relationships.groupBy(rel => ClassTag(rel.getClass))
+
+    val relationshipTypes: Set[ClassTag[_ <: Relationship]] = relationshipMap.keySet
+
+    val outgoingRelationshipMap: Map[ClassTag[_ <: TaxonomyElemKey], Map[TaxonomyElemKey, Seq[Relationship]]] =
+      relationships.groupBy(rel => ClassTag(rel.source.taxonomyElemKey.getClass)).view.mapValues { rels =>
+        rels.groupBy(_.source.taxonomyElemKey)
+      }.toMap
+
+    val incomingRelationshipMap: Map[ClassTag[_ <: TaxonomyElemKey], Map[TaxonomyElemKey, Seq[Relationship]]] =
+      relationships.groupBy(rel => ClassTag(rel.target.taxonomyElemKey.getClass)).view.mapValues { rels =>
+        rels.groupBy(_.target.taxonomyElemKey)
+      }.toMap
+
+    new BasicTaxonomy(
+      taxonomyBase,
+      relationshipTypes,
+      relationshipMap,
+      outgoingRelationshipMap,
+      incomingRelationshipMap,
+      stopAppending,
+      stopPrepending)
+  }
+
+  private def stopAppending(path: RelationshipPath, rel: Relationship): Boolean = {
+    path.hasCycle
+  }
+
+  private def stopPrepending(path: RelationshipPath, rel: Relationship): Boolean = {
+    path.hasCycle
   }
 }

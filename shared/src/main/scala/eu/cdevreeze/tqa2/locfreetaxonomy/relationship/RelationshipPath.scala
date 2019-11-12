@@ -25,6 +25,8 @@ trait RelationshipPath {
 
   type RelationshipType <: Relationship
 
+  type SelfType <: RelationshipPath
+
   def relationships: Seq[RelationshipType]
 
   def source: Endpoint
@@ -40,4 +42,14 @@ trait RelationshipPath {
   def relationshipTargets: Seq[Endpoint]
 
   def hasCycle: Boolean
+
+  def isMinimalIfHavingCycle: Boolean
+
+  def append(relationship: RelationshipType): SelfType
+
+  def prepend(relationship: RelationshipType): SelfType
+
+  def canAppend(relationship: RelationshipType): Boolean
+
+  def canPrepend(relationship: RelationshipType): Boolean
 }

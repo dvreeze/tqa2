@@ -35,6 +35,8 @@ final case class InterConceptRelationshipPath[A <: InterConceptRelationship] pri
 
   override type RelationshipType = A
 
+  override type SelfType = InterConceptRelationshipPath[A]
+
   require(relationships.nonEmpty, s"A relationship path must have at least one relationship")
 
   def source: ConceptKeyEndpoint = firstRelationship.source
