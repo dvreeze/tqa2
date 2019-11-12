@@ -36,11 +36,8 @@ import eu.cdevreeze.yaidom2.core.EName
  *
  * @author Chris de Vreeze
  */
-final class BasicTaxonomy ( // TODO Make constructor private!
-  val rootElems: Seq[TaxonomyElem],
-  val extraProvidedSubstitutionGroupMap: SubstitutionGroupMap,
-  val netSubstitutionGroupMap: SubstitutionGroupMap,
-  val namedGlobalSchemaComponentMap: Map[EName, Seq[NamedGlobalSchemaComponent]],
+final class BasicTaxonomy( // TODO Make constructor private!
+  val taxonomyBase: TaxonomyBase,
   val relationshipTypes: Set[ClassTag[_ <: Relationship]],
   val relationshipMap: Map[ClassTag[_ <: Relationship], Seq[Relationship]],
   val outgoingRelationshipMap: Map[ClassTag[_ <: TaxonomyElemKey], Map[TaxonomyElemKey, Seq[Relationship]]],
@@ -65,7 +62,21 @@ final class BasicTaxonomy ( // TODO Make constructor private!
     stopPrependingFunction(path, prev)
   }
 
-  override def substitutionGroupMap: SubstitutionGroupMap = netSubstitutionGroupMap
+  /**
+   * The collection of taxonomy document root elements. This is a very fast method, because it is taken from the taxonomy
+   * base, where it is a field.
+   */
+  override def rootElems: Seq[TaxonomyElem] = taxonomyBase.rootElems
+
+  override def substitutionGroupMap: SubstitutionGroupMap = taxonomyBase.netSubstitutionGroupMap
+
+  /**
+   * Mapping from target ENames to named top-level schema components having that target EName.
+   * This is a very fast method, because it is taken from the taxonomy base, where it is a field.
+   */
+  override def namedGlobalSchemaComponentMap: Map[EName, Seq[NamedGlobalSchemaComponent]] = {
+    taxonomyBase.namedGlobalSchemaComponentMap
+  }
 }
 
 object BasicTaxonomy {
