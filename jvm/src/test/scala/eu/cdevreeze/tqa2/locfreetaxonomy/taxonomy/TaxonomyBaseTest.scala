@@ -18,6 +18,7 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy
 
 import java.io.File
 
+import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElemTest
@@ -51,6 +52,14 @@ class TaxonomyBaseTest extends FunSuite {
 
     assertResult(globalElemDecls) {
       taxonomyBase.findAllPrimaryItemDeclarations.map(_.globalElementDeclaration)
+    }
+
+    assertResult(Set(Some("http://www.nltaxonomie.nl/nt12/kvk/20170714.a/dictionary/kvk-data"))) {
+      taxonomyBase.findAllPrimaryItemDeclarations.map(_.targetEName.namespaceUriOption).toSet
+    }
+
+    assertResult(Set(Some(ENames.XbrliItemEName))) {
+      taxonomyBase.findAllItemDeclarations.map(_.substitutionGroupOption).toSet
     }
   }
 
