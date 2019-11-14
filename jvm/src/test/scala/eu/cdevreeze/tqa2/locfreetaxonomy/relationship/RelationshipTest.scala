@@ -26,6 +26,7 @@ import eu.cdevreeze.yaidom2.node.saxon
 import eu.cdevreeze.yaidom2.node.saxon.SaxonDocument
 import net.sf.saxon.s9api.Processor
 import org.scalatest.FunSuite
+import org.scalatest.Matchers._
 
 /**
  * Test of extracting and querying relationhips.
@@ -34,25 +35,21 @@ import org.scalatest.FunSuite
  */
 class RelationshipTest extends FunSuite {
 
-  test("testExtractAndQueryStandardLabelRelationships") {
+  test("TQA should be able to extract and query standard label relationships") {
     val linkbase = Linkbase(getTaxonomyElement("/testfiles/venj-bw2-axes-lab-fr.xml").underlyingElem)
 
     val relationshipFactory = new DefaultRelationshipFactory()
 
     val relationships = relationshipFactory.extractRelationships(Map(linkbase.docUri -> linkbase), RelationshipFactory.AnyArc)
 
-    assertResult(true) {
-      relationships.forall(_.isInstanceOf[ConceptLabelRelationship])
-    }
+    relationships.forall(_.isInstanceOf[ConceptLabelRelationship]) should be(true)
 
     val venjBw2DimNs = "http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes"
 
-    assertResult(1) {
-      relationships.collect { case rel: ConceptLabelRelationship => rel }.count { rel =>
-        rel.sourceConcept == EName(venjBw2DimNs, "ClassesOfDirectorsAndPersonnelAxis") &&
-          rel.labelText == "Classes des administrateurs et du personnel [axe]"
-      }
-    }
+    relationships.collect { case rel: ConceptLabelRelationship => rel }.filter { rel =>
+      rel.sourceConcept == EName(venjBw2DimNs, "ClassesOfDirectorsAndPersonnelAxis") &&
+        rel.labelText == "Classes des administrateurs et du personnel [axe]"
+    } should have size 1
   }
 
   private val processor = new Processor(false)

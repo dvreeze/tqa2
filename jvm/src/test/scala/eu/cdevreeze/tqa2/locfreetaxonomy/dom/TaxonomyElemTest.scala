@@ -26,6 +26,7 @@ import eu.cdevreeze.yaidom2.node.saxon.SaxonDocument
 import eu.cdevreeze.yaidom2.queryapi.named
 import net.sf.saxon.s9api.Processor
 import org.scalatest.FunSuite
+import org.scalatest.Matchers._
 
 /**
  * Test of parsing and querying taxonomy elements.
@@ -34,66 +35,56 @@ import org.scalatest.FunSuite
  */
 class TaxonomyElemTest extends FunSuite {
 
-  test("testParseAndQuerySchema") {
+  test("TQA should be able to parse and query a schema") {
     val schema = XsSchema(getTaxonomyElement("/testfiles/kvk-data.xsd").underlyingElem)
 
     val elemClasses = schema.findAllDescendantElemsOrSelf().map(_.getClass).toSet
 
-    assertResult(Set(classOf[XsSchema], classOf[GlobalElementDeclaration], classOf[Import])) {
-      elemClasses
-    }
+    elemClasses should equal(Set(classOf[XsSchema], classOf[GlobalElementDeclaration], classOf[Import]))
 
     val globalElemDecls = schema.findAllGlobalElementDeclarations()
 
-    assertResult(8) {
-      globalElemDecls.size
-    }
+    globalElemDecls should have size 8
 
-    assertResult(schema.filterChildElems(named(ENames.XsElementEName)).map(e => resolved.Elem.from(e))) {
-      globalElemDecls.map(e => resolved.Elem.from(e))
+    globalElemDecls.map(e => resolved.Elem.from(e)) should equal {
+      schema.filterChildElems(named(ENames.XsElementEName)).map(e => resolved.Elem.from(e))
     }
 
     val imports = schema.findAllImports
 
-    assertResult(6) {
-      imports.size
-    }
+    imports should have size 6
 
-    assertResult(schema.filterChildElems(named(ENames.XsImportEName)).map(e => resolved.Elem.from(e))) {
-      imports.map(e => resolved.Elem.from(e))
+    imports.map(e => resolved.Elem.from(e)) should equal {
+      schema.filterChildElems(named(ENames.XsImportEName)).map(e => resolved.Elem.from(e))
     }
   }
 
-  test("testParseAndQueryStandardLabelLinkbase") {
+  test("TQA should be able to parse and query a standard label linkbase") {
     val linkbase = Linkbase(getTaxonomyElement("/testfiles/venj-bw2-axes-lab-fr.xml").underlyingElem)
 
     val elemClasses = linkbase.findAllDescendantElemsOrSelf().map(_.getClass).toSet
 
-    assertResult(Set(classOf[Linkbase], classOf[LabelLink], classOf[ConceptLabelResource], classOf[LabelArc], classOf[ConceptKey])) {
-      elemClasses
+    elemClasses should be {
+      Set(classOf[Linkbase], classOf[LabelLink], classOf[ConceptLabelResource], classOf[LabelArc], classOf[ConceptKey])
     }
 
     val extendedLinks = linkbase.findAllExtendedLinks
 
-    assertResult(1) {
-      extendedLinks.size
-    }
+    extendedLinks should have size 1
 
     val labeledResourceMap: Map[String, Seq[XLinkResource]] = extendedLinks.head.labeledXlinkResourceMap
 
     val venjBw2DimNs = "http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes"
 
-    assertResult(1) {
-      extendedLinks.head.arcs.count { arc =>
-        labeledResourceMap.getOrElse(arc.from, Seq.empty)
-          .collect { case k: ConceptKey if k.key == EName(venjBw2DimNs, "ClassesOfDirectorsAndPersonnelAxis") => k }.nonEmpty &&
-          labeledResourceMap.getOrElse(arc.to, Seq.empty)
-            .collect { case r: ConceptLabelResource if r.text == "Classes des administrateurs et du personnel [axe]" => r }.nonEmpty
-      }
-    }
+    extendedLinks.head.arcs.filter { arc =>
+      labeledResourceMap.getOrElse(arc.from, Seq.empty)
+        .collect { case k: ConceptKey if k.key == EName(venjBw2DimNs, "ClassesOfDirectorsAndPersonnelAxis") => k }.nonEmpty &&
+        labeledResourceMap.getOrElse(arc.to, Seq.empty)
+          .collect { case r: ConceptLabelResource if r.text == "Classes des administrateurs et du personnel [axe]" => r }.nonEmpty
+    } should have size 1
 
-    assertResult(extendedLinks.head.xlinkResourceChildren.collect { case k: ConceptKey => k }) {
-      extendedLinks.head.xlinkResourceChildren.collect { case k: ConceptKey if k.key.localPart.endsWith("Axis") => k }
+    extendedLinks.head.xlinkResourceChildren.collect { case k: ConceptKey if k.key.localPart.endsWith("Axis") => k } should equal {
+      extendedLinks.head.xlinkResourceChildren.collect { case k: ConceptKey => k }
     }
   }
 

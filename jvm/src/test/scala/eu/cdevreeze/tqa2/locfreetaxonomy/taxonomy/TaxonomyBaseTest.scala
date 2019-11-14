@@ -27,6 +27,7 @@ import eu.cdevreeze.yaidom2.node.saxon
 import eu.cdevreeze.yaidom2.node.saxon.SaxonDocument
 import net.sf.saxon.s9api.Processor
 import org.scalatest.FunSuite
+import org.scalatest.Matchers._
 
 /**
  * Test of creating and querying "taxonomy bases".
@@ -35,31 +36,23 @@ import org.scalatest.FunSuite
  */
 class TaxonomyBaseTest extends FunSuite {
 
-  test("testCreateSingleDocumentTaxonomyBase") {
+  test("TQA should be able to create a single-document TaxonomyBase") {
     val schema = XsSchema(getTaxonomyElement("/testfiles/kvk-data.xsd").underlyingElem)
 
     val taxonomyBase: TaxonomyBase = TaxonomyBase.build(Seq(schema), SubstitutionGroupMap.Empty)
 
     val globalElemDecls = taxonomyBase.findAllGlobalElementDeclarations
 
-    assertResult(8) {
-      globalElemDecls.size
+    globalElemDecls should have size 8
+
+    taxonomyBase.findAllItemDeclarations.map(_.globalElementDeclaration) should equal(globalElemDecls)
+
+    taxonomyBase.findAllPrimaryItemDeclarations.map(_.targetEName.namespaceUriOption).toSet should equal {
+      Set(Some("http://www.nltaxonomie.nl/nt12/kvk/20170714.a/dictionary/kvk-data"))
     }
 
-    assertResult(globalElemDecls) {
-      taxonomyBase.findAllItemDeclarations.map(_.globalElementDeclaration)
-    }
-
-    assertResult(globalElemDecls) {
-      taxonomyBase.findAllPrimaryItemDeclarations.map(_.globalElementDeclaration)
-    }
-
-    assertResult(Set(Some("http://www.nltaxonomie.nl/nt12/kvk/20170714.a/dictionary/kvk-data"))) {
-      taxonomyBase.findAllPrimaryItemDeclarations.map(_.targetEName.namespaceUriOption).toSet
-    }
-
-    assertResult(Set(Some(ENames.XbrliItemEName))) {
-      taxonomyBase.findAllItemDeclarations.map(_.substitutionGroupOption).toSet
+    taxonomyBase.findAllItemDeclarations.map(_.substitutionGroupOption).toSet should equal {
+      Set(Some(ENames.XbrliItemEName))
     }
   }
 
