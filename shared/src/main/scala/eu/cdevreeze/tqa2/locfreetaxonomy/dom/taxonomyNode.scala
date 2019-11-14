@@ -624,6 +624,14 @@ final case class ArcroleRef(
   requireName(ENames.CLinkArcroleRefEName)
 }
 
+// In entrypoint schemas
+
+final case class LinkbaseRef(
+  underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace with CLinkDialect.LinkbaseRef {
+
+  requireName(ENames.CLinkLinkbaseRefEName)
+}
+
 /**
  * Other element in the CLink namespace. Either valid other CLink content, or invalid content.
  */
@@ -904,7 +912,8 @@ object TaxonomyElem {
           ENames.CLinkLabelEName -> (e => ConceptLabelResource(e)),
           ENames.CLinkReferenceEName -> (e => ConceptReferenceResource(e)),
           ENames.CLinkRoleRefEName -> (e => RoleRef(e)),
-          ENames.CLinkArcroleRefEName -> (e => ArcroleRef(e))
+          ENames.CLinkArcroleRefEName -> (e => ArcroleRef(e)),
+          ENames.CLinkLinkbaseRefEName -> (e => LinkbaseRef(e))
         ),
         e => OtherElemInCLinkNamespace(e)),
       Namespaces.LinkNamespace -> new ElemFactoryWithFallback(

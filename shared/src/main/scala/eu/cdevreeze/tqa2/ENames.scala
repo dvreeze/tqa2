@@ -508,6 +508,9 @@ object ENames {
   val CLinkRoleRefEName = EName(CLinkNamespace, "roleRef")
   val CLinkArcroleRefEName = EName(CLinkNamespace, "arcroleRef")
 
+  val CLinkLinkbaseRefEName = EName(CLinkNamespace, "linkbaseRef")
+  val CLinkEntrypointEName = EName(CLinkNamespace, "entrypoint")
+
   // The "ckey" namespace.
 
   val CKeyConceptKeyEName = EName(CKeyNamespace, "conceptKey")

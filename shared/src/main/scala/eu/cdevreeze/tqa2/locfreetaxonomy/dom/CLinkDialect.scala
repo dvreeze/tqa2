@@ -16,6 +16,8 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.dom
 
+import java.net.URI
+
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.locfreexlink
 import eu.cdevreeze.yaidom2.queryapi.BackingElemApi
@@ -95,6 +97,16 @@ object CLinkDialect {
     final def arcroleUri: String = {
       attrOption(ENames.ArcroleURIEName)
         .getOrElse(sys.error(s"Expected arcroleURI attribute. Document: $docUri. Element: $name"))
+    }
+  }
+
+  // In entrypoint schemas
+
+  trait LinkbaseRef extends Elem {
+
+    final def href: URI = {
+      attrOption(ENames.HrefEName).map(URI.create)
+        .getOrElse(sys.error(s"Expected href attribute. Document: $docUri. Element: $name"))
     }
   }
 }
