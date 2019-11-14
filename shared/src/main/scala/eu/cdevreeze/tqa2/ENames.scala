@@ -509,7 +509,6 @@ object ENames {
   val CLinkArcroleRefEName = EName(CLinkNamespace, "arcroleRef")
 
   val CLinkLinkbaseRefEName = EName(CLinkNamespace, "linkbaseRef")
-  val CLinkEntrypointEName = EName(CLinkNamespace, "entrypoint")
 
   // The "ckey" namespace.
 

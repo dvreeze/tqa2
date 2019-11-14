@@ -21,6 +21,7 @@ import scala.reflect.ClassTag
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DimensionDefaultRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DimensionDomainRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DimensionalRelationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DimensionalRelationshipPath
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DomainAwareRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DomainAwareRelationshipPath
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DomainMemberRelationship
@@ -34,6 +35,7 @@ import eu.cdevreeze.yaidom2.core.EName
  *
  * @author Chris de Vreeze
  */
+// scalastyle:off number.of.methods
 trait DimensionalRelationshipQueryApi {
 
   // Input strategies, used by relationship path query methods
@@ -69,6 +71,22 @@ trait DimensionalRelationshipQueryApi {
    * ignored.
    */
   def stopPrepending(path: DomainMemberRelationshipPath, prev: DomainMemberRelationship): Boolean
+
+  /**
+   * Strategy used by methods like findAllOutgoingConsecutiveDimensionalRelationshipPaths to stop appending relationships
+   * to relationship paths when desired. Typically this method is used as stop condition when cycles are found.
+   * If a cycle is allowed in the path, but it should stop growing beyond that, the second method parameter can be
+   * ignored.
+   */
+  def stopAppending(path: DimensionalRelationshipPath, next: DimensionalRelationship): Boolean
+
+  /**
+   * Strategy used by methods like findAllIncomingConsecutiveDimensionalRelationshipPaths to stop prepending relationships
+   * to relationship paths when desired. Typically this method is used as stop condition when cycles are found.
+   * If a cycle is allowed in the path, but it should stop growing beyond that, the second method parameter can be
+   * ignored.
+   */
+  def stopPrepending(path: DimensionalRelationshipPath, prev: DimensionalRelationship): Boolean
 
   // Query API methods
 
@@ -324,6 +342,25 @@ trait DimensionalRelationshipQueryApi {
     p: DomainMemberRelationshipPath => Boolean): Seq[DomainMemberRelationshipPath]
 
   /**
+   * Returns `filterOutgoingConsecutiveDimensionalRelationshipPaths(sourceConcept)(_ => true)`.
+   *
+   * Typically the source concept is a hypercube (or a primary that has hypercubes via has-hypercube relationships).
+   */
+  def findAllOutgoingConsecutiveDimensionalRelationshipPaths(
+    sourceConcept: EName): Seq[DimensionalRelationshipPath]
+
+  /**
+   * Filters the consecutive (!) dimensional relationship paths that are outgoing from the given concept.
+   * Only relationship paths for which all (non-empty) "inits" pass the predicate are accepted by the filter!
+   * The relationship paths are as long as possible, but on method stopAppending returning true it stops growing.
+   *
+   * Typically the source concept is a hypercube (or a primary that has hypercubes via has-hypercube relationships).
+   */
+  def filterOutgoingConsecutiveDimensionalRelationshipPaths(
+    sourceConcept: EName)(
+    p: DimensionalRelationshipPath => Boolean): Seq[DimensionalRelationshipPath]
+
+  /**
    * Returns `filterIncomingConsecutiveDomainAwareRelationshipPaths(targetConcept)(_ => true)`.
    */
   def findAllIncomingConsecutiveDomainAwareRelationshipPaths(
@@ -350,6 +387,20 @@ trait DimensionalRelationshipQueryApi {
    */
   def filterIncomingConsecutiveDomainMemberRelationshipPaths(
     targetConcept: EName)(p: DomainMemberRelationshipPath => Boolean): Seq[DomainMemberRelationshipPath]
+
+  /**
+   * Returns `filterIncomingConsecutiveDimensionalRelationshipPaths(targetConcept)(_ => true)`.
+   */
+  def findAllIncomingConsecutiveDimensionalRelationshipPaths(
+    targetConcept: EName): Seq[DimensionalRelationshipPath]
+
+  /**
+   * Filters the consecutive (!) dimensional relationship paths that are incoming to the given concept.
+   * Only relationship paths for which all (non-empty) "tails" pass the predicate are accepted by the filter!
+   * The relationship paths are as long as possible, but on method stopPrepending returning true it stops growing.
+   */
+  def filterIncomingConsecutiveDimensionalRelationshipPaths(
+    targetConcept: EName)(p: DimensionalRelationshipPath => Boolean): Seq[DimensionalRelationshipPath]
 
   // Other query methods
 

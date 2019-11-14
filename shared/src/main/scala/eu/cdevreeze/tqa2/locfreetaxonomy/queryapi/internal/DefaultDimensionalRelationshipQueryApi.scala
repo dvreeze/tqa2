@@ -24,6 +24,7 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.InterConceptRelationshipQueryA
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DimensionDefaultRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DimensionDomainRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DimensionalRelationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DimensionalRelationshipPath
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DomainAwareRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DomainAwareRelationshipPath
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DomainMemberRelationship
@@ -38,6 +39,7 @@ import eu.cdevreeze.yaidom2.core.EName
  *
  * @author Chris de Vreeze
  */
+// scalastyle:off number.of.methods
 trait DefaultDimensionalRelationshipQueryApi extends DimensionalRelationshipQueryApi with InterConceptRelationshipQueryApi {
 
   def stopAppending(path: DomainAwareRelationshipPath, next: DomainAwareRelationship): Boolean = {
@@ -54,6 +56,14 @@ trait DefaultDimensionalRelationshipQueryApi extends DimensionalRelationshipQuer
 
   def stopPrepending(path: DomainMemberRelationshipPath, prev: DomainMemberRelationship): Boolean = {
     stopPrepending[DomainMemberRelationship](path, prev)
+  }
+
+  def stopAppending(path: DimensionalRelationshipPath, next: DimensionalRelationship): Boolean = {
+    stopAppending[DimensionalRelationship](path, next)
+  }
+
+  def stopPrepending(path: DimensionalRelationshipPath, prev: DimensionalRelationship): Boolean = {
+    stopPrepending[DimensionalRelationship](path, prev)
   }
 
   // Finding and filtering relationships without looking at source or target concept
@@ -280,6 +290,19 @@ trait DefaultDimensionalRelationshipQueryApi extends DimensionalRelationshipQuer
     filterOutgoingConsecutiveInterConceptRelationshipPaths(sourceConcept, classTag[DomainMemberRelationship])(p)
   }
 
+  def findAllOutgoingConsecutiveDimensionalRelationshipPaths(
+    sourceConcept: EName): Seq[DimensionalRelationshipPath] = {
+
+    filterOutgoingConsecutiveDimensionalRelationshipPaths(sourceConcept)(_ => true)
+  }
+
+  def filterOutgoingConsecutiveDimensionalRelationshipPaths(
+    sourceConcept: EName)(
+    p: DimensionalRelationshipPath => Boolean): Seq[DimensionalRelationshipPath] = {
+
+    filterOutgoingConsecutiveInterConceptRelationshipPaths(sourceConcept, classTag[DimensionalRelationship])(p)
+  }
+
   def findAllIncomingConsecutiveDomainAwareRelationshipPaths(
     targetConcept: EName): Seq[DomainAwareRelationshipPath] = {
 
@@ -300,6 +323,16 @@ trait DefaultDimensionalRelationshipQueryApi extends DimensionalRelationshipQuer
     targetConcept: EName)(p: DomainMemberRelationshipPath => Boolean): Seq[DomainMemberRelationshipPath] = {
 
     filterIncomingConsecutiveInterConceptRelationshipPaths(targetConcept, classTag[DomainMemberRelationship])(p)
+  }
+
+  def findAllIncomingConsecutiveDimensionalRelationshipPaths(targetConcept: EName): Seq[DimensionalRelationshipPath] = {
+    filterIncomingConsecutiveDimensionalRelationshipPaths(targetConcept)(_ => true)
+  }
+
+  def filterIncomingConsecutiveDimensionalRelationshipPaths(
+    targetConcept: EName)(p: DimensionalRelationshipPath => Boolean): Seq[DimensionalRelationshipPath] = {
+
+    filterIncomingConsecutiveInterConceptRelationshipPaths(targetConcept, classTag[DimensionalRelationship])(p)
   }
 
   // Other query methods

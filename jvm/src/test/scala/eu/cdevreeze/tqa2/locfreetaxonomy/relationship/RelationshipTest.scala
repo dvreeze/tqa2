@@ -42,7 +42,7 @@ class RelationshipTest extends FunSuite {
 
     val relationships = relationshipFactory.extractRelationships(Map(linkbase.docUri -> linkbase), RelationshipFactory.AnyArc)
 
-    relationships.forall(_.isInstanceOf[ConceptLabelRelationship]) should be(true)
+    relationships.forall(_.isInstanceOf[ConceptLabelRelationship]) should equal(true)
 
     val venjBw2DimNs = "http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes"
 

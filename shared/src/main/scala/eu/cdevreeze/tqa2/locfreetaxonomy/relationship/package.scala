@@ -28,4 +28,6 @@ package object relationship {
   type DomainMemberRelationshipPath = InterConceptRelationshipPath[DomainMemberRelationship]
 
   type DomainAwareRelationshipPath = InterConceptRelationshipPath[DomainAwareRelationship]
+
+  type DimensionalRelationshipPath = InterConceptRelationshipPath[DimensionalRelationship]
 }

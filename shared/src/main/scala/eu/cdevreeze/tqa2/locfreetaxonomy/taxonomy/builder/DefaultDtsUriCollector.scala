@@ -28,11 +28,21 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 /**
  * Default DTS URI collector, in the locator-free taxonomy model. All collected URIs are assumed to be absolute URIs.
  *
+ * It is assumed that only schema documents can act as entrypoints, and if they do, they must refer directly to the entire
+ * DTS. More precisely, the entire DTS is the document itself along with all documents (directly) referred to by the entrypoint.
+ *
+ * Hence, entrypoints cannot be nested, so entrypoints cannot refer to other entrypoints, etc. Note that per DTS typically only 1 schema
+ * should act as entrypoint, so only 1 schema should contain URI references (in linkbaseRefs and schema imports). It is, however,
+ * allowed to have multiple entrypoints, and it is allowed for them to have overlapping content. It is even allowed to use
+ * a non-entrypoint schema or linkbase as (additional) "entrypoint", but then they only contribute themselves to the DTS, without pointing to
+ * any other DTS content.
+ *
+ * Taxonomy extensions can either contain their additional entrypoint schema, or they can be just an additional set of taxonomy
+ * documents without extra entrypoint schema.
+ *
  * @author Chris de Vreeze
  */
 final class DefaultDtsUriCollector(val docBuilder: URI => TaxonomyElem) extends DtsUriCollector {
-
-  // TODO Rethink nesting of entrypoints (and also if entrypoints can only be schemas, to which the likely answer is yes).
 
   def findAllDtsUris(entrypoint: Set[URI]): Set[URI] = {
     entrypoint.toSeq.flatMap { docUri =>

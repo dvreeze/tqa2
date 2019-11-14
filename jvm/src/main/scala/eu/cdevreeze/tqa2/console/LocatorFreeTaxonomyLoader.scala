@@ -17,21 +17,12 @@
 package eu.cdevreeze.tqa2.console
 
 import java.io.File
-import java.io.FileInputStream
 import java.net.URI
 
-import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DefaultRelationshipFactory
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.HasHypercubeRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ParentChildRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
-import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyBase
-import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder.DefaultDtsUriCollector
-import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder.DtsUriCollector
 import eu.cdevreeze.yaidom2.core.EName
-import eu.cdevreeze.yaidom2.node.saxon.SaxonDocument
-import javax.xml.transform.stream.StreamSource
 import net.sf.saxon.s9api.Processor
 
 /**
@@ -59,48 +50,9 @@ object LocatorFreeTaxonomyLoader {
 
     val entrypointUri: URI = URI.create(args(1))
 
-    val dtsUriCollector: DtsUriCollector = new DefaultDtsUriCollector(uri => build(uri, taxoRootDir.toURI))
+    val taxo: BasicTaxonomy = ConsoleUtil.createTaxonomy(entrypointUri, taxoRootDir, processor)
 
-    println(s"Finding DTS document URIs ...") // scalastyle:off
-
-    val dtsDocUris: Set[URI] = dtsUriCollector.findAllDtsUris(Set(entrypointUri))
-
-    println(s"Parsing DTS documents ...") // scalastyle:off
-
-    val rootElems: Seq[TaxonomyElem] = dtsDocUris.toSeq.sortBy(_.toString).map(u => build(u, taxoRootDir.toURI))
-
-    println(s"Building TaxonomyBase ...") // scalastyle:off
-
-    val taxoBase: TaxonomyBase = TaxonomyBase.build(rootElems, SubstitutionGroupMap.Empty)
-
-    println(s"Number of documents in the TaxonomyBase: ${taxoBase.rootElems.size}") // scalastyle:off
-    println(s"Building BasicTaxonomy ...") // scalastyle:off
-
-    val taxo: BasicTaxonomy = BasicTaxonomy.build(taxoBase, new DefaultRelationshipFactory)
-
-    println(s"Number of documents in the BasicTaxonomy: ${taxoBase.rootElems.size}") // scalastyle:off
-    println(s"Number of relationships: ${taxo.relationships.size}") // scalastyle:off
-
-    val hasHypercubes: Seq[HasHypercubeRelationship] = taxo.findAllHasHypercubeRelationships
-    val hasHypercubeElrs: Set[String] = hasHypercubes.map(_.elr).toSet
-
-    println() // scalastye:off
-    println(s"Number of dimensional (has-hypercube) ELRs: ${hasHypercubeElrs.size}") // scalastyle:off
-
-    val parentChildren: Seq[ParentChildRelationship] = taxo.findAllParentChildRelationships
-    val parentChildElrs: Set[String] = parentChildren.map(_.elr).toSet
-
-    println(s"Number of parent-child relationship ELRs: ${parentChildElrs.size}") // scalastyle:off
-
-    println(s"Number of parent-child relationship ELRs that are not dimensional ELRs: ${parentChildElrs.diff(hasHypercubeElrs).size}") // scalastyle:off
-    println(s"Number of dimensional ELRs that are not parent-child relationship ELRs: ${hasHypercubeElrs.diff(parentChildElrs).size}") // scalastyle:off
-
-    val dimensionalConcepts: Set[EName] = taxo.computeHasHypercubeInheritanceOrSelf.keySet
-
-    val items: Set[EName] = taxo.findAllItemDeclarations.map(_.targetEName).toSet
-
-    println(s"Number of dimensional concepts that are not items in the taxo: ${dimensionalConcepts.diff(items).size}") // scalastyle:off
-    println(s"Number of items in the taxo that are not dimensional concepts: ${items.diff(dimensionalConcepts).size}") // scalastyle:off
+    printTaxonomyInfo(taxo)
 
     val end = System.currentTimeMillis()
 
@@ -108,29 +60,27 @@ object LocatorFreeTaxonomyLoader {
     println(s"The program took ${end - start} ms") // scalastyle:off
   }
 
-  private def build(uri: URI, taxoRootDirAsUri: URI): TaxonomyElem = {
-    val localUri: URI = rewriteUri(uri, taxoRootDirAsUri)
+  // scalastyle:off
+  def printTaxonomyInfo(taxo: BasicTaxonomy): Unit = {
+    val hasHypercubes: Seq[HasHypercubeRelationship] = taxo.findAllHasHypercubeRelationships
+    val hasHypercubeElrs: Set[String] = hasHypercubes.map(_.elr).toSet
 
-    val is = new FileInputStream(new File(localUri))
-    val source = new StreamSource(is, uri.toString)
-    val xdmNode = processor.newDocumentBuilder().build(source)
-    val doc = SaxonDocument(xdmNode)
+    println()
+    println(s"Number of dimensional (has-hypercube) ELRs: ${hasHypercubeElrs.size}")
 
-    TaxonomyElem(doc.documentElement)
-  }
+    val parentChildren: Seq[ParentChildRelationship] = taxo.findAllParentChildRelationships
+    val parentChildElrs: Set[String] = parentChildren.map(_.elr).toSet
 
-  private def rewriteUri(uri: URI, taxoRootDirAsUri: URI): URI = {
-    require(uri.isAbsolute, s"Expected absolute URI, but got '$uri'")
-    require(Option(uri.getFragment).isEmpty, s"Expected no fragment in the URI, but got URI '$uri")
-    require(Set("http", "https").contains(uri.getScheme), s"Expected scheme 'http' or 'https', but got URI '$uri'")
+    println(s"Number of parent-child relationship ELRs: ${parentChildElrs.size}")
 
-    val host = uri.getHost
-    val hostOnlyUri: URI = new URI(uri.getScheme, host, "/", null) // scalastyle:off null
-    val relativeUri: URI = hostOnlyUri.relativize(uri).ensuring(!_.isAbsolute)
+    println(s"Number of parent-child relationship ELRs that are not dimensional ELRs: ${parentChildElrs.diff(hasHypercubeElrs).size}")
+    println(s"Number of dimensional ELRs that are not parent-child relationship ELRs: ${hasHypercubeElrs.diff(parentChildElrs).size}")
 
-    val localHostDir = new File(taxoRootDirAsUri.resolve(host))
-    require(localHostDir.isDirectory, s"Not a directory: $localHostDir")
-    val localHostUri: URI = localHostDir.toURI
-    localHostUri.resolve(relativeUri)
+    val dimensionalConcepts: Set[EName] = taxo.computeHasHypercubeInheritanceOrSelf.keySet
+
+    val items: Set[EName] = taxo.findAllItemDeclarations.map(_.targetEName).toSet
+
+    println(s"Number of dimensional concepts that are not items in the taxo: ${dimensionalConcepts.diff(items).size}")
+    println(s"Number of items in the taxo that are not dimensional concepts: ${items.diff(dimensionalConcepts).size}")
   }
 }

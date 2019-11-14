@@ -47,6 +47,8 @@ class TaxonomyBaseTest extends FunSuite {
 
     taxonomyBase.findAllItemDeclarations.map(_.globalElementDeclaration) should equal(globalElemDecls)
 
+    taxonomyBase.findAllPrimaryItemDeclarations.map(_.globalElementDeclaration) should equal(globalElemDecls)
+
     taxonomyBase.findAllPrimaryItemDeclarations.map(_.targetEName.namespaceUriOption).toSet should equal {
       Set(Some("http://www.nltaxonomie.nl/nt12/kvk/20170714.a/dictionary/kvk-data"))
     }
