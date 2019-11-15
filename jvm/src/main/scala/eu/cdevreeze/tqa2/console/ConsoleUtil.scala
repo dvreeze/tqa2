@@ -22,7 +22,7 @@ import java.net.URI
 
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DefaultRelationshipFactory
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.jvm.DefaultParallelRelationshipFactory
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyBase
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder.DefaultDtsUriCollector
@@ -56,7 +56,7 @@ private[console] object ConsoleUtil {
     println(s"Number of documents in the TaxonomyBase: ${taxoBase.rootElems.size}") // scalastyle:off
     println(s"Building BasicTaxonomy ...") // scalastyle:off
 
-    val taxo: BasicTaxonomy = BasicTaxonomy.build(taxoBase, new DefaultRelationshipFactory)
+    val taxo: BasicTaxonomy = BasicTaxonomy.build(taxoBase, new DefaultParallelRelationshipFactory)
 
     println(s"Number of relationships: ${taxo.relationships.size}") // scalastyle:off
     taxo

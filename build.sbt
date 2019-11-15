@@ -41,6 +41,8 @@ lazy val commonSettings = Seq(
 
   libraryDependencies += "org.scala-lang.modules" %%% "scala-xml" % "1.2.0",
 
+  libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "0.2.0",
+
   libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.8" % "test"
 )
 
