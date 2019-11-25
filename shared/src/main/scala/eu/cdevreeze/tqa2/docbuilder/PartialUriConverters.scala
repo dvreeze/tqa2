@@ -14,23 +14,26 @@
  * limitations under the License.
  */
 
-package eu.cdevreeze.tqa2
+package eu.cdevreeze.tqa2.docbuilder
 
 import java.net.URI
 
 /**
- * Document builders, for taxonomy files or other XML files (for example, XBRL instances). Most of this support for parsing
- * (or retrieving) documents targets both the JVM and the JS platforms.
+ * Support for creating partial URI converters.
  *
  * @author Chris de Vreeze
  */
-package object docbuilder {
+object PartialUriConverters {
 
-  type PartialUriConverter = URI => Option[URI]
+  def identity: PartialUriConverter = { uri: URI => Some(uri) }
 
-  type UriConverter = URI => URI
-
-  type PartialUriResolver = URI => Option[XmlInputSource]
-
-  type UriResolver = URI => XmlInputSource
+  /**
+   * Turns the given catalog into a partial URI converter. It can return absolute and/or relative
+   * URIs. Relative URIs are typically meant to be resolved inside ZIP files.
+   *
+   * The partial URI converter is only defined for URIs matching URI start strings in the catalog.
+   */
+  def fromCatalog(catalog: SimpleCatalog): PartialUriConverter = {
+    catalog.findMappedUri
+  }
 }

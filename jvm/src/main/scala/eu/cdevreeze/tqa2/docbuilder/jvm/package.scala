@@ -14,23 +14,18 @@
  * limitations under the License.
  */
 
-package eu.cdevreeze.tqa2
+package eu.cdevreeze.tqa2.docbuilder
 
 import java.net.URI
 
 /**
- * Document builders, for taxonomy files or other XML files (for example, XBRL instances). Most of this support for parsing
- * (or retrieving) documents targets both the JVM and the JS platforms.
+ * JVM-specific support for URI resolvers.
  *
  * @author Chris de Vreeze
  */
-package object docbuilder {
+package object jvm {
 
-  type PartialUriConverter = URI => Option[URI]
+  type SaxUriResolver = URI => SaxInputSource
 
-  type UriConverter = URI => URI
-
-  type PartialUriResolver = URI => Option[XmlInputSource]
-
-  type UriResolver = URI => XmlInputSource
+  type PartialSaxUriResolver = URI => Option[SaxInputSource]
 }

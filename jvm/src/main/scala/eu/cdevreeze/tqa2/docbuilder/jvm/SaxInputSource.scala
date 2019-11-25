@@ -14,23 +14,26 @@
  * limitations under the License.
  */
 
-package eu.cdevreeze.tqa2
+package eu.cdevreeze.tqa2.docbuilder.jvm
 
+import java.io.InputStream
 import java.net.URI
 
+import eu.cdevreeze.tqa2.docbuilder.XmlInputSource
+import org.xml.sax.InputSource
+
 /**
- * Document builders, for taxonomy files or other XML files (for example, XBRL instances). Most of this support for parsing
- * (or retrieving) documents targets both the JVM and the JS platforms.
+ * XML input source, wrapping a SAX InputSource.
  *
  * @author Chris de Vreeze
  */
-package object docbuilder {
+final class SaxInputSource(val underlyingInputSource: InputSource) extends XmlInputSource {
 
-  type PartialUriConverter = URI => Option[URI]
+  def docUriOption: Option[URI] = {
+    Option(underlyingInputSource.getSystemId).map(URI.create)
+  }
 
-  type UriConverter = URI => URI
-
-  type PartialUriResolver = URI => Option[XmlInputSource]
-
-  type UriResolver = URI => XmlInputSource
+  def inputStream: InputStream = {
+    underlyingInputSource.getByteStream
+  }
 }
