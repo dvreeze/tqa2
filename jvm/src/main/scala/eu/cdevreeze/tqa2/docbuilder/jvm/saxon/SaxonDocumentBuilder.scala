@@ -32,7 +32,7 @@ import org.xml.sax.InputSource
  * @author Chris de Vreeze
  */
 final class SaxonDocumentBuilder(val underlyingDocBuilder: s9api.DocumentBuilder, val uriResolver: URI => SaxInputSource)
-    extends DocumentBuilder {
+    extends DocumentBuilder.UsingUriResolver {
 
   type BackingDoc = SaxonDocument
 

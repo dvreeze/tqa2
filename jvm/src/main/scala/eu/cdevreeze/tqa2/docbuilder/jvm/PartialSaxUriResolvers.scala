@@ -25,6 +25,7 @@ import java.util.zip.ZipFile
 
 import scala.jdk.CollectionConverters._
 
+import eu.cdevreeze.tqa2.docbuilder.PartialUriConverter
 import eu.cdevreeze.tqa2.docbuilder.PartialUriConverters
 import eu.cdevreeze.tqa2.docbuilder.SimpleCatalog
 import org.xml.sax.InputSource
@@ -42,7 +43,7 @@ object PartialSaxUriResolvers {
    *
    * The created PartialSaxUriResolver is defined for the same URIs as the input PartialUriConverter.
    */
-  def fromPartialUriConverter(partialUriConverter: URI => Option[URI]): PartialSaxUriResolver = {
+  def fromPartialUriConverter(partialUriConverter: PartialUriConverter): PartialSaxUriResolver = {
     def resolveUri(uri: URI): Option[SaxInputSource] = {
       val mappedUriOption = partialUriConverter(uri)
 
@@ -68,7 +69,7 @@ object PartialSaxUriResolvers {
    * The ZIP file should be closed after use (typically when the taxonomy has been loaded), thus closing
    * all its entry input streams.
    */
-  def forZipFile(zipFile: ZipFile, partialUriConverter: URI => Option[URI]): PartialSaxUriResolver = {
+  def forZipFile(zipFile: ZipFile, partialUriConverter: PartialUriConverter): PartialSaxUriResolver = {
     val zipEntriesByRelativeUri: Map[URI, ZipEntry] = computeZipEntryMap(zipFile)
 
     def resolveUri(uri: URI): Option[SaxInputSource] = {

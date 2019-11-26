@@ -22,6 +22,17 @@ import java.net.URI
  * Document builders, for taxonomy files or other XML files (for example, XBRL instances). Most of this support for parsing
  * (or retrieving) documents targets both the JVM and the JS platforms.
  *
+ * Typical document builders use an URI resolver, mapping document URIs (mostly HTTP(S) URIs) to local resources. Hence the
+ * UriResolver and PartialUriResolver abstractions, where URI resolvers often combine multiple partial URI resolvers. A partial
+ * URI resolver could for example resolve URIs in a specific ZIP file, such as a taxonomy package. URI resolvers and partial
+ * URI resolvers typically use URI converters (from "remote" URIs to "local" URIs) and partial URI converters.
+ *
+ * This package also contains a simple XML catalog abstraction, as restricted by the XBRL taxonomy packages standard. Hence the
+ * simple catalogs offered here only support URI rewriting rules. Simple catalogs are typically used as (partial) URI converters.
+ *
+ * Note that the (partial) URI converter and (partial) URI resolver abstractions together facilitate document builders that take
+ * multiple ZIP files as input.
+ *
  * @author Chris de Vreeze
  */
 package object docbuilder {

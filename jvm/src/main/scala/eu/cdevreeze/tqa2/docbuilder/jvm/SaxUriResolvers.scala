@@ -20,7 +20,11 @@ import java.io.File
 import java.io.FileInputStream
 import java.io.InputStream
 import java.net.URI
+import java.util.zip.ZipFile
 
+import eu.cdevreeze.tqa2.docbuilder.SimpleCatalog
+import eu.cdevreeze.tqa2.docbuilder.UriConverter
+import eu.cdevreeze.tqa2.docbuilder.UriConverters
 import org.xml.sax.InputSource
 
 /**
@@ -64,5 +68,116 @@ object SaxUriResolvers {
     resolveUri
   }
 
-  // TODO ...
+  /**
+   * Like `PartialSaxUriResolvers.fromPartialUriConverter(liftedUriConverter).andThen(_.get)`.
+   */
+  def fromUriConverter(uriConverter: UriConverter): SaxUriResolver = {
+    val delegate: PartialSaxUriResolver =
+      PartialSaxUriResolvers.fromPartialUriConverter(uriConverter.andThen(u => Some(u)))
+
+    delegate.andThen(_.ensuring(_.isDefined).get)
+  }
+
+  /**
+   * Like `PartialSaxUriResolvers.forZipFile(zipFile, liftedUriConverter).andThen(_.get)`, .
+   */
+  def forZipFile(zipFile: ZipFile, uriConverter: UriConverter): SaxUriResolver = {
+    val delegate: PartialSaxUriResolver =
+      PartialSaxUriResolvers.forZipFile(zipFile, uriConverter.andThen(u => Some(u)))
+
+    delegate.andThen(_.ensuring(_.isDefined).get)
+  }
+
+  /**
+   * Returns `fromUriConverter(UriConverters.fromCatalogOrIdentity(catalog))`.
+   */
+  def fromCatalogWithFallback(catalog: SimpleCatalog): SaxUriResolver = {
+    fromUriConverter(UriConverters.fromCatalogOrIdentity(catalog))
+  }
+
+  /**
+   * Returns `fromUriConverter(UriConverters.fromCatalog(catalog))`.
+   */
+  def fromCatalogWithoutFallback(catalog: SimpleCatalog): SaxUriResolver = {
+    fromUriConverter(UriConverters.fromCatalog(catalog))
+  }
+
+  /**
+   * Returns an URI resolver that expects all files to be found in a local mirror, with the host name
+   * of the URI mirrored under the given root directory. The protocol (HTTP or HTTPS) is not represented in
+   * the local mirror.
+   */
+  def fromLocalMirrorRootDirectory(rootDir: File): SaxUriResolver = {
+    require(rootDir.isDirectory, s"Not a directory: $rootDir")
+    require(rootDir.isAbsolute, s"Not an absolute path: $rootDir")
+
+    def convertUri(uri: URI): URI = {
+      require(uri.getHost != null, s"Missing host name in URI '$uri'")
+      require(uri.getScheme == "http" || uri.getScheme == "https", s"Not an HTTP(S) URI: '$uri'")
+
+      val uriStart = returnWithTrailingSlash(new URI(uri.getScheme, uri.getHost, null, null))
+      val rewritePrefix = returnWithTrailingSlash((new File(rootDir, uri.getHost)).toURI)
+
+      val catalog =
+        SimpleCatalog(
+          None,
+          Vector(SimpleCatalog.UriRewrite(None, uriStart, rewritePrefix)))
+
+      val mappedUri = catalog.findMappedUri(uri).getOrElse(sys.error(s"No mapping found for URI '$uri'"))
+      mappedUri
+    }
+
+    fromUriConverter(convertUri)
+  }
+
+  /**
+   * Returns an URI resolver that expects all files to be found in a local mirror in a ZIP file, with the host name
+   * of the URI mirrored under the given optional parent directory. The protocol (HTTP or HTTPS) is not represented in
+   * the local mirror.
+   */
+  def forZipFileContainingLocalMirror(zipFile: ZipFile, parentPathOption: Option[URI]): SaxUriResolver = {
+    require(parentPathOption.forall(!_.isAbsolute), s"Not a relative URI: ${parentPathOption.get}")
+
+    def convertUri(uri: URI): URI = {
+      require(uri.getHost != null, s"Missing host name in URI '$uri'")
+      require(uri.getScheme == "http" || uri.getScheme == "https", s"Not an HTTP(S) URI: '$uri'")
+
+      val uriStart = returnWithTrailingSlash(new URI(uri.getScheme, uri.getHost, null, null))
+
+      val hostAsRelativeUri = URI.create(uri.getHost + "/")
+
+      val rewritePrefix =
+        parentPathOption.map(pp => URI.create(returnWithTrailingSlash(pp)).resolve(hostAsRelativeUri)).
+          getOrElse(hostAsRelativeUri).toString.ensuring(_.endsWith("/"))
+
+      val catalog =
+        SimpleCatalog(
+          None,
+          Vector(SimpleCatalog.UriRewrite(None, uriStart, rewritePrefix)))
+
+      val mappedUri = catalog.findMappedUri(uri).getOrElse(sys.error(s"No mapping found for URI '$uri'"))
+      mappedUri
+    }
+
+    forZipFile(zipFile, convertUri)
+  }
+
+  /**
+   * Returns `forZipFile(zipFile, UriConverters.fromCatalogOrIdentity(catalog))`.
+   */
+  def forZipFileUsingCatalogWithFallback(zipFile: ZipFile, catalog: SimpleCatalog): SaxUriResolver = {
+    forZipFile(zipFile, UriConverters.fromCatalogOrIdentity(catalog))
+  }
+
+  /**
+   * Returns `forZipFile(zipFile, UriConverters.fromCatalog(catalog))`.
+   */
+  def forZipFileUsingCatalogWithoutFallback(zipFile: ZipFile, catalog: SimpleCatalog): SaxUriResolver = {
+    forZipFile(zipFile, UriConverters.fromCatalog(catalog))
+  }
+
+  private def returnWithTrailingSlash(uri: URI): String = {
+    val s = uri.toString
+    if (s.endsWith("/")) s else s + "/"
+  }
 }

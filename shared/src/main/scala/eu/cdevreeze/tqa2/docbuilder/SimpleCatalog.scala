@@ -18,8 +18,8 @@ package eu.cdevreeze.tqa2.docbuilder
 
 import java.net.URI
 
-import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.yaidom2.core.EName
+import eu.cdevreeze.yaidom2.core.Scope
 import eu.cdevreeze.yaidom2.core.SimpleScope
 import eu.cdevreeze.yaidom2.node.nodebuilder
 import eu.cdevreeze.yaidom2.node.nodebuilder.NodeBuilders.ElemCreator
@@ -139,5 +139,5 @@ object SimpleCatalog {
   val UriStartStringEName: EName = EName.fromLocalName("uriStartString")
   val RewritePrefixEName: EName = EName.fromLocalName("rewritePrefix")
 
-  private val XmlBaseEName = EName(Namespaces.XmlNamespace, "base")
+  private val XmlBaseEName = EName(Scope.XmlNamespace, "base")
 }

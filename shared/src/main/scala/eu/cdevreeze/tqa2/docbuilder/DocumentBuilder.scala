@@ -34,10 +34,22 @@ trait DocumentBuilder {
 
   type BackingDoc <: BackingDocumentApi
 
+  /**
+   * Returns the document with the given URI. This typically but not necessarily involves parsing of the document.
+   */
   def build(uri: URI): BackingDoc
 }
 
 object DocumentBuilder {
+
+  /**
+   * Document builder that uses an URI resolver internally, typically to load the document from a local mirror.
+   * The "original" URI is stored with the document as its document URI, even if the document is loaded from a local mirror.
+   */
+  trait UsingUriResolver extends DocumentBuilder {
+
+    def uriResolver: UriResolver
+  }
 
   type Aux[A] = DocumentBuilder { type BackingDoc = A }
 }

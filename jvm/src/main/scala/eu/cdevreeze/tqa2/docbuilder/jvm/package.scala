@@ -25,7 +25,7 @@ import java.net.URI
  */
 package object jvm {
 
-  type SaxUriResolver = URI => SaxInputSource
+  type SaxUriResolver = URI => SaxInputSource // sub-type of UriResolver
 
-  type PartialSaxUriResolver = URI => Option[SaxInputSource]
+  type PartialSaxUriResolver = URI => Option[SaxInputSource] // sub-type of PartialUriResolver
 }
