@@ -19,8 +19,7 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.dom
 import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
-import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
-import eu.cdevreeze.tqa2.locfreetaxonomy.UriResolverTestUtil
+import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.node.resolved
 import eu.cdevreeze.yaidom2.node.saxon
@@ -78,10 +77,14 @@ class TaxonomyElemTest extends FunSuite {
     val venjBw2DimNs = "http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes"
 
     extendedLinks.head.arcs.filter { arc =>
-      labeledResourceMap.getOrElse(arc.from, Seq.empty)
-        .collect { case k: ConceptKey if k.key == EName(venjBw2DimNs, "ClassesOfDirectorsAndPersonnelAxis") => k }.nonEmpty &&
-        labeledResourceMap.getOrElse(arc.to, Seq.empty)
-          .collect { case r: ConceptLabelResource if r.text == "Classes des administrateurs et du personnel [axe]" => r }.nonEmpty
+      labeledResourceMap
+        .getOrElse(arc.from, Seq.empty)
+        .collect { case k: ConceptKey if k.key == EName(venjBw2DimNs, "ClassesOfDirectorsAndPersonnelAxis") => k }
+        .nonEmpty &&
+      labeledResourceMap
+        .getOrElse(arc.to, Seq.empty)
+        .collect { case r: ConceptLabelResource if r.text == "Classes des administrateurs et du personnel [axe]" => r }
+        .nonEmpty
     } should have size 1
 
     extendedLinks.head.xlinkResourceChildren.collect { case k: ConceptKey if k.key.localPart.endsWith("Axis") => k } should equal {
@@ -92,8 +95,7 @@ class TaxonomyElemTest extends FunSuite {
   private val processor = new Processor(false)
 
   private def getTaxonomyElement(relativeFilePath: URI): TaxonomyElem = {
-    val docBuilder = SaxonDocumentBuilder(processor, UriResolverTestUtil.getUriResolverForClasspath)
-    val doc: saxon.Document = docBuilder.build(relativeFilePath)
+    val doc: saxon.Document = TestResourceUtil.buildSaxonDocumentFromClasspathResource(relativeFilePath, processor)
 
     TaxonomyElem(doc.documentElement)
   }

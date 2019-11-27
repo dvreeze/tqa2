@@ -20,8 +20,7 @@ import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
-import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
-import eu.cdevreeze.tqa2.locfreetaxonomy.UriResolverTestUtil
+import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
 import eu.cdevreeze.yaidom2.node.saxon
@@ -61,8 +60,7 @@ class TaxonomyBaseTest extends FunSuite {
   private val processor = new Processor(false)
 
   private def getTaxonomyElement(relativeFilePath: URI): TaxonomyElem = {
-    val docBuilder = SaxonDocumentBuilder(processor, UriResolverTestUtil.getUriResolverForClasspath)
-    val doc: saxon.Document = docBuilder.build(relativeFilePath)
+    val doc: saxon.Document = TestResourceUtil.buildSaxonDocumentFromClasspathResource(relativeFilePath, processor)
 
     TaxonomyElem(doc.documentElement)
   }

@@ -18,8 +18,7 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.relationship
 
 import java.net.URI
 
-import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
-import eu.cdevreeze.tqa2.locfreetaxonomy.UriResolverTestUtil
+import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Linkbase
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.yaidom2.core.EName
@@ -48,15 +47,14 @@ class RelationshipTest extends FunSuite {
 
     relationships.collect { case rel: ConceptLabelRelationship => rel }.filter { rel =>
       rel.sourceConcept == EName(venjBw2DimNs, "ClassesOfDirectorsAndPersonnelAxis") &&
-        rel.labelText == "Classes des administrateurs et du personnel [axe]"
+      rel.labelText == "Classes des administrateurs et du personnel [axe]"
     } should have size 1
   }
 
   private val processor = new Processor(false)
 
   private def getTaxonomyElement(relativeFilePath: URI): TaxonomyElem = {
-    val docBuilder = SaxonDocumentBuilder(processor, UriResolverTestUtil.getUriResolverForClasspath)
-    val doc: saxon.Document = docBuilder.build(relativeFilePath)
+    val doc: saxon.Document = TestResourceUtil.buildSaxonDocumentFromClasspathResource(relativeFilePath, processor)
 
     TaxonomyElem(doc.documentElement)
   }
