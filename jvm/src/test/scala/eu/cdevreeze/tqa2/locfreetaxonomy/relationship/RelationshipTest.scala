@@ -16,14 +16,14 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.relationship
 
-import java.io.File
+import java.net.URI
 
+import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
+import eu.cdevreeze.tqa2.locfreetaxonomy.UriResolverTestUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Linkbase
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElemTest
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.node.saxon
-import eu.cdevreeze.yaidom2.node.saxon.SaxonDocument
 import net.sf.saxon.s9api.Processor
 import org.scalatest.FunSuite
 import org.scalatest.Matchers._
@@ -36,7 +36,7 @@ import org.scalatest.Matchers._
 class RelationshipTest extends FunSuite {
 
   test("TQA should be able to extract and query standard label relationships") {
-    val linkbase = Linkbase(getTaxonomyElement("/testfiles/venj-bw2-axes-lab-fr.xml").underlyingElem)
+    val linkbase = Linkbase(getTaxonomyElement(URI.create("testfiles/venj-bw2-axes-lab-fr.xml")).underlyingElem)
 
     val relationshipFactory = new DefaultRelationshipFactory()
 
@@ -54,13 +54,10 @@ class RelationshipTest extends FunSuite {
 
   private val processor = new Processor(false)
 
-  private def getTaxonomyElement(relativeFilePath: String): TaxonomyElem = {
-    val docBuilder = processor.newDocumentBuilder()
-    val file = new File(classOf[TaxonomyElemTest].getResource("/" + relativeFilePath.stripPrefix("/")).toURI)
-    val doc = docBuilder.build(file)
+  private def getTaxonomyElement(relativeFilePath: URI): TaxonomyElem = {
+    val docBuilder = SaxonDocumentBuilder(processor, UriResolverTestUtil.getUriResolverForClasspath)
+    val doc: saxon.Document = docBuilder.build(relativeFilePath)
 
-    val docElem: saxon.Elem = SaxonDocument(doc).documentElement
-
-    TaxonomyElem(docElem)
+    TaxonomyElem(doc.documentElement)
   }
 }

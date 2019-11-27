@@ -71,7 +71,7 @@ object SaxonDocumentBuilder {
     new SaxonDocumentBuilder(underlyingDocBuilder, uriResolver)
   }
 
-  def from(underlyingDocBuilder: s9api.DocumentBuilder, underlyingUriResolver: URI => InputSource): SaxonDocumentBuilder = {
-    apply(underlyingDocBuilder, uri => new SaxInputSource(underlyingUriResolver(uri)))
+  def apply(saxonProcessor: s9api.Processor, uriResolver: URI => SaxInputSource): SaxonDocumentBuilder = {
+    new SaxonDocumentBuilder(saxonProcessor.newDocumentBuilder(), uriResolver)
   }
 }

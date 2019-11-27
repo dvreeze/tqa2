@@ -16,15 +16,15 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy
 
-import java.io.File
+import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
+import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
+import eu.cdevreeze.tqa2.locfreetaxonomy.UriResolverTestUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElemTest
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
 import eu.cdevreeze.yaidom2.node.saxon
-import eu.cdevreeze.yaidom2.node.saxon.SaxonDocument
 import net.sf.saxon.s9api.Processor
 import org.scalatest.FunSuite
 import org.scalatest.Matchers._
@@ -37,7 +37,7 @@ import org.scalatest.Matchers._
 class TaxonomyBaseTest extends FunSuite {
 
   test("TQA should be able to create a single-document TaxonomyBase") {
-    val schema = XsSchema(getTaxonomyElement("/testfiles/kvk-data.xsd").underlyingElem)
+    val schema = XsSchema(getTaxonomyElement(URI.create("testfiles/kvk-data.xsd")).underlyingElem)
 
     val taxonomyBase: TaxonomyBase = TaxonomyBase.build(Seq(schema), SubstitutionGroupMap.Empty)
 
@@ -60,13 +60,10 @@ class TaxonomyBaseTest extends FunSuite {
 
   private val processor = new Processor(false)
 
-  private def getTaxonomyElement(relativeFilePath: String): TaxonomyElem = {
-    val docBuilder = processor.newDocumentBuilder()
-    val file = new File(classOf[TaxonomyElemTest].getResource("/" + relativeFilePath.stripPrefix("/")).toURI)
-    val doc = docBuilder.build(file)
+  private def getTaxonomyElement(relativeFilePath: URI): TaxonomyElem = {
+    val docBuilder = SaxonDocumentBuilder(processor, UriResolverTestUtil.getUriResolverForClasspath)
+    val doc: saxon.Document = docBuilder.build(relativeFilePath)
 
-    val docElem: saxon.Elem = SaxonDocument(doc).documentElement
-
-    TaxonomyElem(docElem)
+    TaxonomyElem(doc.documentElement)
   }
 }

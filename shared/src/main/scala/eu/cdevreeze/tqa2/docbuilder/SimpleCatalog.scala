@@ -71,7 +71,8 @@ final case class SimpleCatalog(xmlBaseAttrOption: Option[URI], uriRewrites: Seq[
 
     val uriRewriteElems: Seq[nodebuilder.Elem] = uriRewrites.map(_.toElem).map(e => nodebuilder.Elem.from(e))
 
-    val resultElem = ElemCreator(simpleScope).emptyElem(ErCatalogEName)
+    val resultElem = ElemCreator(simpleScope)
+      .emptyElem(ErCatalogEName)
       .plusAttributeOption(XmlBaseEName, xmlBaseAttrOption.map(_.toString))
       .plusChildren(uriRewriteElems)
 
@@ -101,7 +102,8 @@ object SimpleCatalog {
     def toElem: simple.Elem = {
       val simpleScope: SimpleScope = SimpleScope.from("er" -> ErNamespace)
 
-      val resultElem = ElemCreator(simpleScope).emptyElem(ErRewriteURIEName)
+      val resultElem = ElemCreator(simpleScope)
+        .emptyElem(ErRewriteURIEName)
         .plusAttributeOption(XmlBaseEName, xmlBaseAttrOption.map(_.toString))
         .plusAttribute(UriStartStringEName, uriStartString)
         .plusAttribute(RewritePrefixEName, rewritePrefix)
@@ -115,18 +117,20 @@ object SimpleCatalog {
     def fromElem(rewriteElem: ScopedNodes.Elem): UriRewrite = {
       require(rewriteElem.name == ErRewriteURIEName, s"Expected $ErRewriteURIEName but got ${rewriteElem.name}")
 
-      UriRewrite(
-        rewriteElem.attrOption(XmlBaseEName).map(URI.create),
-        rewriteElem.attr(UriStartStringEName),
-        rewriteElem.attr(RewritePrefixEName))
+      UriRewrite(rewriteElem.attrOption(XmlBaseEName).map(URI.create),
+                 rewriteElem.attr(UriStartStringEName),
+                 rewriteElem.attr(RewritePrefixEName))
     }
+  }
+
+  def from(uriRewrites: Map[String, String]): SimpleCatalog = {
+    SimpleCatalog(None, uriRewrites.toSeq.map { case (startString, rewritePrefix) => UriRewrite(None, startString, rewritePrefix) })
   }
 
   def fromElem(catalogElem: ScopedNodes.Elem): SimpleCatalog = {
     require(catalogElem.name == ErCatalogEName, s"Expected $ErCatalogEName but got ${catalogElem.name}")
 
-    val uriRewrites: Seq[UriRewrite] = catalogElem.filterChildElems(_.name == ErRewriteURIEName)
-      .map(e => UriRewrite.fromElem(e))
+    val uriRewrites: Seq[UriRewrite] = catalogElem.filterChildElems(_.name == ErRewriteURIEName).map(e => UriRewrite.fromElem(e))
 
     SimpleCatalog(catalogElem.attrOption(XmlBaseEName).map(URI.create), uriRewrites)
   }

@@ -116,12 +116,9 @@ object SaxUriResolvers {
       require(uri.getScheme == "http" || uri.getScheme == "https", s"Not an HTTP(S) URI: '$uri'")
 
       val uriStart = returnWithTrailingSlash(new URI(uri.getScheme, uri.getHost, null, null))
-      val rewritePrefix = returnWithTrailingSlash((new File(rootDir, uri.getHost)).toURI)
+      val rewritePrefix = returnWithTrailingSlash(new File(rootDir, uri.getHost).toURI)
 
-      val catalog =
-        SimpleCatalog(
-          None,
-          Vector(SimpleCatalog.UriRewrite(None, uriStart, rewritePrefix)))
+      val catalog = SimpleCatalog.from(Map(uriStart -> rewritePrefix))
 
       val mappedUri = catalog.findMappedUri(uri).getOrElse(sys.error(s"No mapping found for URI '$uri'"))
       mappedUri
@@ -147,13 +144,13 @@ object SaxUriResolvers {
       val hostAsRelativeUri = URI.create(uri.getHost + "/")
 
       val rewritePrefix =
-        parentPathOption.map(pp => URI.create(returnWithTrailingSlash(pp)).resolve(hostAsRelativeUri)).
-          getOrElse(hostAsRelativeUri).toString.ensuring(_.endsWith("/"))
+        parentPathOption
+          .map(pp => URI.create(returnWithTrailingSlash(pp)).resolve(hostAsRelativeUri))
+          .getOrElse(hostAsRelativeUri)
+          .toString
+          .ensuring(_.endsWith("/"))
 
-      val catalog =
-        SimpleCatalog(
-          None,
-          Vector(SimpleCatalog.UriRewrite(None, uriStart, rewritePrefix)))
+      val catalog = SimpleCatalog.from(Map(uriStart -> rewritePrefix))
 
       val mappedUri = catalog.findMappedUri(uri).getOrElse(sys.error(s"No mapping found for URI '$uri'"))
       mappedUri
