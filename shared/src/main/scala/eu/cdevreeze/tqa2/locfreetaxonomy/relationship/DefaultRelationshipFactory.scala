@@ -32,7 +32,7 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkResource
  *
  * @author Chris de Vreeze
  */
-class DefaultRelationshipFactory extends RelationshipFactory {
+object DefaultRelationshipFactory extends RelationshipFactory {
 
   def extractRelationships(
     taxonomy: Map[URI, TaxonomyElem],

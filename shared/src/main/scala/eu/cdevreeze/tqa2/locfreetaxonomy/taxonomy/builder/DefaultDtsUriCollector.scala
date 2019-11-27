@@ -42,11 +42,11 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
  *
  * @author Chris de Vreeze
  */
-final class DefaultDtsUriCollector(val docBuilder: URI => TaxonomyElem) extends DtsUriCollector {
+object DefaultDtsUriCollector extends DtsUriCollector {
 
-  def findAllDtsUris(entrypoint: Set[URI]): Set[URI] = {
+  def findAllDtsUris(entrypoint: Set[URI], taxoElemBuilder: URI => TaxonomyElem): Set[URI] = {
     entrypoint.toSeq.flatMap { docUri =>
-      val docElem: TaxonomyElem = Try(docBuilder(docUri)).getOrElse(sys.error(s"Missing document with URI $docUri"))
+      val docElem: TaxonomyElem = Try(taxoElemBuilder(docUri)).getOrElse(sys.error(s"Missing document with URI $docUri"))
 
       findOwnDtsUris(docElem).union(entrypoint)
     }.toSet
@@ -55,13 +55,17 @@ final class DefaultDtsUriCollector(val docBuilder: URI => TaxonomyElem) extends 
   private def findOwnDtsUris(docElem: TaxonomyElem): Set[URI] = {
     docElem.name match {
       case ENames.XsSchemaEName =>
-        val linkbaseRefs: Seq[LinkbaseRef] = docElem.filterDescendantElems(_.name == ENames.CLinkLinkbaseRefEName)
+        val linkbaseRefs: Seq[LinkbaseRef] = docElem
+          .filterDescendantElems(_.name == ENames.CLinkLinkbaseRefEName)
           .collect { case e: LinkbaseRef => e }
 
-        val imports: Seq[Import] = docElem.filterDescendantElems(_.name == ENames.XsImportEName)
+        val imports: Seq[Import] = docElem
+          .filterDescendantElems(_.name == ENames.XsImportEName)
           .collect { case e: Import => e }
 
-        linkbaseRefs.map(_.href).toSet
+        linkbaseRefs
+          .map(_.href)
+          .toSet
           .union(imports.flatMap(_.attrOption(ENames.SchemaLocationEName).map(URI.create)).toSet)
       case _ =>
         Set.empty

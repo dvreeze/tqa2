@@ -49,15 +49,11 @@ private[console] object ConsoleUtil {
   }
 
   def createTaxonomy(entrypointUri: URI, taxoRootDir: File, processor: Processor): BasicTaxonomy = {
-    createTaxonomy(Set(entrypointUri), taxoRootDir, processor)
-  }
-
-  def createTaxonomy(entrypointUris: Set[URI], taxoRootDir: File, processor: Processor): BasicTaxonomy = {
-    val dtsUriCollector: DtsUriCollector = new DefaultDtsUriCollector(uri => build(uri, taxoRootDir.toURI, processor))
+    val dtsUriCollector: DtsUriCollector = DefaultDtsUriCollector
 
     println(s"Finding DTS document URIs (entrypoint: ${entrypointUris.mkString(", ")}) ...") // scalastyle:off
 
-    val dtsDocUris: Set[URI] = dtsUriCollector.findAllDtsUris(entrypointUris)
+    val dtsDocUris: Set[URI] = dtsUriCollector.findAllDtsUris(Set(entrypointUri), { uri => build(uri, taxoRootDir.toURI, processor) })
 
     println(s"Parsing DTS documents ...") // scalastyle:off
 

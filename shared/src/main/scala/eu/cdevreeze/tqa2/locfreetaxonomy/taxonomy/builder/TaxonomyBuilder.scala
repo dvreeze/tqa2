@@ -18,17 +18,17 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder
 
 import java.net.URI
 
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
+import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 
 /**
- * API for DTS URI collectors, in the locator-free taxonomy model.
+ * Abstract API for taxonomy builders.
  *
  * @author Chris de Vreeze
  */
-trait DtsUriCollector {
+trait TaxonomyBuilder {
 
   /**
-   * Given an entrypoint as URI set, finds all document URIs of documents in the DTS of that entrypoint.
+   * Given an entrypoint as URI set, builds the DTS of that entrypoint, as BasicTaxonomy.
    */
-  def findAllDtsUris(entrypoint: Set[URI], taxoElemBuilder: URI => TaxonomyElem): Set[URI]
+  def build(entrypoint: Set[URI]): BasicTaxonomy
 }

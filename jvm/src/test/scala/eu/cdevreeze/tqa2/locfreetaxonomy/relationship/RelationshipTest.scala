@@ -37,7 +37,7 @@ class RelationshipTest extends FunSuite {
   test("TQA should be able to extract and query standard label relationships") {
     val linkbase = Linkbase(getTaxonomyElement(URI.create("testfiles/venj-bw2-axes-lab-fr.xml")).underlyingElem)
 
-    val relationshipFactory = new DefaultRelationshipFactory()
+    val relationshipFactory = DefaultRelationshipFactory
 
     val relationships = relationshipFactory.extractRelationships(Map(linkbase.docUri -> linkbase), RelationshipFactory.AnyArc)
 
