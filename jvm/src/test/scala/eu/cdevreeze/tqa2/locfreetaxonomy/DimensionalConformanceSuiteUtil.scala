@@ -47,7 +47,10 @@ object DimensionalConformanceSuiteUtil {
 
     val coreSchemaZipFile: File = new File(TestResourceUtil.convertClasspathUriToAbsoluteUri(URI.create("core-schemas.zip")))
 
-    val taxoCatalog: SimpleCatalog = SimpleCatalog.from(Map(dummyUriPrefix.toString -> ""))
+    val taxoCatalog: SimpleCatalog = SimpleCatalog.from(
+      Map(
+        dummyUriPrefix.toString -> "xdt-conf-cr4-2009-10-06/"
+      ))
 
     val coreSchemaCatalog: SimpleCatalog = SimpleCatalog.from(
       Map(

@@ -18,8 +18,7 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder
 
 import java.net.URI
 
-import scala.util.Try
-
+import scala.util.{Failure, Success, Try}
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Import
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.LinkbaseRef
@@ -46,7 +45,10 @@ object DefaultDtsUriCollector extends DtsUriCollector {
 
   def findAllDtsUris(entrypoint: Set[URI], taxoElemBuilder: URI => TaxonomyElem): Set[URI] = {
     entrypoint.toSeq.flatMap { docUri =>
-      val docElem: TaxonomyElem = Try(taxoElemBuilder(docUri)).getOrElse(sys.error(s"Missing document with URI $docUri"))
+      val docElem: TaxonomyElem = Try(taxoElemBuilder(docUri)) match {
+        case Success(v) => v
+        case Failure(exc) => throw new RuntimeException(s"Missing document with URI $docUri", exc)
+      }
 
       findOwnDtsUris(docElem).union(entrypoint)
     }.toSet
