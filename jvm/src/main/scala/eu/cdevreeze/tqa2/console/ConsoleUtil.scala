@@ -38,12 +38,23 @@ import net.sf.saxon.s9api.Processor
  */
 private[console] object ConsoleUtil {
 
-  def createTaxonomy(entrypointUri: URI, taxoRootDir: File, processor: Processor): BasicTaxonomy = {
+  def createTaxonomyForCombinedDts(entrypointsParentDirUri: URI, taxoRootDir: File, processor: Processor): BasicTaxonomy = {
+    val localParentDirUri: URI = rewriteUri(entrypointsParentDirUri, taxoRootDir.toURI)
+    val localParentDir: File = new File(localParentDirUri)
+
+    val entrypointFiles: Seq[File] = localParentDir.listFiles(_.isFile).toIndexedSeq
+    val entrypointUris: Set[URI] = entrypointFiles.map(f => entrypointsParentDirUri.resolve(f.getName)).toSet
+
+    createTaxonomy(entrypointUris, taxoRootDir, processor)
+  }
+
+
+  def createTaxonomy(entrypointUris: Set[URI], taxoRootDir: File, processor: Processor): BasicTaxonomy = {
     val dtsUriCollector: DtsUriCollector = DefaultDtsUriCollector
 
-    println(s"Finding DTS document URIs (entrypoint: $entrypointUri) ...") // scalastyle:off
+    println(s"Finding DTS document URIs (entrypoint: ${entrypointUris.mkString(", ")} ...") // scalastyle:off
 
-    val dtsDocUris: Set[URI] = dtsUriCollector.findAllDtsUris(Set(entrypointUri), { uri => build(uri, taxoRootDir.toURI, processor) })
+    val dtsDocUris: Set[URI] = dtsUriCollector.findAllDtsUris(entrypointUris, { uri => build(uri, taxoRootDir.toURI, processor) })
 
     println(s"Parsing DTS documents ...") // scalastyle:off
 
@@ -60,6 +71,10 @@ private[console] object ConsoleUtil {
 
     println(s"Number of relationships: ${taxo.relationships.size}") // scalastyle:off
     taxo
+  }
+
+  def createTaxonomy(entrypointUri: URI, taxoRootDir: File, processor: Processor): BasicTaxonomy = {
+    createTaxonomy(Set(entrypointUri), taxoRootDir, processor)
   }
 
   private def build(uri: URI, taxoRootDirAsUri: URI, processor: Processor): TaxonomyElem = {
