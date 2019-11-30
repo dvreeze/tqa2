@@ -22,6 +22,11 @@ import java.net.URI
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.HasHypercubeRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ParentChildRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
+import eu.cdevreeze.tqa2.validate.SchemaValidations
+import eu.cdevreeze.tqa2.validate.Validation
+import eu.cdevreeze.tqa2.validate.ValidationResult
+import eu.cdevreeze.tqa2.validate.Validator
+import eu.cdevreeze.tqa2.validate.XLinkValidations
 import eu.cdevreeze.yaidom2.core.EName
 import net.sf.saxon.s9api.Processor
 
@@ -54,6 +59,8 @@ object LocatorFreeTaxonomyLoader {
 
     printTaxonomyInfo(taxo)
 
+    validateTaxonomy(taxo)
+
     val end = System.currentTimeMillis()
 
     println() // scalastyle:off
@@ -82,5 +89,29 @@ object LocatorFreeTaxonomyLoader {
 
     println(s"Number of dimensional concepts that are not items in the taxo: ${dimensionalConcepts.diff(items).size}")
     println(s"Number of items in the taxo that are not dimensional concepts: ${items.diff(dimensionalConcepts).size}")
+  }
+
+  // scalastyle:off
+  def validateTaxonomy(taxo: BasicTaxonomy): Unit = {
+    val validations: Seq[Validation] = XLinkValidations.all.appendedAll(SchemaValidations.all)
+
+    def keepResult(validationResult: ValidationResult): Boolean = true
+
+    val validationResults: Seq[ValidationResult] = Validator.validate(taxo, validations, keepResult)
+
+    val validationOk = validationResults.isEmpty
+
+    println()
+    println(s"Number of validations: ${validations.size}")
+    validations.foreach(v => println(s"\t${v.rule}"))
+
+    println()
+    println(s"Validation OK: $validationOk")
+
+    if (!validationOk) {
+      println()
+      println(s"Number of validation results: ${validationResults.size}")
+      println(s"Validation results: $validationResults")
+    }
   }
 }
