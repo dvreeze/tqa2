@@ -47,6 +47,46 @@ class DimensionalQueryTest extends FunSuite {
     hypercube.globalElementDeclaration.isAbstract should be(true)
   }
 
+  test("TQA should be able to query for (non-abstract) hypercube declarations") {
+    val taxo = makeDts("100-xbrldte/101-HypercubeElementIsNotAbstractError/hypercubeNotAbstract.xsd")
+
+    val hypercubeName: EName = EName.parse("{http://www.xbrl.org/dim/conf/100/hypercubeNotAbstract}MyHypercube")
+    val hypercube = taxo.getHypercubeDeclaration(hypercubeName)
+
+    hypercube.targetEName should be(hypercubeName)
+
+    hypercube.globalElementDeclaration.hasSubstitutionGroup(ENames.XbrldtHypercubeItemEName, taxo.substitutionGroupMap) should be(true)
+
+    hypercube.isAbstract should be(false)
+
+    hypercube.globalElementDeclaration.isAbstract should be(false)
+  }
+
+  test("TQA should be able to query for hypercube declarations with substitution group complexities") {
+    val taxo = makeDts("100-xbrldte/101-HypercubeElementIsNotAbstractError/hypercubeNotAbstractWithSGComplexities.xsd")
+
+    val hypercubeName: EName = EName.parse("{http://www.xbrl.org/dim/conf/100/hypercubeNotAbstract}MyHypercube")
+    val otherHypercubeName: EName = EName.parse("{http://www.xbrl.org/dim/conf/100/hypercubeNotAbstract}MyOtherHypercube")
+
+    val hypercube = taxo.getHypercubeDeclaration(hypercubeName)
+    val otherHypercube = taxo.getHypercubeDeclaration(otherHypercubeName)
+
+    hypercube.targetEName should be(hypercubeName)
+
+    otherHypercube.targetEName should be(otherHypercubeName)
+
+    otherHypercube.substitutionGroupOption should be(Some(hypercubeName))
+
+    hypercube.globalElementDeclaration.hasSubstitutionGroup(ENames.XbrldtHypercubeItemEName, taxo.substitutionGroupMap) should be(true)
+
+    otherHypercube.globalElementDeclaration.hasSubstitutionGroup(ENames.XbrldtHypercubeItemEName, taxo.substitutionGroupMap) should be(true)
+
+    hypercube.isAbstract should be(true)
+    otherHypercube.isAbstract should be(false)
+    hypercube.globalElementDeclaration.isAbstract should be(true)
+    otherHypercube.globalElementDeclaration.isAbstract should be(false)
+  }
+
   private val processor = new Processor(false)
 
   private def makeDts(relativeFilePath: String): BasicTaxonomy = {
