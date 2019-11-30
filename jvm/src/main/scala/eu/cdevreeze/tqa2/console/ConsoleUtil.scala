@@ -17,18 +17,20 @@
 package eu.cdevreeze.tqa2.console
 
 import java.io.File
-import java.io.FileInputStream
 import java.net.URI
 
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
+import eu.cdevreeze.tqa2.docbuilder.SimpleCatalog
+import eu.cdevreeze.tqa2.docbuilder.jvm.SaxUriResolver
+import eu.cdevreeze.tqa2.docbuilder.jvm.SaxUriResolvers
+import eu.cdevreeze.tqa2.docbuilder.jvm.SimpleCatalogs
+import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.jvm.DefaultParallelRelationshipFactory
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyBase
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder.DefaultDtsUriCollector
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder.DtsUriCollector
-import eu.cdevreeze.yaidom2.node.saxon.SaxonDocument
-import javax.xml.transform.stream.StreamSource
 import net.sf.saxon.s9api.Processor
 
 /**
@@ -38,27 +40,38 @@ import net.sf.saxon.s9api.Processor
  */
 private[console] object ConsoleUtil {
 
-  def createTaxonomyForCombinedDts(entrypointsParentDirUri: URI, taxoRootDir: File, processor: Processor): BasicTaxonomy = {
-    val localParentDirUri: URI = rewriteUri(entrypointsParentDirUri, taxoRootDir.toURI)
-    val localParentDir: File = new File(localParentDirUri)
+  def createTaxonomyForCombinedDts(entrypointsParentDirRemoteUri: URI, taxoRootDir: File, processor: Processor): BasicTaxonomy = {
+    require(entrypointsParentDirRemoteUri.isAbsolute, s"Expected absolute URI, but got '$entrypointsParentDirRemoteUri'")
+    require(Option(entrypointsParentDirRemoteUri.getFragment).isEmpty,
+            s"Expected no fragment in the URI, but got URI '$entrypointsParentDirRemoteUri")
+    require(
+      Set("http", "https").contains(entrypointsParentDirRemoteUri.getScheme),
+      s"Expected scheme 'http' or 'https', but got URI '$entrypointsParentDirRemoteUri'"
+    )
 
-    val entrypointFiles: Seq[File] = localParentDir.listFiles(_.isFile).toIndexedSeq
-    val entrypointUris: Set[URI] = entrypointFiles.map(f => entrypointsParentDirUri.resolve(f.getName)).toSet
+    val siteSchemes: Map[String, String] = Map(entrypointsParentDirRemoteUri.getHost -> entrypointsParentDirRemoteUri.getScheme)
+    val catalog: SimpleCatalog = SimpleCatalogs.fromLocalMirrorRootDirectory(taxoRootDir, siteSchemes)
+    val reverseCatalog: SimpleCatalog = catalog.reverse
+
+    val entrypointsLocalParentDir: File = new File(catalog.getMappedUri(entrypointsParentDirRemoteUri))
+    val entrypointFiles: Seq[File] = entrypointsLocalParentDir.listFiles(_.isFile).toIndexedSeq
+    val entrypointUris: Set[URI] = entrypointFiles.map(f => reverseCatalog.getMappedUri(f.toURI)).toSet
 
     createTaxonomy(entrypointUris, taxoRootDir, processor)
   }
-
 
   def createTaxonomy(entrypointUris: Set[URI], taxoRootDir: File, processor: Processor): BasicTaxonomy = {
     val dtsUriCollector: DtsUriCollector = DefaultDtsUriCollector
 
     println(s"Finding DTS document URIs (entrypoint: ${entrypointUris.mkString(", ")} ...") // scalastyle:off
 
-    val dtsDocUris: Set[URI] = dtsUriCollector.findAllDtsUris(entrypointUris, { uri => build(uri, taxoRootDir.toURI, processor) })
+    val docBuilder: SaxonDocumentBuilder = getDocumentBuilder(taxoRootDir, processor)
+
+    val dtsDocUris: Set[URI] = dtsUriCollector.findAllDtsUris(entrypointUris, uri => TaxonomyElem(docBuilder.build(uri).documentElement))
 
     println(s"Parsing DTS documents ...") // scalastyle:off
 
-    val rootElems: Seq[TaxonomyElem] = dtsDocUris.toSeq.sortBy(_.toString).map(u => build(u, taxoRootDir.toURI, processor))
+    val rootElems: Seq[TaxonomyElem] = dtsDocUris.toSeq.sortBy(_.toString).map(u => TaxonomyElem(docBuilder.build(u).documentElement))
 
     println(s"Building TaxonomyBase ...") // scalastyle:off
 
@@ -77,29 +90,9 @@ private[console] object ConsoleUtil {
     createTaxonomy(Set(entrypointUri), taxoRootDir, processor)
   }
 
-  private def build(uri: URI, taxoRootDirAsUri: URI, processor: Processor): TaxonomyElem = {
-    val localUri: URI = rewriteUri(uri, taxoRootDirAsUri)
+  private def getDocumentBuilder(taxoRootDir: File, processor: Processor): SaxonDocumentBuilder = {
+    val uriResolver: SaxUriResolver = SaxUriResolvers.fromLocalMirrorRootDirectory(taxoRootDir)
 
-    val is = new FileInputStream(new File(localUri))
-    val source = new StreamSource(is, uri.toString)
-    val xdmNode = processor.newDocumentBuilder().build(source)
-    val doc = SaxonDocument(xdmNode)
-
-    TaxonomyElem(doc.documentElement)
-  }
-
-  private def rewriteUri(uri: URI, taxoRootDirAsUri: URI): URI = {
-    require(uri.isAbsolute, s"Expected absolute URI, but got '$uri'")
-    require(Option(uri.getFragment).isEmpty, s"Expected no fragment in the URI, but got URI '$uri")
-    require(Set("http", "https").contains(uri.getScheme), s"Expected scheme 'http' or 'https', but got URI '$uri'")
-
-    val host = uri.getHost
-    val hostOnlyUri: URI = new URI(uri.getScheme, host, "/", null) // scalastyle:off null
-    val relativeUri: URI = hostOnlyUri.relativize(uri).ensuring(!_.isAbsolute)
-
-    val localHostDir = new File(taxoRootDirAsUri.resolve(host))
-    require(localHostDir.isDirectory, s"Not a directory: $localHostDir")
-    val localHostUri: URI = localHostDir.toURI
-    localHostUri.resolve(relativeUri)
+    SaxonDocumentBuilder(processor, uriResolver)
   }
 }

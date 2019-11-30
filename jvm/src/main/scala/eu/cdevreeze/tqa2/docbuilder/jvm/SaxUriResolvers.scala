@@ -120,7 +120,7 @@ object SaxUriResolvers {
 
       val catalog = SimpleCatalog.from(Map(uriStart -> rewritePrefix))
 
-      val mappedUri = catalog.findMappedUri(uri).getOrElse(sys.error(s"No mapping found for URI '$uri'"))
+      val mappedUri = catalog.getMappedUri(uri)
       mappedUri
     }
 
@@ -152,7 +152,7 @@ object SaxUriResolvers {
 
       val catalog = SimpleCatalog.from(Map(uriStart -> rewritePrefix))
 
-      val mappedUri = catalog.findMappedUri(uri).getOrElse(sys.error(s"No mapping found for URI '$uri'"))
+      val mappedUri = catalog.getMappedUri(uri)
       mappedUri
     }
 
