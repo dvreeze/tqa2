@@ -22,11 +22,13 @@ import java.net.URI
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.HasHypercubeRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ParentChildRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
-import eu.cdevreeze.tqa2.validate.SchemaValidations
 import eu.cdevreeze.tqa2.validate.Validation
 import eu.cdevreeze.tqa2.validate.ValidationResult
 import eu.cdevreeze.tqa2.validate.Validator
-import eu.cdevreeze.tqa2.validate.XLinkValidations
+import eu.cdevreeze.tqa2.validate.rules.SchemaValidations
+import eu.cdevreeze.tqa2.validate.rules.TaxoDocumentValidations
+import eu.cdevreeze.tqa2.validate.rules.TaxoElemKeyValidations
+import eu.cdevreeze.tqa2.validate.rules.XLinkValidations
 import eu.cdevreeze.yaidom2.core.EName
 import net.sf.saxon.s9api.Processor
 
@@ -94,10 +96,10 @@ object LocatorFreeTaxonomyLoader {
   // scalastyle:off
   def validateTaxonomy(taxo: BasicTaxonomy): Unit = {
     val validations: Seq[Validation] = XLinkValidations.all.appendedAll(SchemaValidations.all)
+      .appendedAll(TaxoDocumentValidations.all)
+      .appendedAll(TaxoElemKeyValidations.all)
 
-    def keepResult(validationResult: ValidationResult): Boolean = true
-
-    val validationResults: Seq[ValidationResult] = Validator.validate(taxo, validations, keepResult)
+    val validationResults: Seq[ValidationResult] = Validator.validate(taxo, validations)
 
     val validationOk = validationResults.isEmpty
 

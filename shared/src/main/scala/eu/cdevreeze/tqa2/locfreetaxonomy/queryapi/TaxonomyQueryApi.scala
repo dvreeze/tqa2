@@ -16,6 +16,7 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.queryapi
 
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Linkbase
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Relationship
 
@@ -42,11 +43,6 @@ trait TaxonomyQueryApi
    */
   def relationships: Seq[Relationship]
 
-  //  /**
-  //   * Returns all taxonomy documents.
-  //   */
-  //  def taxonomyDocs: Seq[TaxonomyDocument]
-
   /**
    * Returns all (document) root elements. To find certain taxonomy elements across the taxonomy,
    * in taxonomy schemas and linkbases, the following pattern can be used:
@@ -55,5 +51,13 @@ trait TaxonomyQueryApi
    * }}}
    */
   def rootElems: Seq[TaxonomyElem]
+
+  /**
+   * Returns the linkbase elements. To find certain extended links, the following pattern can be used:
+   * {{{
+   * findAllLinkbases.flatMap(_.findAllExtendedLinks.filter(pred))
+   * }}}
+   */
+  def findAllLinkbases: Seq[Linkbase]
 
 }

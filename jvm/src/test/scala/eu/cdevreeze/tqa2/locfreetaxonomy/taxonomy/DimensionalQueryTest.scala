@@ -20,6 +20,12 @@ import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.locfreetaxonomy.DimensionalConformanceSuiteUtil
+import eu.cdevreeze.tqa2.validate.Validation
+import eu.cdevreeze.tqa2.validate.Validator
+import eu.cdevreeze.tqa2.validate.rules.SchemaValidations
+import eu.cdevreeze.tqa2.validate.rules.TaxoDocumentValidations
+import eu.cdevreeze.tqa2.validate.rules.TaxoElemKeyValidations
+import eu.cdevreeze.tqa2.validate.rules.XLinkValidations
 import eu.cdevreeze.yaidom2.core.EName
 import net.sf.saxon.s9api.Processor
 import org.scalatest.FunSuite
@@ -90,6 +96,13 @@ class DimensionalQueryTest extends FunSuite {
   private val processor = new Processor(false)
 
   private def makeDts(relativeFilePath: String): BasicTaxonomy = {
-    DimensionalConformanceSuiteUtil.makeTestDts(Seq(URI.create(relativeFilePath)), processor)
+    DimensionalConformanceSuiteUtil
+      .makeTestDts(Seq(URI.create(relativeFilePath)), processor)
+      .ensuring(taxo => Validator.validate(taxo, validations).isEmpty)
   }
+
+  private val validations: Seq[Validation] = XLinkValidations.all
+    .appendedAll(SchemaValidations.all)
+    .appendedAll(TaxoDocumentValidations.all)
+    .appendedAll(TaxoElemKeyValidations.all)
 }

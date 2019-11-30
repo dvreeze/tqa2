@@ -14,10 +14,14 @@
  * limitations under the License.
  */
 
-package eu.cdevreeze.tqa2.validate
+package eu.cdevreeze.tqa2.validate.rules
 
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
+import eu.cdevreeze.tqa2.validate.Rule
+import eu.cdevreeze.tqa2.validate.Taxonomies
+import eu.cdevreeze.tqa2.validate.Validation
+import eu.cdevreeze.tqa2.validate.ValidationResult
 
 /**
  * Taxonomy schema validations.
@@ -26,11 +30,11 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
  */
 object SchemaValidations {
 
-  val includeNotAllowedRule: Rule = "xs:include not allowed"
+  val includeNotAllowedRule: Rule = "Element xs:include not allowed"
 
   val tnsRequiredRule: Rule = "Missing targetNamespace attribute"
 
-  val typedDomainRefNotAllowedRule: Rule = "xbrldt:typedDomainRef attribute not allowed"
+  val typedDomainRefNotAllowedRule: Rule = "Attribute xbrldt:typedDomainRef not allowed"
 
   object IncludeNotAllowed extends Validation {
 

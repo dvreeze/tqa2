@@ -20,9 +20,11 @@ import scala.reflect.ClassTag
 
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.TaxonomyElemKey
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Linkbase
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.NamedGlobalSchemaComponent
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkArc
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal.DefaultTaxonomyQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.InterConceptRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.InterConceptRelationshipPath
@@ -38,14 +40,14 @@ import eu.cdevreeze.yaidom2.core.EName
  *
  * @author Chris de Vreeze
  */
-final class BasicTaxonomy private(
-  val taxonomyBase: TaxonomyBase,
-  val relationshipTypes: Set[ClassTag[_ <: Relationship]],
-  val relationshipMap: Map[ClassTag[_ <: Relationship], Seq[Relationship]],
-  val outgoingRelationshipMap: Map[ClassTag[_ <: TaxonomyElemKey], Map[TaxonomyElemKey, Seq[Relationship]]],
-  val incomingRelationshipMap: Map[ClassTag[_ <: TaxonomyElemKey], Map[TaxonomyElemKey, Seq[Relationship]]],
-  val stopAppendingFunction: (RelationshipPath, Relationship) => Boolean,
-  val stopPrependingFunction: (RelationshipPath, Relationship) => Boolean
+final class BasicTaxonomy private (
+    val taxonomyBase: TaxonomyBase,
+    val relationshipTypes: Set[ClassTag[_ <: Relationship]],
+    val relationshipMap: Map[ClassTag[_ <: Relationship], Seq[Relationship]],
+    val outgoingRelationshipMap: Map[ClassTag[_ <: TaxonomyElemKey], Map[TaxonomyElemKey, Seq[Relationship]]],
+    val incomingRelationshipMap: Map[ClassTag[_ <: TaxonomyElemKey], Map[TaxonomyElemKey, Seq[Relationship]]],
+    val stopAppendingFunction: (RelationshipPath, Relationship) => Boolean,
+    val stopPrependingFunction: (RelationshipPath, Relationship) => Boolean
 ) extends DefaultTaxonomyQueryApi {
 
   override def stopAppending[A <: InterConceptRelationship](path: InterConceptRelationshipPath[A], next: A): Boolean = {
@@ -70,6 +72,14 @@ final class BasicTaxonomy private(
    */
   override def rootElems: Seq[TaxonomyElem] = taxonomyBase.rootElems
 
+  override def findAllLinkbases: Seq[Linkbase] = {
+    rootElems.flatMap(_.findTopmostElemsOrSelf(_.isRootElement)).flatMap {
+      case e: Linkbase => Seq(e)
+      case e: XsSchema => e.findTopmostElems(_.isRootElement).collect { case lb: Linkbase => lb }
+      case _           => Seq.empty
+    }
+  }
+
   override def substitutionGroupMap: SubstitutionGroupMap = taxonomyBase.netSubstitutionGroupMap
 
   /**
@@ -80,9 +90,8 @@ final class BasicTaxonomy private(
     taxonomyBase.namedGlobalSchemaComponentMap
   }
 
-  def withStopFunctions(
-    newStopAppendingFunction: (RelationshipPath, Relationship) => Boolean,
-    newStopPrependingFunction: (RelationshipPath, Relationship) => Boolean): BasicTaxonomy = {
+  def withStopFunctions(newStopAppendingFunction: (RelationshipPath, Relationship) => Boolean,
+                        newStopPrependingFunction: (RelationshipPath, Relationship) => Boolean): BasicTaxonomy = {
 
     new BasicTaxonomy(
       taxonomyBase,
@@ -115,23 +124,30 @@ object BasicTaxonomy {
     val relationshipTypes: Set[ClassTag[_ <: Relationship]] = relationshipMap.keySet
 
     val outgoingRelationshipMap: Map[ClassTag[_ <: TaxonomyElemKey], Map[TaxonomyElemKey, Seq[Relationship]]] =
-      relationships.groupBy(rel => ClassTag(rel.source.taxonomyElemKey.getClass)).view.mapValues { rels =>
-        rels.groupBy(_.source.taxonomyElemKey)
-      }.toMap
+      relationships
+        .groupBy(rel => ClassTag(rel.source.taxonomyElemKey.getClass))
+        .view
+        .mapValues { rels =>
+          rels.groupBy(_.source.taxonomyElemKey)
+        }
+        .toMap
 
     val incomingRelationshipMap: Map[ClassTag[_ <: TaxonomyElemKey], Map[TaxonomyElemKey, Seq[Relationship]]] =
-      relationships.groupBy(rel => ClassTag(rel.target.taxonomyElemKey.getClass)).view.mapValues { rels =>
-        rels.groupBy(_.target.taxonomyElemKey)
-      }.toMap
+      relationships
+        .groupBy(rel => ClassTag(rel.target.taxonomyElemKey.getClass))
+        .view
+        .mapValues { rels =>
+          rels.groupBy(_.target.taxonomyElemKey)
+        }
+        .toMap
 
-    new BasicTaxonomy(
-      taxonomyBase,
-      relationshipTypes,
-      relationshipMap,
-      outgoingRelationshipMap,
-      incomingRelationshipMap,
-      stopAppending,
-      stopPrepending)
+    new BasicTaxonomy(taxonomyBase,
+                      relationshipTypes,
+                      relationshipMap,
+                      outgoingRelationshipMap,
+                      incomingRelationshipMap,
+                      stopAppending,
+                      stopPrepending)
   }
 
   private def stopAppending(path: RelationshipPath, rel: Relationship): Boolean = {
