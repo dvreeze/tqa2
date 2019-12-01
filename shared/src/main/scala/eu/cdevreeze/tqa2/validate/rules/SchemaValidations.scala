@@ -17,6 +17,7 @@
 package eu.cdevreeze.tqa2.validate.rules
 
 import eu.cdevreeze.tqa2.ENames
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.validate.Rule
 import eu.cdevreeze.tqa2.validate.Taxonomies
@@ -36,6 +37,8 @@ object SchemaValidations {
 
   val typedDomainRefNotAllowedRule: Rule = "Attribute xbrldt:typedDomainRef not allowed"
 
+  val tnsUniqueRule: Rule = "Non-unique targetNamespace attribute across schemas"
+
   object IncludeNotAllowed extends Validation {
 
     def rule: Rule = includeNotAllowedRule
@@ -54,6 +57,9 @@ object SchemaValidations {
    * chameleon schemas cannot occur. The latter is important, because chameleon schemas have no target namespace in isolation
    * so cannot be referred to from taxonomy element keys elsewhere, unless a very costly implementation is made to support
    * that "use case". Similar problems with chameleon schemas apply to regular taxonomies.
+   *
+   * Note that the targetNamespace attribute is very important in the locator-free model, because URIs are banned (except
+   * in entrypoints), so namespaces play a far more central role in the locator-free model than in regular taxonomies.
    */
   object MissingTargetNamespace extends Validation {
 
@@ -82,5 +88,29 @@ object SchemaValidations {
     }
   }
 
-  val all: Seq[Validation] = Seq(IncludeNotAllowed, MissingTargetNamespace, TypedDomainRefNotAllowed)
+  /**
+   * Validation that checks that all schemas (with target namespace) have a unique target namespace, so that no 2 schemas have the
+   * same target namespace.
+   *
+   * Again note that the targetNamespace attribute is very important in the locator-free model, because URIs are banned (except
+   * in entrypoints), so namespaces play a far more central role in the locator-free model than in regular taxonomies.
+   */
+  object NonUniqueTargetNamespace extends Validation {
+
+    def rule: Rule = tnsUniqueRule
+
+    def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
+      val schemasWithTns = taxo.findAllXsdSchemas
+        .filter(Taxonomies.isProperTaxonomyDocumentContent)
+        .filter(_.targetNamespaceOption.nonEmpty)
+
+      val schemasGroupedByTns: Map[String, Seq[XsSchema]] = schemasWithTns.groupBy(_.targetNamespaceOption.get)
+
+      val duplicateTnses: Set[String] = schemasGroupedByTns.filter(_._2.sizeIs >= 2).keySet
+
+      duplicateTnses.toSeq.sorted.map(tns => ValidationResult(rule, "Non-unique targetNamespace attribute", tns))
+    }
+  }
+
+  val all: Seq[Validation] = Seq(IncludeNotAllowed, MissingTargetNamespace, TypedDomainRefNotAllowed, NonUniqueTargetNamespace)
 }

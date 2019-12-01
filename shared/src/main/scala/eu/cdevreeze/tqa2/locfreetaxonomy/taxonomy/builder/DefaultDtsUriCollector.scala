@@ -27,17 +27,10 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 /**
  * Default DTS URI collector, in the locator-free taxonomy model. All collected URIs are assumed to be absolute URIs.
  *
- * It is assumed that only schema documents can act as entrypoints, and if they do, they must refer directly to the entire
- * DTS. More precisely, the entire DTS is the document itself along with all documents (directly) referred to by the entrypoint.
+ * For more information on entrypoints and DTSes in the locator-free model, see the validation rules on "entrypoints".
  *
- * Hence, entrypoints cannot be nested, so entrypoints cannot refer to other entrypoints, etc. Note that per DTS typically only 1 schema
- * should act as entrypoint, so only 1 schema should contain URI references (in linkbaseRefs and schema imports). It is, however,
- * allowed to have multiple entrypoints, and it is allowed for them to have overlapping content. It is even allowed to use
- * a non-entrypoint schema or linkbase as (additional) "entrypoint", but then they only contribute themselves to the DTS, without pointing to
- * any other DTS content.
- *
- * Taxonomy extensions can either contain their additional entrypoint schema, or they can be just an additional set of taxonomy
- * documents without extra entrypoint schema.
+ * Of particular interest is that "DTS discovery" is 1 level deep only. That is, entrypoint schemas cannot refer to other entrypoint
+ * schemas, but they can be combined with other entrypoint schemas making up one multi-document entrypoint.
  *
  * @author Chris de Vreeze
  */
@@ -46,7 +39,7 @@ object DefaultDtsUriCollector extends DtsUriCollector {
   def findAllDtsUris(entrypoint: Set[URI], taxoElemBuilder: URI => TaxonomyElem): Set[URI] = {
     entrypoint.toSeq.flatMap { docUri =>
       val docElem: TaxonomyElem = Try(taxoElemBuilder(docUri)) match {
-        case Success(v) => v
+        case Success(v)   => v
         case Failure(exc) => throw new RuntimeException(s"Missing document with URI $docUri", exc)
       }
 

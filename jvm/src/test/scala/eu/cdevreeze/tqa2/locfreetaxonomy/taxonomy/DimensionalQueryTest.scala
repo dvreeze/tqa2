@@ -22,6 +22,7 @@ import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.locfreetaxonomy.DimensionalConformanceSuiteUtil
 import eu.cdevreeze.tqa2.validate.Validation
 import eu.cdevreeze.tqa2.validate.Validator
+import eu.cdevreeze.tqa2.validate.rules.EntrypointSchemaValidations
 import eu.cdevreeze.tqa2.validate.rules.SchemaValidations
 import eu.cdevreeze.tqa2.validate.rules.TaxoDocumentValidations
 import eu.cdevreeze.tqa2.validate.rules.TaxoElemKeyValidations
@@ -98,11 +99,14 @@ class DimensionalQueryTest extends FunSuite {
   private def makeDts(relativeFilePath: String): BasicTaxonomy = {
     DimensionalConformanceSuiteUtil
       .makeTestDts(Seq(URI.create(relativeFilePath)), processor)
-      .ensuring(taxo => Validator.validate(taxo, validations).isEmpty)
+      .ensuring(taxo => Validator.validate(taxo, getValidations(relativeFilePath)).isEmpty)
   }
 
-  private val validations: Seq[Validation] = XLinkValidations.all
-    .appendedAll(SchemaValidations.all)
-    .appendedAll(TaxoDocumentValidations.all)
-    .appendedAll(TaxoElemKeyValidations.all)
+  private def getValidations(relativeFilePath: String): Seq[Validation] =
+    XLinkValidations.all
+      .appendedAll(SchemaValidations.all)
+      .appendedAll(TaxoDocumentValidations.all)
+      .appendedAll(TaxoElemKeyValidations.all)
+      .appendedAll(
+        EntrypointSchemaValidations.all(DimensionalConformanceSuiteUtil.findAllUrisOfEntrypoint(Seq(URI.create(relativeFilePath)))))
 }

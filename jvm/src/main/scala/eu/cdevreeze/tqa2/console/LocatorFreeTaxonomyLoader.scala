@@ -25,6 +25,7 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.validate.Validation
 import eu.cdevreeze.tqa2.validate.ValidationResult
 import eu.cdevreeze.tqa2.validate.Validator
+import eu.cdevreeze.tqa2.validate.rules.EntrypointSchemaValidations
 import eu.cdevreeze.tqa2.validate.rules.SchemaValidations
 import eu.cdevreeze.tqa2.validate.rules.TaxoDocumentValidations
 import eu.cdevreeze.tqa2.validate.rules.TaxoElemKeyValidations
@@ -61,7 +62,7 @@ object LocatorFreeTaxonomyLoader {
 
     printTaxonomyInfo(taxo)
 
-    validateTaxonomy(taxo)
+    validateTaxonomy(taxo, entrypointUri)
 
     val end = System.currentTimeMillis()
 
@@ -94,10 +95,11 @@ object LocatorFreeTaxonomyLoader {
   }
 
   // scalastyle:off
-  def validateTaxonomy(taxo: BasicTaxonomy): Unit = {
+  def validateTaxonomy(taxo: BasicTaxonomy, entrypointUri: URI): Unit = {
     val validations: Seq[Validation] = XLinkValidations.all.appendedAll(SchemaValidations.all)
       .appendedAll(TaxoDocumentValidations.all)
       .appendedAll(TaxoElemKeyValidations.all)
+      .appendedAll(EntrypointSchemaValidations.all(Set(entrypointUri)))
 
     val validationResults: Seq[ValidationResult] = Validator.validate(taxo, validations)
 

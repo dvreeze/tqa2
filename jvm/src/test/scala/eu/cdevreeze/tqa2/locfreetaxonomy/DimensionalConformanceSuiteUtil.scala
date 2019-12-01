@@ -72,7 +72,7 @@ object DimensionalConformanceSuiteUtil {
   }
 
   def makeTestDts(relativeDocPaths: Seq[URI], processor: Processor): BasicTaxonomy = {
-    val entrypointUris: Set[URI] = relativeDocPaths.map(dummyUriPrefix.resolve).toSet
+    val entrypointUris: Set[URI] = findAllUrisOfEntrypoint(relativeDocPaths)
 
     val docBuilder = getDocumentBuilder(processor)
 
@@ -83,5 +83,9 @@ object DimensionalConformanceSuiteUtil {
         .withDefaultRelationshipFactory
 
     taxoBuilder.build(entrypointUris)
+  }
+
+  def findAllUrisOfEntrypoint(relativeDocPaths: Seq[URI]): Set[URI] = {
+    relativeDocPaths.map(dummyUriPrefix.resolve).toSet
   }
 }
