@@ -208,7 +208,7 @@ object XPointer {
     val idOption = elem.attrOption(ENames.IdEName)
 
     idOption.map(id => ShorthandPointer(id)).getOrElse {
-      val parentElemOption = elem.findParentElem()
+      val parentElemOption = elem.findParentElem
 
       parentElemOption.map { parent =>
         // Recursive call

@@ -119,15 +119,15 @@ sealed trait XLinkResource extends ChildXLink with locfreexlink.XLinkResource
 sealed trait ExtendedLink extends XLinkElem with locfreexlink.ExtendedLink {
 
   final def xlinkChildren: Seq[ChildXLink] = {
-    findAllChildElems().collect { case e: ChildXLink => e }
+    findAllChildElems.collect { case e: ChildXLink => e }
   }
 
   final def xlinkResourceChildren: Seq[XLinkResource] = {
-    findAllChildElems().collect { case e: XLinkResource => e }
+    findAllChildElems.collect { case e: XLinkResource => e }
   }
 
   final def arcs: Seq[XLinkArc] = {
-    findAllChildElems().collect { case e: XLinkArc => e }
+    findAllChildElems.collect { case e: XLinkArc => e }
   }
 
   /**
@@ -148,7 +148,7 @@ sealed trait XLinkArc extends ChildXLink with locfreexlink.XLinkArc {
    * If the taxonomy is not known to be schema-valid, it may be impossible to create a Base Set key.
    */
   final def baseSetKey: BaseSetKey = {
-    val parentElemOption = underlyingElem.findParentElem()
+    val parentElemOption = underlyingElem.findParentElem
     require(parentElemOption.nonEmpty, s"Missing parent element. Document $docUri. Element name: $name")
     BaseSetKey(name, arcrole, parentElemOption.get.name, parentElemOption.get.attr(ENames.XLinkRoleEName))
   }
@@ -262,7 +262,7 @@ final case class Linkbase(
    * Finds all ("taxonomy DOM") extended links
    */
   def findAllExtendedLinks: Seq[ExtendedLink] = {
-    findAllChildElems().collect { case e: ExtendedLink => e }
+    findAllChildElems.collect { case e: ExtendedLink => e }
   }
 
   def findAllRoleRefs(): Seq[RoleRef] = {
@@ -779,7 +779,7 @@ object TaxonomyElem {
   }
 
   private def optElementDeclarationOrReference(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
-    val parentIsSchema = underlyingElem.findParentElem().exists(_.name == ENames.XsSchemaEName)
+    val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
     val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
     val hasRef = underlyingElem.attrOption(ENames.RefEName).nonEmpty
 
@@ -795,7 +795,7 @@ object TaxonomyElem {
   }
 
   private def optAttributeDeclarationOrReference(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
-    val parentIsSchema = underlyingElem.findParentElem().exists(_.name == ENames.XsSchemaEName)
+    val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
     val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
     val hasRef = underlyingElem.attrOption(ENames.RefEName).nonEmpty
 
@@ -811,7 +811,7 @@ object TaxonomyElem {
   }
 
   private def optSimpleTypeDefinition(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
-    val parentIsSchema = underlyingElem.findParentElem().exists(_.name == ENames.XsSchemaEName)
+    val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
     val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
 
     if (parentIsSchema && hasName) {
@@ -824,7 +824,7 @@ object TaxonomyElem {
   }
 
   private def optComplexTypeDefinition(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
-    val parentIsSchema = underlyingElem.findParentElem().exists(_.name == ENames.XsSchemaEName)
+    val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
     val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
 
     if (parentIsSchema && hasName) {
@@ -837,7 +837,7 @@ object TaxonomyElem {
   }
 
   private def optAttributeGroupDefinitionOrReference(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
-    val parentIsSchema = underlyingElem.findParentElem().exists(_.name == ENames.XsSchemaEName)
+    val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
     val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
     val hasRef = underlyingElem.attrOption(ENames.RefEName).nonEmpty
 
@@ -851,7 +851,7 @@ object TaxonomyElem {
   }
 
   private def optModelGroupDefinitionOrReference(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
-    val parentIsSchema = underlyingElem.findParentElem().exists(_.name == ENames.XsSchemaEName)
+    val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
     val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
     val hasRef = underlyingElem.attrOption(ENames.RefEName).nonEmpty
 

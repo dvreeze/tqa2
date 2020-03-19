@@ -25,15 +25,15 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
 import eu.cdevreeze.yaidom2.node.saxon
 import net.sf.saxon.s9api.Processor
-import org.scalatest.FunSuite
-import org.scalatest.Matchers._
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers._
 
 /**
  * Test of creating and querying "taxonomy bases".
  *
  * @author Chris de Vreeze
  */
-class TaxonomyBaseTest extends FunSuite {
+class TaxonomyBaseTest extends AnyFunSuite {
 
   test("TQA should be able to create a single-document TaxonomyBase") {
     val schema = XsSchema(getTaxonomyElement(URI.create("testfiles/kvk-data.xsd")).underlyingElem)

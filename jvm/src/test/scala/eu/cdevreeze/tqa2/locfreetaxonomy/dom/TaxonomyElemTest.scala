@@ -25,20 +25,20 @@ import eu.cdevreeze.yaidom2.node.resolved
 import eu.cdevreeze.yaidom2.node.saxon
 import eu.cdevreeze.yaidom2.queryapi.named
 import net.sf.saxon.s9api.Processor
-import org.scalatest.FunSuite
-import org.scalatest.Matchers._
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers._
 
 /**
  * Test of parsing and querying taxonomy elements.
  *
  * @author Chris de Vreeze
  */
-class TaxonomyElemTest extends FunSuite {
+class TaxonomyElemTest extends AnyFunSuite {
 
   test("TQA should be able to parse and query a schema") {
     val schema = XsSchema(getTaxonomyElement(URI.create("testfiles/kvk-data.xsd")).underlyingElem)
 
-    val elemClasses = schema.findAllDescendantElemsOrSelf().map(_.getClass).toSet
+    val elemClasses = schema.findAllDescendantElemsOrSelf.map(_.getClass).toSet
 
     elemClasses should equal(Set(classOf[XsSchema], classOf[GlobalElementDeclaration], classOf[Import]))
 
@@ -62,7 +62,7 @@ class TaxonomyElemTest extends FunSuite {
   test("TQA should be able to parse and query a standard label linkbase") {
     val linkbase = Linkbase(getTaxonomyElement(URI.create("testfiles/venj-bw2-axes-lab-fr.xml")).underlyingElem)
 
-    val elemClasses = linkbase.findAllDescendantElemsOrSelf().map(_.getClass).toSet
+    val elemClasses = linkbase.findAllDescendantElemsOrSelf.map(_.getClass).toSet
 
     elemClasses should be {
       Set(classOf[Linkbase], classOf[LabelLink], classOf[ConceptLabelResource], classOf[LabelArc], classOf[ConceptKey])

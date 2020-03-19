@@ -24,15 +24,15 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.node.saxon
 import net.sf.saxon.s9api.Processor
-import org.scalatest.FunSuite
-import org.scalatest.Matchers._
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers._
 
 /**
  * Test of extracting and querying relationhips.
  *
  * @author Chris de Vreeze
  */
-class RelationshipTest extends FunSuite {
+class RelationshipTest extends AnyFunSuite {
 
   test("TQA should be able to extract and query standard label relationships") {
     val linkbase = Linkbase(getTaxonomyElement(URI.create("testfiles/venj-bw2-axes-lab-fr.xml")).underlyingElem)

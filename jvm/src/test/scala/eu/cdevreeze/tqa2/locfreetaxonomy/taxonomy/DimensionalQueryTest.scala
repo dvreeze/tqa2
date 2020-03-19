@@ -29,15 +29,15 @@ import eu.cdevreeze.tqa2.validate.rules.TaxoElemKeyValidations
 import eu.cdevreeze.tqa2.validate.rules.XLinkValidations
 import eu.cdevreeze.yaidom2.core.EName
 import net.sf.saxon.s9api.Processor
-import org.scalatest.FunSuite
-import org.scalatest.Matchers._
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers._
 
 /**
  * Dimensional querying test case. It uses test data from the XBRL Dimensions conformance suite.
  *
  * @author Chris de Vreeze
  */
-class DimensionalQueryTest extends FunSuite {
+class DimensionalQueryTest extends AnyFunSuite {
 
   test("TQA should be able to query for (abstract) hypercube declarations") {
     val taxo = makeDts("100-xbrldte/101-HypercubeElementIsNotAbstractError/hypercubeValid.xsd")

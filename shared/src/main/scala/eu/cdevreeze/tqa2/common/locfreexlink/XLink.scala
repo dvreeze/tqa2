@@ -73,7 +73,7 @@ object XLink {
      * Returns the extended link role of the surrounding extended link element.
      */
     final def elr: String = {
-      findParentElem().flatMap(_.attrOption(ENames.XLinkRoleEName)).getOrElse(
+      findParentElem.flatMap(_.attrOption(ENames.XLinkRoleEName)).getOrElse(
         sys.error(s"Missing parent or its xlink:role attribute. Document: $docUri. Element: $name")
       )
     }

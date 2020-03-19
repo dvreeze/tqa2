@@ -61,7 +61,7 @@ sealed trait Relationship {
 
   final def validated: this.type = {
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in $docUri")
-    require(arc.findParentElem().nonEmpty, s"Missing parent (extended link) element of an arc in $docUri")
+    require(arc.findParentElem.nonEmpty, s"Missing parent (extended link) element of an arc in $docUri")
     this
   }
 

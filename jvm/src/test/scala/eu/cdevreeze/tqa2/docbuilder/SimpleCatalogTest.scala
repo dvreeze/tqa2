@@ -29,15 +29,15 @@ import eu.cdevreeze.yaidom2.queryapi.ScopedNodes
 import javax.xml.transform.stream.StreamSource
 import net.sf.saxon.s9api.Processor
 import net.sf.saxon.s9api.XdmNode
-import org.scalatest.FunSuite
-import org.scalatest.Matchers._
+import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.matchers.should.Matchers._
 
 /**
  * Test of simple catalogs. Several example catalogs have been used from the XBRL Taxonomy Packages standard.
  *
  * @author Chris de Vreeze
  */
-class SimpleCatalogTest extends FunSuite {
+class SimpleCatalogTest extends AnyFunSuite {
 
   import SimpleCatalog.UriRewrite
 

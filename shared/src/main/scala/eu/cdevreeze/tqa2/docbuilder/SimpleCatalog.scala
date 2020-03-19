@@ -19,10 +19,12 @@ package eu.cdevreeze.tqa2.docbuilder
 import java.net.URI
 
 import eu.cdevreeze.yaidom2.core.EName
+import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.core.Scope
-import eu.cdevreeze.yaidom2.core.SimpleScope
+import eu.cdevreeze.yaidom2.core.PrefixedScope
 import eu.cdevreeze.yaidom2.node.nodebuilder
-import eu.cdevreeze.yaidom2.node.nodebuilder.NodeBuilders.ElemCreator
+import eu.cdevreeze.yaidom2.node.nodebuilder.NodeBuilderCreator
+import eu.cdevreeze.yaidom2.node.nodebuilder.NodeBuilderCreator._
 import eu.cdevreeze.yaidom2.node.simple
 import eu.cdevreeze.yaidom2.queryapi.ScopedNodes
 
@@ -110,14 +112,16 @@ final case class SimpleCatalog(xmlBaseAttrOption: Option[URI], uriRewrites: Seq[
   def toElem: simple.Elem = {
     import SimpleCatalog._
 
-    val simpleScope: SimpleScope = SimpleScope.from("er" -> ErNamespace)
+    val prefixNamespaceMapper: NamespacePrefixMapper = NamespacePrefixMapper.fromMapWithFallback(Map(ErNamespace -> "er"))
+    implicit val elemCreator: NodeBuilderCreator = NodeBuilderCreator(prefixNamespaceMapper)
+    import elemCreator._
 
     val uriRewriteElems: Seq[nodebuilder.Elem] = uriRewrites.map(_.toElem).map(e => nodebuilder.Elem.from(e))
 
-    val resultElem = ElemCreator(simpleScope)
-      .emptyElem(ErCatalogEName)
+    val resultElem: nodebuilder.Elem = emptyElem(ErCatalogEName, PrefixedScope.empty).creationApi
       .plusAttributeOption(XmlBaseEName, xmlBaseAttrOption.map(_.toString))
       .plusChildren(uriRewriteElems)
+      .underlyingElem
 
     simple.Elem.from(resultElem) // TODO Prettify
   }
@@ -143,13 +147,15 @@ object SimpleCatalog {
     }
 
     def toElem: simple.Elem = {
-      val simpleScope: SimpleScope = SimpleScope.from("er" -> ErNamespace)
+      val prefixNamespaceMapper: NamespacePrefixMapper = NamespacePrefixMapper.fromMapWithFallback(Map(ErNamespace -> "er"))
+      implicit val elemCreator: NodeBuilderCreator = NodeBuilderCreator(prefixNamespaceMapper)
+      import elemCreator._
 
-      val resultElem = ElemCreator(simpleScope)
-        .emptyElem(ErRewriteURIEName)
+      val resultElem: nodebuilder.Elem = emptyElem(ErRewriteURIEName, PrefixedScope.empty).creationApi
         .plusAttributeOption(XmlBaseEName, xmlBaseAttrOption.map(_.toString))
         .plusAttribute(UriStartStringEName, uriStartString)
         .plusAttribute(RewritePrefixEName, rewritePrefix)
+        .underlyingElem
 
       simple.Elem.from(resultElem)
     }
@@ -180,8 +186,8 @@ object SimpleCatalog {
 
   val ErNamespace = "urn:oasis:names:tc:entity:xmlns:xml:catalog"
 
-  val ErCatalogEName = EName(ErNamespace, "catalog")
-  val ErRewriteURIEName = EName(ErNamespace, "rewriteURI")
+  val ErCatalogEName: EName = EName(ErNamespace, "catalog")
+  val ErRewriteURIEName: EName = EName(ErNamespace, "rewriteURI")
 
   val UriStartStringEName: EName = EName.fromLocalName("uriStartString")
   val RewritePrefixEName: EName = EName.fromLocalName("rewritePrefix")

@@ -37,13 +37,15 @@ lazy val commonSettings = Seq(
   pomExtra := pomData,
   pomIncludeRepository := { _ => false },
 
-  libraryDependencies += "eu.cdevreeze.yaidom2" %%% "yaidom2" % "0.7.0",
+  libraryDependencies += "eu.cdevreeze.yaidom2" %%% "yaidom2" % "0.8.0",
 
-  libraryDependencies += "org.scala-lang.modules" %%% "scala-xml" % "1.2.0",
+  libraryDependencies += "org.scala-lang.modules" %%% "scala-xml" % "2.0.0-M1",
 
   libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "0.2.0",
 
-  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.0.8" % "test"
+  libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.1" % "test",
+
+  libraryDependencies += "org.scalatestplus" %%% "scalacheck-1-14" % "3.1.1.1" % "test"
 )
 
 lazy val root = project.in(file("."))
@@ -65,15 +67,15 @@ lazy val tqa2 = crossProject(JSPlatform, JVMPlatform)
   .jvmSettings(
     // By all means, override this version of Saxon if needed, possibly with a Saxon-EE release!
 
-    libraryDependencies += "net.sf.saxon" % "Saxon-HE" % "9.9.1-5",
+    libraryDependencies += "net.sf.saxon" % "Saxon-HE" % "9.9.1-7",
 
-    libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.14.2" % "test"
+    libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.14.3" % "test"
   )
   .jsSettings(
     // Do we need this jsEnv?
     jsEnv := new org.scalajs.jsenv.jsdomnodejs.JSDOMNodeJSEnv(),
 
-    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "0.9.7",
+    libraryDependencies += "org.scala-js" %%% "scalajs-dom" % "1.0.0",
 
     Test / parallelExecution := false
   )
