@@ -268,6 +268,8 @@ final case class OtherPresentationRelationship(
 sealed trait CalculationRelationship extends InterConceptRelationship {
 
   def arc: dom.CalculationArc
+
+  def weight: Double = arc.weight
 }
 
 final case class SummationItemRelationship(

@@ -21,11 +21,13 @@ import java.net.URI
 /**
  * Support for creating URI converters.
  *
+ * Note that the only fundamental methods in this singleton object are fromPartialUriConverters and fromPartialUriConvertersOrIdentity.
+ *
  * @author Chris de Vreeze
  */
 object UriConverters {
 
-  def identity: UriConverter = PartialUriConverters.identity.andThen(_.get)
+  val identity: UriConverter = PartialUriConverters.identity.andThen(_.get)
 
   /**
    * Returns the URI converter that for each input URI tries all given partial URI converters until a
@@ -58,16 +60,30 @@ object UriConverters {
   }
 
   /**
+   * Returns `fromPartialUriConverters(Seq(partialUriConverter))`.
+   */
+  def fromPartialUriConverter(partialUriConverter: PartialUriConverter): UriConverter = {
+    fromPartialUriConverters(Seq(partialUriConverter))
+  }
+
+  /**
+   * Returns `fromPartialUriConvertersOrIdentity(Seq(partialUriConverter))`.
+   */
+  def fromPartialUriConverterOrIdentity(partialUriConverter: PartialUriConverter): UriConverter = {
+    fromPartialUriConvertersOrIdentity(Seq(partialUriConverter))
+  }
+
+  /**
    * Like `PartialUriConverters.fromCatalog(catalog)`, but otherwise throwing an exception.
    */
   def fromCatalog(catalog: SimpleCatalog): UriConverter = {
-    fromPartialUriConverters(Seq(PartialUriConverters.fromCatalog(catalog)))
+    fromPartialUriConverter(PartialUriConverters.fromCatalog(catalog))
   }
 
   /**
    * Like `PartialUriConverters.fromCatalog(catalog)`, but otherwise the identity function.
    */
   def fromCatalogOrIdentity(catalog: SimpleCatalog): UriConverter = {
-    fromPartialUriConvertersOrIdentity(Seq(PartialUriConverters.fromCatalog(catalog)))
+    fromPartialUriConverterOrIdentity(PartialUriConverters.fromCatalog(catalog))
   }
 }

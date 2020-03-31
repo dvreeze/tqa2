@@ -51,6 +51,13 @@ object StandardLabelRoles {
    */
   val StandardLabel: String = Label
 
+  val allRoles: Set[String] = Set(
+    Label, TerseLabel, VerboseLabel, PositiveLabel, PositiveTerseLabel, PositiveVerboseLabel,
+    NegativeLabel, NegativeTerseLabel, NegativeVerboseLabel, ZeroLabel, ZeroTerseLabel, ZeroVerboseLabel,
+    TotalLabel, PeriodStartLabel, PeriodEndLabel, Documentation, DefinitionGuidance, DisclosureGuidance,
+    PresentationGuidance, MeasurementGuidance, CommentaryGuidance, ExampleGuidance
+  )
+
   private def makeLabelRole(suffix: String): String = {
     s"http://www.xbrl.org/2003/role/$suffix"
   }

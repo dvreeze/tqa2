@@ -33,6 +33,9 @@ import org.xml.sax.InputSource
 /**
  * Support for creating partial URI resolvers on the JVM.
  *
+ * Note that the only fundamental methods in this singleton object are fromPartialUriConverter and its counterpart for ZIP files,
+ * namely forZipFile.
+ *
  * @author Chris de Vreeze
  */
 object PartialSaxUriResolvers {
@@ -104,6 +107,23 @@ object PartialSaxUriResolvers {
   def forZipFileUsingCatalog(zipFile: ZipFile, catalog: SimpleCatalog): PartialSaxUriResolver = {
     forZipFile(zipFile, PartialUriConverters.fromCatalog(catalog))
   }
+
+
+  /**
+   * Creates a PartialSaxUriResolver from the given SaxUriResolver, returning None for all URIs for which the URI filter returns false.
+   */
+  def fromSaxUriResolver(uriResolver: SaxUriResolver, filterUri: URI => Boolean): PartialSaxUriResolver = {
+    { uri: URI => if (filterUri(uri)) Some(uriResolver(uri)) else None }
+  }
+
+  /**
+   * Returns `fromSaxUriResolver(uriResolver, _ => true)`.
+   */
+  def fromSaxUriResolver(uriResolver: SaxUriResolver): PartialSaxUriResolver = {
+    fromSaxUriResolver(uriResolver, _ => true)
+  }
+
+  val default: PartialSaxUriResolver = fromPartialUriConverter(PartialUriConverters.identity)
 
   private def computeZipEntryMap(zipFile: ZipFile): Map[URI, ZipEntry] = {
     val zipEntries = zipFile.entries().asScala.toIndexedSeq

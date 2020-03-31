@@ -17,18 +17,14 @@
 package eu.cdevreeze.tqa2.locfreetaxonomy.dom
 
 import scala.collection.immutable.ArraySeq
-
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.tqa2.common.FragmentKey
+import eu.cdevreeze.tqa2.common.datatypes.{XsBooleans, XsDoubles}
 import eu.cdevreeze.tqa2.common.locfreexlink
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.common.xmlschema.XmlSchemaDialect
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.BaseSetKey
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.CyclesAllowed
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.PeriodType
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.Use
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.Variety
+import eu.cdevreeze.tqa2.locfreetaxonomy.common.{BaseSetKey, ContentType, CyclesAllowed, PeriodType, Use, Variety}
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.dialect.AbstractDialectBackingElem
 import eu.cdevreeze.yaidom2.queryapi.anyElem
@@ -398,7 +394,27 @@ sealed trait SimpleTypeDefinition extends TypeDefinition with XmlSchemaDialect.S
   }
 }
 
-sealed trait ComplexTypeDefinition extends TypeDefinition with XmlSchemaDialect.ComplexTypeDefinition
+sealed trait ComplexTypeDefinition extends TypeDefinition with XmlSchemaDialect.ComplexTypeDefinition {
+
+  final def contentType: ContentType = {
+    val isMixed: Boolean = attrOption(ENames.MixedEName).exists(v => XsBooleans.parseBoolean(v) == true)
+
+    contentElemOption match {
+      case Some(ComplexContent(_)) =>
+        if (isMixed) ContentType.Mixed else ContentType.ElementOnly
+      case Some(SimpleContent(_)) =>
+        ContentType.Simple
+      case _ =>
+        if (findAllChildElems.collectFirst { case e: ModelGroup => e }.isDefined) {
+          if (isMixed) ContentType.Mixed else ContentType.ElementOnly
+        } else if (findAllChildElems.collectFirst { case e: ModelGroupReference => e }.isDefined) {
+          if (isMixed) ContentType.Mixed else ContentType.ElementOnly
+        } else {
+          ContentType.Empty
+        }
+    }
+  }
+}
 
 final case class NamedSimpleTypeDefinition(
   underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace
@@ -577,6 +593,10 @@ final case class CalculationArc(
   underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace with InterConceptArc with CLinkDialect.CalculationArc {
 
   requireName(ENames.CLinkCalculationArcEName)
+
+  def weight: Double = {
+    XsDoubles.parseDouble(attr(ENames.WeightEName))
+  }
 }
 
 final case class LabelArc(

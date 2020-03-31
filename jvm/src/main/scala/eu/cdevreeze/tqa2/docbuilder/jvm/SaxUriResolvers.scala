@@ -27,8 +27,13 @@ import eu.cdevreeze.tqa2.docbuilder.UriConverter
 import eu.cdevreeze.tqa2.docbuilder.UriConverters
 import org.xml.sax.InputSource
 
+import scala.util.Try
+
 /**
  * Support for creating (SAX) URI resolvers on the JVM.
+ *
+ * Note that this singleton object only has fundamental methods fromPartialSaxUriResolversWithoutFallback and fromPartialSaxUriResolversWithFallback,
+ * and, arguably, methods fromUriConverter and forZipFile as well.
  *
  * @author Chris de Vreeze
  */
@@ -66,6 +71,20 @@ object SaxUriResolvers {
     }
 
     resolveUri
+  }
+
+  /**
+   * Returns `fromPartialSaxUriResolversWithoutFallback(Seq(partialUriResolver))`.
+   */
+  def fromPartialSaxUriResolverWithoutFallback(partialUriResolver: PartialSaxUriResolver): SaxUriResolver = {
+    fromPartialSaxUriResolversWithoutFallback(Seq(partialUriResolver))
+  }
+
+  /**
+   * Returns `fromPartialSaxUriResolversWithFallback(Seq(partialUriResolver))`.
+   */
+  def fromPartialSaxUriResolverWithFallback(partialUriResolver: PartialSaxUriResolver): SaxUriResolver = {
+    fromPartialSaxUriResolversWithFallback(Seq(partialUriResolver))
   }
 
   /**
@@ -173,8 +192,27 @@ object SaxUriResolvers {
     forZipFile(zipFile, UriConverters.fromCatalog(catalog))
   }
 
+  val default: SaxUriResolver = fromUriConverter(UriConverters.identity)
+
   private def returnWithTrailingSlash(uri: URI): String = {
     val s = uri.toString
     if (s.endsWith("/")) s else s + "/"
+  }
+
+  /**
+   * Extension of SaxUriResolver with resolution fallback capability.
+   */
+  implicit class WithResolutionFallback(val uriResolver: SaxUriResolver) extends AnyVal {
+
+    /**
+     * Adds a second SaxUriResolver as resolution fallback, if the first SaxUriResolver fails with an exception for some URI.
+     */
+    def withResolutionFallback(otherUriResolver: SaxUriResolver): SaxUriResolver = {
+      def resolve(uri: URI): SaxInputSource = {
+        Try(uriResolver(uri)).getOrElse(otherUriResolver(uri))
+      }
+
+      resolve
+    }
   }
 }
