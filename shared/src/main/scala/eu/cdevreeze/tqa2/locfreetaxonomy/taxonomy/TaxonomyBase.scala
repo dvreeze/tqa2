@@ -33,6 +33,7 @@ import eu.cdevreeze.yaidom2.core.EName
  */
 final class TaxonomyBase private (
     val rootElems: Seq[TaxonomyElem],
+    val conceptDeclarations: Seq[ConceptDeclaration],
     val extraProvidedSubstitutionGroupMap: SubstitutionGroupMap,
     val netSubstitutionGroupMap: SubstitutionGroupMap,
     val namedGlobalSchemaComponentMap: Map[EName, Seq[NamedGlobalSchemaComponent]]
@@ -40,17 +41,6 @@ final class TaxonomyBase private (
     with DefaultSchemaQueryApi {
 
   override def substitutionGroupMap: SubstitutionGroupMap = netSubstitutionGroupMap
-
-  override def conceptDeclarations: Seq[ConceptDeclaration] = {
-    // TODO Speed up by ignoring linkbases
-    val globalElemDecls: Seq[GlobalElementDeclaration] = rootElems.flatMap { rootElem =>
-      rootElem.findTopmostElems(_.name == ENames.XsElementEName).collect { case e: GlobalElementDeclaration => e }
-    }
-
-    val conceptDeclarationBuilder = new ConceptDeclaration.Builder(substitutionGroupMap)
-
-    globalElemDecls.flatMap(decl => conceptDeclarationBuilder.optConceptDeclaration(decl))
-  }
 
   def rootElemMap: Map[URI, TaxonomyElem] = {
     rootElems.groupBy(_.docUri).view.mapValues(_.head).toMap
@@ -72,7 +62,9 @@ object TaxonomyBase {
 
     val netSubstitutionGroupMap: SubstitutionGroupMap = derivedSubstitutionGroupMap.append(extraProvidedSubstitutionGroupMap)
 
-    new TaxonomyBase(rootElems, extraProvidedSubstitutionGroupMap, netSubstitutionGroupMap, namedGlobalSchemaComponentMap)
+    val conceptDecls: Seq[ConceptDeclaration] = findAllConceptDeclarations(rootElems, netSubstitutionGroupMap)
+
+    new TaxonomyBase(rootElems, conceptDecls, extraProvidedSubstitutionGroupMap, netSubstitutionGroupMap, namedGlobalSchemaComponentMap)
   }
 
   private def computeNamedGlobalSchemaComponentMap(rootElems: Seq[TaxonomyElem]): Map[EName, Seq[NamedGlobalSchemaComponent]] = {
@@ -80,6 +72,17 @@ object TaxonomyBase {
       .flatMap(_.filterDescendantElems(isNamedGlobalSchemaComponent))
       .collect { case e: NamedGlobalSchemaComponent => e }
       .groupBy(_.targetEName)
+  }
+
+  private def findAllConceptDeclarations(rootElems: Seq[TaxonomyElem], substitutionGroupMap: SubstitutionGroupMap): Seq[ConceptDeclaration] = {
+    // TODO Speed up by ignoring linkbases
+    val globalElemDecls: Seq[GlobalElementDeclaration] = rootElems.flatMap { rootElem =>
+      rootElem.findTopmostElems(_.name == ENames.XsElementEName).collect { case e: GlobalElementDeclaration => e }
+    }
+
+    val conceptDeclarationBuilder = new ConceptDeclaration.Builder(substitutionGroupMap)
+
+    globalElemDecls.flatMap(decl => conceptDeclarationBuilder.optConceptDeclaration(decl))
   }
 
   private def findAllXsdElems(rootElems: Seq[TaxonomyElem]): Seq[XsSchema] = {
