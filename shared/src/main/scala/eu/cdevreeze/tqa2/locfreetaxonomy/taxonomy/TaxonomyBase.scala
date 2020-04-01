@@ -34,6 +34,7 @@ import eu.cdevreeze.yaidom2.core.EName
 final class TaxonomyBase private (
     val rootElems: Seq[TaxonomyElem],
     val conceptDeclarations: Seq[ConceptDeclaration],
+    val conceptDeclarationsByEName: Map[EName, ConceptDeclaration],
     val extraProvidedSubstitutionGroupMap: SubstitutionGroupMap,
     val netSubstitutionGroupMap: SubstitutionGroupMap,
     val namedGlobalSchemaComponentMap: Map[EName, Seq[NamedGlobalSchemaComponent]]
@@ -64,7 +65,15 @@ object TaxonomyBase {
 
     val conceptDecls: Seq[ConceptDeclaration] = findAllConceptDeclarations(rootElems, netSubstitutionGroupMap)
 
-    new TaxonomyBase(rootElems, conceptDecls, extraProvidedSubstitutionGroupMap, netSubstitutionGroupMap, namedGlobalSchemaComponentMap)
+    val conceptDeclMap: Map[EName, ConceptDeclaration] = conceptDecls.groupBy(_.targetEName).view.mapValues(_.head).toMap
+
+    new TaxonomyBase(
+      rootElems,
+      conceptDecls,
+      conceptDeclMap,
+      extraProvidedSubstitutionGroupMap,
+      netSubstitutionGroupMap,
+      namedGlobalSchemaComponentMap)
   }
 
   private def computeNamedGlobalSchemaComponentMap(rootElems: Seq[TaxonomyElem]): Map[EName, Seq[NamedGlobalSchemaComponent]] = {
@@ -74,7 +83,9 @@ object TaxonomyBase {
       .groupBy(_.targetEName)
   }
 
-  private def findAllConceptDeclarations(rootElems: Seq[TaxonomyElem], substitutionGroupMap: SubstitutionGroupMap): Seq[ConceptDeclaration] = {
+  private def findAllConceptDeclarations(
+      rootElems: Seq[TaxonomyElem],
+      substitutionGroupMap: SubstitutionGroupMap): Seq[ConceptDeclaration] = {
     // TODO Speed up by ignoring linkbases
     val globalElemDecls: Seq[GlobalElementDeclaration] = rootElems.flatMap { rootElem =>
       rootElem.findTopmostElems(_.name == ENames.XsElementEName).collect { case e: GlobalElementDeclaration => e }

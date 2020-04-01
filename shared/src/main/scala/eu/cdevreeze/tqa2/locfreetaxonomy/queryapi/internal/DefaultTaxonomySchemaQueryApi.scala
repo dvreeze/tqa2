@@ -16,15 +16,7 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal
 
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.ConceptDeclaration
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.DimensionDeclaration
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.ExplicitDimensionDeclaration
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.GlobalElementDeclaration
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.HypercubeDeclaration
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.ItemDeclaration
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.PrimaryItemDeclaration
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TupleDeclaration
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TypedDimensionDeclaration
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom._
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.TaxonomySchemaQueryApi
 import eu.cdevreeze.yaidom2.core.EName
 
@@ -39,6 +31,8 @@ trait DefaultTaxonomySchemaQueryApi extends TaxonomySchemaQueryApi {
   // Abstract methods
 
   def conceptDeclarations: Seq[ConceptDeclaration]
+
+  def conceptDeclarationsByEName: Map[EName, ConceptDeclaration]
 
   // Concept declarations, across documents
 
@@ -55,9 +49,7 @@ trait DefaultTaxonomySchemaQueryApi extends TaxonomySchemaQueryApi {
   }
 
   def findConceptDeclaration(ename: EName): Option[ConceptDeclaration] = {
-    val conceptDeclarationBuilder = new ConceptDeclaration.Builder(substitutionGroupMap)
-
-    findGlobalElementDeclaration(ename).flatMap(decl => conceptDeclarationBuilder.optConceptDeclaration(decl))
+    conceptDeclarationsByEName.get(ename)
   }
 
   def getConceptDeclaration(ename: EName): ConceptDeclaration = {

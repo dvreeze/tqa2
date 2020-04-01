@@ -16,7 +16,6 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy
 
-import scala.collection.immutable.SeqMap
 import scala.reflect.ClassTag
 
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
@@ -33,7 +32,6 @@ import eu.cdevreeze.yaidom2.core.EName
  */
 final class BasicTaxonomy private (
     val taxonomyBase: TaxonomyBase,
-    val conceptDeclarationsByEName: SeqMap[EName, ConceptDeclaration],
     val relationshipTypes: Set[ClassTag[_ <: Relationship]],
     val relationshipMap: Map[ClassTag[_ <: Relationship], Seq[Relationship]],
     val outgoingRelationshipMap: Map[ClassTag[_ <: TaxonomyElemKey], Map[TaxonomyElemKey, Seq[Relationship]]],
@@ -43,6 +41,8 @@ final class BasicTaxonomy private (
 ) extends DefaultTaxonomyQueryApi {
 
   override def conceptDeclarations: Seq[ConceptDeclaration] = taxonomyBase.conceptDeclarations
+
+  override def conceptDeclarationsByEName: Map[EName, ConceptDeclaration] = taxonomyBase.conceptDeclarationsByEName
 
   override def stopAppending[A <: InterConceptRelationship](path: InterConceptRelationshipPath[A], next: A): Boolean = {
     stopAppendingFunction(path, next)
@@ -84,12 +84,12 @@ final class BasicTaxonomy private (
     taxonomyBase.namedGlobalSchemaComponentMap
   }
 
-  def withStopFunctions(newStopAppendingFunction: (RelationshipPath, Relationship) => Boolean,
-                        newStopPrependingFunction: (RelationshipPath, Relationship) => Boolean): BasicTaxonomy = {
+  def withStopFunctions(
+      newStopAppendingFunction: (RelationshipPath, Relationship) => Boolean,
+      newStopPrependingFunction: (RelationshipPath, Relationship) => Boolean): BasicTaxonomy = {
 
     new BasicTaxonomy(
       taxonomyBase,
-      conceptDeclarationsByEName,
       relationshipTypes,
       relationshipMap,
       outgoingRelationshipMap,
@@ -113,10 +113,6 @@ object BasicTaxonomy {
   }
 
   def build(taxonomyBase: TaxonomyBase, relationships: Seq[Relationship]): BasicTaxonomy = {
-    val conceptDecls: Seq[ConceptDeclaration] = taxonomyBase.conceptDeclarations
-
-    val conceptDeclarationsByEName: SeqMap[EName, ConceptDeclaration] = conceptDecls.map(decl => decl.targetEName -> decl).to(SeqMap)
-
     val relationshipMap: Map[ClassTag[_ <: Relationship], Seq[Relationship]] =
       relationships.groupBy(rel => ClassTag(rel.getClass))
 
@@ -142,7 +138,6 @@ object BasicTaxonomy {
 
     new BasicTaxonomy(
       taxonomyBase,
-      conceptDeclarationsByEName,
       relationshipTypes,
       relationshipMap,
       outgoingRelationshipMap,
