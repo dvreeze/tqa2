@@ -36,12 +36,14 @@ import eu.cdevreeze.yaidom2.core.EName
  */
 trait DefaultTaxonomySchemaQueryApi extends TaxonomySchemaQueryApi {
 
+  // Abstract methods
+
+  def conceptDeclarations: Seq[ConceptDeclaration]
+
   // Concept declarations, across documents
 
   def findAllConceptDeclarations: Seq[ConceptDeclaration] = {
-    val conceptDeclarationBuilder = new ConceptDeclaration.Builder(substitutionGroupMap)
-
-    findAllGlobalElementDeclarations.flatMap(decl => conceptDeclarationBuilder.optConceptDeclaration(decl))
+    conceptDeclarations
   }
 
   def filterConceptDeclarations(p: ConceptDeclaration => Boolean): Seq[ConceptDeclaration] = {

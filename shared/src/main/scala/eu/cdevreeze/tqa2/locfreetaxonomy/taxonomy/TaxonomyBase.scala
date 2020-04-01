@@ -18,11 +18,9 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy
 
 import java.net.URI
 
+import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.GlobalElementDeclaration
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.NamedGlobalSchemaComponent
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom._
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal.DefaultSchemaQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal.DefaultTaxonomySchemaQueryApi
 import eu.cdevreeze.yaidom2.core.EName
@@ -33,14 +31,26 @@ import eu.cdevreeze.yaidom2.core.EName
  *
  * @author Chris de Vreeze
  */
-final class TaxonomyBase private(
-  val rootElems: Seq[TaxonomyElem],
-  val extraProvidedSubstitutionGroupMap: SubstitutionGroupMap,
-  val netSubstitutionGroupMap: SubstitutionGroupMap,
-  val namedGlobalSchemaComponentMap: Map[EName, Seq[NamedGlobalSchemaComponent]]
-) extends DefaultTaxonomySchemaQueryApi with DefaultSchemaQueryApi {
+final class TaxonomyBase private (
+    val rootElems: Seq[TaxonomyElem],
+    val extraProvidedSubstitutionGroupMap: SubstitutionGroupMap,
+    val netSubstitutionGroupMap: SubstitutionGroupMap,
+    val namedGlobalSchemaComponentMap: Map[EName, Seq[NamedGlobalSchemaComponent]]
+) extends DefaultTaxonomySchemaQueryApi
+    with DefaultSchemaQueryApi {
 
   override def substitutionGroupMap: SubstitutionGroupMap = netSubstitutionGroupMap
+
+  override def conceptDeclarations: Seq[ConceptDeclaration] = {
+    // TODO Speed up by ignoring linkbases
+    val globalElemDecls: Seq[GlobalElementDeclaration] = rootElems.flatMap { rootElem =>
+      rootElem.findTopmostElems(_.name == ENames.XsElementEName).collect { case e: GlobalElementDeclaration => e }
+    }
+
+    val conceptDeclarationBuilder = new ConceptDeclaration.Builder(substitutionGroupMap)
+
+    globalElemDecls.flatMap(decl => conceptDeclarationBuilder.optConceptDeclaration(decl))
+  }
 
   def rootElemMap: Map[URI, TaxonomyElem] = {
     rootElems.groupBy(_.docUri).view.mapValues(_.head).toMap
@@ -53,7 +63,10 @@ object TaxonomyBase {
     val namedGlobalSchemaComponentMap: Map[EName, Seq[NamedGlobalSchemaComponent]] = computeNamedGlobalSchemaComponentMap(rootElems)
 
     val globalElementDeclarationMap: Map[EName, GlobalElementDeclaration] = namedGlobalSchemaComponentMap.view
-      .mapValues(_.collect { case e: GlobalElementDeclaration => e }).filter(_._2.nonEmpty).mapValues(_.head).toMap
+      .mapValues(_.collect { case e: GlobalElementDeclaration => e })
+      .filter(_._2.nonEmpty)
+      .mapValues(_.head)
+      .toMap
 
     val derivedSubstitutionGroupMap: SubstitutionGroupMap = computeDerivedSubstitutionGroupMap(globalElementDeclarationMap)
 
@@ -63,27 +76,30 @@ object TaxonomyBase {
   }
 
   private def computeNamedGlobalSchemaComponentMap(rootElems: Seq[TaxonomyElem]): Map[EName, Seq[NamedGlobalSchemaComponent]] = {
-    findAllXsdElems(rootElems).flatMap(_.filterDescendantElems(isNamedGlobalSchemaComponent))
-      .collect { case e: NamedGlobalSchemaComponent => e }.groupBy(_.targetEName)
+    findAllXsdElems(rootElems)
+      .flatMap(_.filterDescendantElems(isNamedGlobalSchemaComponent))
+      .collect { case e: NamedGlobalSchemaComponent => e }
+      .groupBy(_.targetEName)
   }
 
   private def findAllXsdElems(rootElems: Seq[TaxonomyElem]): Seq[XsSchema] = {
     rootElems.flatMap(_.findTopmostElemsOrSelf(_.isRootElement)).flatMap {
       case e: XsSchema => Seq(e)
-      case _ => Seq.empty
+      case _           => Seq.empty
     }
   }
 
   private def isNamedGlobalSchemaComponent(e: TaxonomyElem): Boolean = e match {
     case _: NamedGlobalSchemaComponent => true
-    case _ => false
+    case _                             => false
   }
 
   /**
    * Returns the SubstitutionGroupMap that can be derived from this taxonomy base alone.
    * This is an expensive operation that should be performed only once, if possible.
    */
-  private def computeDerivedSubstitutionGroupMap(globalElementDeclarationMap: Map[EName, GlobalElementDeclaration]): SubstitutionGroupMap = {
+  private def computeDerivedSubstitutionGroupMap(
+      globalElementDeclarationMap: Map[EName, GlobalElementDeclaration]): SubstitutionGroupMap = {
     val rawMappings: Map[EName, EName] =
       globalElementDeclarationMap.toSeq.flatMap {
         case (en, decl) => decl.substitutionGroupOption.map(sg => en -> sg)

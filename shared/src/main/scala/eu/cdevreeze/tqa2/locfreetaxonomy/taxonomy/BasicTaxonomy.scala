@@ -16,23 +16,14 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy
 
+import scala.collection.immutable.SeqMap
 import scala.reflect.ClassTag
 
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.TaxonomyElemKey
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Linkbase
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.NamedGlobalSchemaComponent
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkArc
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom._
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal.DefaultTaxonomyQueryApi
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.InterConceptRelationship
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.InterConceptRelationshipPath
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.NonStandardRelationship
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.NonStandardRelationshipPath
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Relationship
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.RelationshipFactory
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.RelationshipPath
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship._
 import eu.cdevreeze.yaidom2.core.EName
 
 /**
@@ -42,6 +33,7 @@ import eu.cdevreeze.yaidom2.core.EName
  */
 final class BasicTaxonomy private (
     val taxonomyBase: TaxonomyBase,
+    val conceptDeclarationsByEName: SeqMap[EName, ConceptDeclaration],
     val relationshipTypes: Set[ClassTag[_ <: Relationship]],
     val relationshipMap: Map[ClassTag[_ <: Relationship], Seq[Relationship]],
     val outgoingRelationshipMap: Map[ClassTag[_ <: TaxonomyElemKey], Map[TaxonomyElemKey, Seq[Relationship]]],
@@ -49,6 +41,8 @@ final class BasicTaxonomy private (
     val stopAppendingFunction: (RelationshipPath, Relationship) => Boolean,
     val stopPrependingFunction: (RelationshipPath, Relationship) => Boolean
 ) extends DefaultTaxonomyQueryApi {
+
+  override def conceptDeclarations: Seq[ConceptDeclaration] = taxonomyBase.conceptDeclarations
 
   override def stopAppending[A <: InterConceptRelationship](path: InterConceptRelationshipPath[A], next: A): Boolean = {
     stopAppendingFunction(path, next)
@@ -95,6 +89,7 @@ final class BasicTaxonomy private (
 
     new BasicTaxonomy(
       taxonomyBase,
+      conceptDeclarationsByEName,
       relationshipTypes,
       relationshipMap,
       outgoingRelationshipMap,
@@ -118,6 +113,10 @@ object BasicTaxonomy {
   }
 
   def build(taxonomyBase: TaxonomyBase, relationships: Seq[Relationship]): BasicTaxonomy = {
+    val conceptDecls: Seq[ConceptDeclaration] = taxonomyBase.conceptDeclarations
+
+    val conceptDeclarationsByEName: SeqMap[EName, ConceptDeclaration] = conceptDecls.map(decl => decl.targetEName -> decl).to(SeqMap)
+
     val relationshipMap: Map[ClassTag[_ <: Relationship], Seq[Relationship]] =
       relationships.groupBy(rel => ClassTag(rel.getClass))
 
@@ -141,13 +140,16 @@ object BasicTaxonomy {
         }
         .toMap
 
-    new BasicTaxonomy(taxonomyBase,
-                      relationshipTypes,
-                      relationshipMap,
-                      outgoingRelationshipMap,
-                      incomingRelationshipMap,
-                      stopAppending,
-                      stopPrepending)
+    new BasicTaxonomy(
+      taxonomyBase,
+      conceptDeclarationsByEName,
+      relationshipTypes,
+      relationshipMap,
+      outgoingRelationshipMap,
+      incomingRelationshipMap,
+      stopAppending,
+      stopPrepending
+    )
   }
 
   private def stopAppending(path: RelationshipPath, rel: Relationship): Boolean = {
