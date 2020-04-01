@@ -81,6 +81,100 @@ sealed trait TaxonomyElem extends AbstractDialectBackingElem with CanBeTaxonomyD
     step(this)
   }
 
+  // Overridden methods, to "fix" the method signatures (setting ThisElem to TaxonomyElem)
+
+  final override def filterChildElems(p: ThisElem => Boolean): Seq[ThisElem] = {
+    super.filterChildElems(p)
+  }
+
+  final override def findAllChildElems: Seq[ThisElem] = {
+    super.findAllChildElems
+  }
+
+  final override def findChildElem(p: ThisElem => Boolean): Option[ThisElem] = {
+    super.findChildElem(p)
+  }
+
+  final override def filterDescendantElems(p: ThisElem => Boolean): Seq[ThisElem] = {
+    super.filterDescendantElems(p)
+  }
+
+  final override def findAllDescendantElems: Seq[ThisElem] = {
+    super.findAllDescendantElems
+  }
+
+  final override def findDescendantElem(p: ThisElem => Boolean): Option[ThisElem] = {
+    super.findDescendantElem(p)
+  }
+
+  final override def filterDescendantElemsOrSelf(p: ThisElem => Boolean): Seq[ThisElem] = {
+    super.filterDescendantElemsOrSelf(p)
+  }
+
+  final override def findAllDescendantElemsOrSelf: Seq[ThisElem] = {
+    super.findAllDescendantElemsOrSelf
+  }
+
+  final override def findDescendantElemOrSelf(p: ThisElem => Boolean): Option[ThisElem] = {
+    super.findDescendantElemOrSelf(p)
+  }
+
+  final override def findTopmostElems(p: ThisElem => Boolean): Seq[ThisElem] = {
+    super.findTopmostElems(p)
+  }
+
+  final override def findTopmostElemsOrSelf(p: ThisElem => Boolean): Seq[ThisElem] = {
+    super.findTopmostElemsOrSelf(p)
+  }
+
+  final override def findDescendantElemOrSelf(navigationPath: Seq[Int]): Option[ThisElem] = {
+    super.findDescendantElemOrSelf(navigationPath)
+  }
+
+  final override def getDescendantElemOrSelf(navigationPath: Seq[Int]): ThisElem = {
+    super.getDescendantElemOrSelf(navigationPath)
+  }
+
+  final override def findParentElem(p: ThisElem => Boolean): Option[ThisElem] = {
+    super.findParentElem(p)
+  }
+
+  final override def findParentElem: Option[ThisElem] = {
+    super.findParentElem
+  }
+
+  final override def filterAncestorElems(p: ThisElem => Boolean): Seq[ThisElem] = {
+    super.filterAncestorElems(p)
+  }
+
+  final override def findAllAncestorElems: Seq[ThisElem] = {
+    super.findAllAncestorElems
+  }
+
+  final override def findAncestorElem(p: ThisElem => Boolean): Option[ThisElem] = {
+    super.findAncestorElem(p)
+  }
+
+  final override def filterAncestorElemsOrSelf(p: ThisElem => Boolean): Seq[ThisElem] = {
+    super.filterAncestorElemsOrSelf(p)
+  }
+
+  final override def findAllAncestorElemsOrSelf: Seq[ThisElem] = {
+    super.findAllAncestorElemsOrSelf
+  }
+
+  final override def findAncestorElemOrSelf(p: ThisElem => Boolean): Option[ThisElem] = {
+    super.findAncestorElemOrSelf(p)
+  }
+
+  final override def findAllPrecedingSiblingElems: Seq[ThisElem] = {
+    super.findAllPrecedingSiblingElems
+  }
+
+  final override def rootElem: ThisElem = {
+    super.rootElem
+  }
+
   // Other methods
 
   final def fragmentKey: FragmentKey = {
@@ -397,7 +491,7 @@ sealed trait SimpleTypeDefinition extends TypeDefinition with XmlSchemaDialect.S
 sealed trait ComplexTypeDefinition extends TypeDefinition with XmlSchemaDialect.ComplexTypeDefinition {
 
   final def contentType: ContentType = {
-    val isMixed: Boolean = attrOption(ENames.MixedEName).exists(v => XsBooleans.parseBoolean(v) == true)
+    val isMixed: Boolean = attrOption(ENames.MixedEName).exists(v => XsBooleans.parseBoolean(v))
 
     contentElemOption match {
       case Some(ComplexContent(_)) =>
