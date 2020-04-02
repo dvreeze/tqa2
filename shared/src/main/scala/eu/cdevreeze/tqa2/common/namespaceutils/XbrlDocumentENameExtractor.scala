@@ -44,8 +44,6 @@ final class XbrlDocumentENameExtractor(
 
 object XbrlDocumentENameExtractor {
 
-  // TODO Locator-free model namespace usage
-
   val defaultElementTextENameExtractors: Map[EName, TextENameExtractor] = {
     Seq(
       "{http://www.xbrl.org/2003/linkbase}usedOn" -> QNameTextENameExtractor,
@@ -89,10 +87,20 @@ object XbrlDocumentENameExtractor {
 
   val defaultAttributeValueTextENameExtractors: Map[EName, Map[EName, TextENameExtractor]] = {
     Map(
+      EName.parse("{http://www.locfreexbrl.org/2019/key}conceptKey") -> Map(
+        EName.parse("key") -> QNameTextENameExtractor,
+      ),
+      EName.parse("{http://www.locfreexbrl.org/2019/key}elementKey") -> Map(
+        EName.parse("key") -> QNameTextENameExtractor,
+      ),
+      EName.parse("{http://www.locfreexbrl.org/2019/key}typeKey") -> Map(
+        EName.parse("key") -> QNameTextENameExtractor,
+      ),
       EName.parse("{http://www.w3.org/2001/XMLSchema}element") -> Map(
         EName.parse("ref") -> QNameTextENameExtractor,
         EName.parse("substitutionGroup") -> QNameTextENameExtractor,
         EName.parse("type") -> QNameTextENameExtractor,
+        EName.parse("typedDomainKey") -> QNameTextENameExtractor, // loc-free model attribute
       ),
       EName.parse("{http://www.w3.org/2001/XMLSchema}attribute") -> Map(
         EName.parse("ref") -> QNameTextENameExtractor,
