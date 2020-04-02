@@ -39,6 +39,8 @@ lazy val commonSettings = Seq(
 
   libraryDependencies += "eu.cdevreeze.yaidom2" %%% "yaidom2" % "0.8.0",
 
+  libraryDependencies += "eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.6.0",
+
   libraryDependencies += "org.scala-lang.modules" %%% "scala-xml" % "2.0.0-M1",
 
   libraryDependencies += "org.scala-lang.modules" %% "scala-parallel-collections" % "0.2.0",
