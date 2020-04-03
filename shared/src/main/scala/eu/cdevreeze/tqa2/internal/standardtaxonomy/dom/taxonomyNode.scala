@@ -16,15 +16,13 @@
 
 package eu.cdevreeze.tqa2.internal.standardtaxonomy.dom
 
-import java.net.URI
-
 import scala.collection.immutable.ArraySeq
-import scala.collection.immutable.SeqMap
 
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.tqa2.common.FragmentKey
 import eu.cdevreeze.tqa2.common.datatypes.XsBooleans
+import eu.cdevreeze.tqa2.common.xlink
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.common.xmlschema.XmlSchemaDialect
 import eu.cdevreeze.tqa2.locfreetaxonomy.common._
@@ -197,102 +195,43 @@ sealed trait TaxonomyElem extends AbstractDialectBackingElem with CanBeTaxonomyD
 
 // XLink
 
-sealed trait XLinkElem extends TaxonomyElem {
+sealed trait XLinkElem extends TaxonomyElem with xlink.XLinkElem {
 
-  final def xlinkType: String = {
-    attrOption(ENames.XLinkTypeEName).getOrElse(sys.error(s"Missing xlink:type attribute. Document: $docUri. Element: $name"))
-  }
+  type ChildXLinkType = ChildXLink
 
-  final def xlinkAttributes: SeqMap[EName, String] = {
-    attributes.filter { case (attrName, _) => attrName.namespaceUriOption.contains(Namespaces.XLinkNamespace) }
-  }
+  type LabeledXLinkType = LabeledXLink
+
+  type XLinkResourceType = XLinkResource
+
+  type XLinkLocatorType = XLinkLocator
+
+  type XLinkArcType = XLinkArc
 }
 
 /**
  * Simple or extended link
  */
-sealed trait XLinkLink extends XLinkElem
+sealed trait XLinkLink extends XLinkElem with xlink.XLinkLink
 
 // TODO XLink title and documentation (abstract) elements have not been modeled (yet).
 
 /**
  * XLink child element of an extended link, so an XLink resource, locator or arc
  */
-sealed trait ChildXLink extends XLinkElem {
-
-  /**
-   * Returns the extended link role of the surrounding extended link element.
-   */
-  final def elr: String = {
-    findParentElem
-      .flatMap(_.attrOption(ENames.XLinkRoleEName))
-      .getOrElse(
-        sys.error(s"Missing parent or its xlink:role attribute. Document: $docUri. Element: $name")
-      )
-  }
-}
+sealed trait ChildXLink extends XLinkElem with xlink.ChildXLink
 
 /**
  * XLink resource or locator
  */
-sealed trait LabeledXLink extends ChildXLink {
+sealed trait LabeledXLink extends ChildXLink with xlink.LabeledXLink
 
-  /**
-   * Returns the XLink label.
-   */
-  final def xlinkLabel: String = {
-    attrOption(ENames.XLinkLabelEName).getOrElse(sys.error(s"Missing xlink:label attribute. Document: $docUri. Element: $name"))
-  }
+sealed trait XLinkResource extends LabeledXLink with xlink.XLinkResource
 
-  final def roleOption: Option[String] = {
-    attrOption(ENames.XLinkRoleEName)
-  }
-}
+sealed trait XLinkLocator extends LabeledXLink with xlink.XLinkLocator
 
-sealed trait XLinkResource extends LabeledXLink
+sealed trait SimpleLink extends XLinkLink with xlink.SimpleLink
 
-sealed trait XLinkLocator extends LabeledXLink {
-
-  final def rawHref: URI = {
-    val uriString =
-      attrOption(ENames.XLinkHrefEName).getOrElse(sys.error(s"Missing xlink:href attribute. Document: $docUri. Element: $name"))
-    URI.create(uriString)
-  }
-
-  final def resolvedHref: URI = {
-    baseUriOption.map(u => u.resolve(rawHref)).getOrElse(rawHref)
-  }
-}
-
-sealed trait SimpleLink extends XLinkLink {
-
-  final def arcroleOption: Option[String] = {
-    attrOption(ENames.XLinkArcroleEName)
-  }
-
-  final def roleOption: Option[String] = {
-    attrOption(ENames.XLinkRoleEName)
-  }
-
-  final def rawHref: URI = {
-    val uriString =
-      attrOption(ENames.XLinkHrefEName).getOrElse(sys.error(s"Missing xlink:href attribute. Document: $docUri. Element: $name"))
-    URI.create(uriString)
-  }
-
-  final def resolvedHref: URI = {
-    baseUriOption.map(u => u.resolve(rawHref)).getOrElse(rawHref)
-  }
-}
-
-sealed trait ExtendedLink extends XLinkLink {
-
-  /**
-   * Returns the extended link role.
-   */
-  final def role: String = {
-    attrOption(ENames.XLinkRoleEName).getOrElse(sys.error(s"Missing xlink:role attribute. Document: $docUri. Element: $name"))
-  }
+sealed trait ExtendedLink extends XLinkLink with xlink.ExtendedLink {
 
   final def xlinkChildren: Seq[ChildXLink] = {
     findAllChildElems.collect { case e: ChildXLink => e }
@@ -316,28 +255,7 @@ sealed trait ExtendedLink extends XLinkLink {
   }
 }
 
-sealed trait XLinkArc extends ChildXLink {
-
-  /**
-   * Returns the arcrole.
-   */
-  final def arcrole: String = {
-    attrOption(ENames.XLinkArcroleEName).getOrElse(sys.error(s"Missing xlink:arcrole attribute. Document: $docUri. Element: $name"))
-  }
-
-  /**
-   * Returns the XLink "from".
-   */
-  final def from: String = {
-    attrOption(ENames.XLinkFromEName).getOrElse(sys.error(s"Missing xlink:from attribute. Document: $docUri. Element: $name"))
-  }
-
-  /**
-   * Returns the XLink "to".
-   */
-  final def to: String = {
-    attrOption(ENames.XLinkToEName).getOrElse(sys.error(s"Missing xlink:to attribute. Document: $docUri. Element: $name"))
-  }
+sealed trait XLinkArc extends ChildXLink with xlink.XLinkArc {
 
   /**
    * Returns the Base Set key.
