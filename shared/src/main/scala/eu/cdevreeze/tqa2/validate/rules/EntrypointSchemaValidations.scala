@@ -143,9 +143,10 @@ object EntrypointSchemaValidations {
         .filter(e => e.attrOption(ENames.SchemaLocationEName).exists(u => entrypoint.contains(e.baseUri.resolve(URI.create(u)))))
 
       violatingImports.map(_.docUri).distinct.map { uri =>
-        ValidationResult(rule,
-                         "Attribute schemaLocation referring to other entrypoint schema found but not allowed in xs:import in entrypoint",
-                         uri)
+        ValidationResult(
+          rule,
+          "Attribute schemaLocation referring to other entrypoint schema found but not allowed in xs:import in entrypoint",
+          uri)
       }
     }
   }
