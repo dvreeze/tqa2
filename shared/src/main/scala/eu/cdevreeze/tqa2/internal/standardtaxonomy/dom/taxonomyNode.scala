@@ -18,14 +18,22 @@ package eu.cdevreeze.tqa2.internal.standardtaxonomy.dom
 
 import java.net.URI
 
-import scala.collection.immutable.{ArraySeq, SeqMap}
+import scala.collection.immutable.ArraySeq
+import scala.collection.immutable.SeqMap
 
-import eu.cdevreeze.tqa2.{ENames, Namespaces}
+import eu.cdevreeze.tqa2.ENames
+import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.tqa2.common.FragmentKey
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.{BaseSetKey, Use}
+import eu.cdevreeze.tqa2.common.datatypes.XsBooleans
+import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
+import eu.cdevreeze.tqa2.common.xmlschema.XmlSchemaDialect
+import eu.cdevreeze.tqa2.locfreetaxonomy.common._
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.dialect.AbstractDialectBackingElem
-import eu.cdevreeze.yaidom2.queryapi.{BackingNodes, ElemStep}
+import eu.cdevreeze.yaidom2.queryapi.BackingNodes
+import eu.cdevreeze.yaidom2.queryapi.ElemStep
+import eu.cdevreeze.yaidom2.queryapi.anyElem
+import eu.cdevreeze.yaidom2.queryapi.named
 
 /**
  * Node in a standard XBRL taxonomy.
@@ -42,8 +50,9 @@ final case class TaxonomyTextNode(text: String) extends TaxonomyNode with Backin
 
 final case class TaxonomyCommentNode(text: String) extends CanBeTaxonomyDocumentChild with BackingNodes.Comment
 
-final case class TaxonomyProcessingInstructionNode(target: String, data: String) extends CanBeTaxonomyDocumentChild
-  with BackingNodes.ProcessingInstruction
+final case class TaxonomyProcessingInstructionNode(target: String, data: String)
+    extends CanBeTaxonomyDocumentChild
+    with BackingNodes.ProcessingInstruction
 
 /**
  * Standard XBRL taxonomy dialect element node, offering the `BackingNodes.Elem` element query API and additional
@@ -178,7 +187,7 @@ sealed trait TaxonomyElem extends AbstractDialectBackingElem with CanBeTaxonomyD
 
   final def isRootElement: Boolean = this match {
     case _: RootElement => true
-    case _ => false
+    case _              => false
   }
 
   protected[dom] def requireName(elemName: EName): Unit = {
@@ -215,9 +224,11 @@ sealed trait ChildXLink extends XLinkElem {
    * Returns the extended link role of the surrounding extended link element.
    */
   final def elr: String = {
-    findParentElem.flatMap(_.attrOption(ENames.XLinkRoleEName)).getOrElse(
-      sys.error(s"Missing parent or its xlink:role attribute. Document: $docUri. Element: $name")
-    )
+    findParentElem
+      .flatMap(_.attrOption(ENames.XLinkRoleEName))
+      .getOrElse(
+        sys.error(s"Missing parent or its xlink:role attribute. Document: $docUri. Element: $name")
+      )
   }
 }
 
@@ -243,7 +254,8 @@ sealed trait XLinkResource extends LabeledXLink
 sealed trait XLinkLocator extends LabeledXLink {
 
   final def rawHref: URI = {
-    val uriString = attrOption(ENames.XLinkHrefEName).getOrElse(sys.error(s"Missing xlink:href attribute. Document: $docUri. Element: $name"))
+    val uriString =
+      attrOption(ENames.XLinkHrefEName).getOrElse(sys.error(s"Missing xlink:href attribute. Document: $docUri. Element: $name"))
     URI.create(uriString)
   }
 
@@ -263,7 +275,8 @@ sealed trait SimpleLink extends XLinkLink {
   }
 
   final def rawHref: URI = {
-    val uriString = attrOption(ENames.XLinkHrefEName).getOrElse(sys.error(s"Missing xlink:href attribute. Document: $docUri. Element: $name"))
+    val uriString =
+      attrOption(ENames.XLinkHrefEName).getOrElse(sys.error(s"Missing xlink:href attribute. Document: $docUri. Element: $name"))
     URI.create(uriString)
   }
 
@@ -366,13 +379,356 @@ sealed trait XLinkArc extends ChildXLink {
  */
 sealed trait RootElement extends TaxonomyElem with TaxonomyRootElem
 
+// Elements in some known namespaces
+
+sealed trait ElemInXsNamespace extends TaxonomyElem with XmlSchemaDialect.Elem {
+
+  type GlobalElementDeclarationType = GlobalElementDeclaration
+
+  type GlobalAttributeDeclarationType = GlobalAttributeDeclaration
+
+  type NamedTypeDefinitionType = NamedTypeDefinition
+}
+
+sealed trait ElemInLinkNamespace extends TaxonomyElem
+
+// Named top-level schema component
+
+/**
+ * Named top-level schema component, such as a global element declaration, global attribute declaration or named type
+ * definition. This trait extends `ElemInXsNamespace` and offers the `XmlSchemaDialect.NamedGlobalDeclOrDef` API.
+ * Hence it offers method `targetEName`.
+ */
+sealed trait NamedGlobalSchemaComponent extends ElemInXsNamespace with XmlSchemaDialect.NamedGlobalDeclOrDef
+
+// Schema root element
+
+final case class XsSchema(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.XsSchema with RootElement {
+  requireName(ENames.XsSchemaEName)
+
+  def isSchema: Boolean = true
+
+  def isLinkbase: Boolean = false
+
+  def findAllImports: Seq[Import] = {
+    filterChildElems(named(ENames.XsImportEName)).collect { case e: Import => e }
+  }
+
+  def filterGlobalElementDeclarations(p: GlobalElementDeclaration => Boolean): Seq[GlobalElementDeclaration] = {
+    filterChildElems(named(ENames.XsElementEName)).collect { case e: GlobalElementDeclaration if p(e) => e }
+  }
+
+  def findAllGlobalElementDeclarations(): Seq[GlobalElementDeclaration] = {
+    filterGlobalElementDeclarations(anyElem)
+  }
+
+  def filterGlobalAttributeDeclarations(p: GlobalAttributeDeclaration => Boolean): Seq[GlobalAttributeDeclaration] = {
+    filterChildElems(named(ENames.XsAttributeEName)).collect { case e: GlobalAttributeDeclaration if p(e) => e }
+  }
+
+  def findAllGlobalAttributeDeclarations(): Seq[GlobalAttributeDeclaration] = {
+    filterGlobalAttributeDeclarations(anyElem)
+  }
+
+  def filterNamedTypeDefinitions(p: NamedTypeDefinition => Boolean): Seq[NamedTypeDefinition] = {
+    filterChildElems(e => e.name == ENames.XsComplexTypeEName || e.name == ENames.XsSimpleTypeEName)
+      .collect { case e: NamedTypeDefinition if p(e) => e }
+  }
+
+  def findAllNamedTypeDefinitions(): Seq[NamedTypeDefinition] = {
+    filterNamedTypeDefinitions(anyElem)
+  }
+}
+
+// Linkbase root element
+
+// TODO Linkbase root element
+
+// Schema content.
+
+sealed trait ElementDeclarationOrReference extends ElemInXsNamespace with XmlSchemaDialect.ElementDeclarationOrReference
+
+sealed trait ElementDeclaration extends ElementDeclarationOrReference with XmlSchemaDialect.ElementDeclaration
+
+/**
+ * Global element declaration. Often a concept declaration, although in general the DOM element has not enough context
+ * to determine that in isolation.
+ */
+final case class GlobalElementDeclaration(underlyingElem: BackingNodes.Elem)
+    extends NamedGlobalSchemaComponent
+    with ElementDeclaration
+    with XmlSchemaDialect.GlobalElementDeclaration {
+
+  requireName(ENames.XsElementEName)
+
+  /**
+   * Returns true if this global element declaration has the given substitution group, either
+   * directly or indirectly. The given mappings are used as the necessary context, but are not needed if the element
+   * declaration directly has the substitution group itself.
+   *
+   * This method may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def hasSubstitutionGroup(substGroup: EName, substitutionGroupMap: SubstitutionGroupMap): Boolean = {
+    substitutionGroupOption.contains(substGroup) || {
+      val derivedSubstGroups = substitutionGroupMap.substitutionGroupDerivations.getOrElse(substGroup, Set.empty)
+
+      // Recursive calls
+
+      derivedSubstGroups.exists(substGrp => hasSubstitutionGroup(substGrp, substitutionGroupMap))
+    }
+  }
+
+  /**
+   * Returns all own or transitively inherited substitution groups. The given mappings are used as the necessary context.
+   *
+   * This method may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def findAllOwnOrTransitivelyInheritedSubstitutionGroups(substitutionGroupMap: SubstitutionGroupMap): Set[EName] = {
+    substitutionGroupOption.toSeq.flatMap { sg =>
+      substitutionGroupMap.transitivelyInheritedSubstitutionGroupsIncludingSelf(sg)
+    }.toSet
+  }
+
+  /**
+   * Returns the optional xbrli:periodType attribute, as `PeriodType`.
+   */
+  def periodTypeOption: Option[PeriodType] = {
+    attrOption(ENames.XbrliPeriodTypeEName).map(v => PeriodType.fromString(v))
+  }
+}
+
+final case class LocalElementDeclaration(underlyingElem: BackingNodes.Elem)
+    extends ElemInXsNamespace
+    with ElementDeclaration
+    with XmlSchemaDialect.LocalElementDeclaration {
+
+  requireName(ENames.XsElementEName)
+}
+
+final case class ElementReference(underlyingElem: BackingNodes.Elem)
+    extends ElemInXsNamespace
+    with ElementDeclarationOrReference
+    with XmlSchemaDialect.ElementReference {
+
+  requireName(ENames.XsElementEName)
+}
+
+sealed trait AttributeDeclarationOrReference extends ElemInXsNamespace with XmlSchemaDialect.AttributeDeclarationOrReference
+
+sealed trait AttributeDeclaration extends AttributeDeclarationOrReference with XmlSchemaDialect.AttributeDeclaration
+
+final case class GlobalAttributeDeclaration(underlyingElem: BackingNodes.Elem)
+    extends NamedGlobalSchemaComponent
+    with AttributeDeclaration
+    with XmlSchemaDialect.GlobalAttributeDeclaration {
+
+  requireName(ENames.XsAttributeEName)
+}
+
+final case class LocalAttributeDeclaration(underlyingElem: BackingNodes.Elem)
+    extends ElemInXsNamespace
+    with AttributeDeclaration
+    with XmlSchemaDialect.LocalAttributeDeclaration {
+
+  requireName(ENames.XsAttributeEName)
+}
+
+final case class AttributeReference(underlyingElem: BackingNodes.Elem)
+    extends ElemInXsNamespace
+    with AttributeDeclarationOrReference
+    with XmlSchemaDialect.AttributeReference {
+
+  requireName(ENames.XsAttributeEName)
+}
+
+sealed trait TypeDefinition extends ElemInXsNamespace with XmlSchemaDialect.TypeDefinition
+
+sealed trait NamedTypeDefinition extends TypeDefinition with NamedGlobalSchemaComponent with XmlSchemaDialect.NamedTypeDefinition
+
+sealed trait AnonymousTypeDefinition extends TypeDefinition with XmlSchemaDialect.AnonymousTypeDefinition
+
+sealed trait SimpleTypeDefinition extends TypeDefinition with XmlSchemaDialect.SimpleTypeDefinition {
+
+  /**
+   * Returns the variety.
+   */
+  final def variety: Variety = {
+    if (findChildElem(named(ENames.XsListEName)).isDefined) {
+      Variety.List
+    } else if (findChildElem(named(ENames.XsUnionEName)).isDefined) {
+      Variety.Union
+    } else if (findChildElem(named(ENames.XsRestrictionEName)).isDefined) {
+      Variety.Atomic
+    } else {
+      sys.error(s"Could not determine variety. Document: $docUri. Element: $name")
+    }
+  }
+
+  /**
+   * Returns the optional base type.
+   */
+  final def baseTypeOption: Option[EName] = variety match {
+    case Variety.Atomic =>
+      filterChildElems(named(ENames.XsRestrictionEName)).collectFirst { case e: Restriction => e }.flatMap(_.baseTypeOption)
+    case _ => None
+  }
+}
+
+sealed trait ComplexTypeDefinition extends TypeDefinition with XmlSchemaDialect.ComplexTypeDefinition {
+
+  final def contentType: ContentType = {
+    val isMixed: Boolean = attrOption(ENames.MixedEName).exists(v => XsBooleans.parseBoolean(v))
+
+    contentElemOption match {
+      case Some(ComplexContent(_)) =>
+        if (isMixed) ContentType.Mixed else ContentType.ElementOnly
+      case Some(SimpleContent(_)) =>
+        ContentType.Simple
+      case _ =>
+        if (findAllChildElems.collectFirst { case e: ModelGroup => e }.isDefined) {
+          if (isMixed) ContentType.Mixed else ContentType.ElementOnly
+        } else if (findAllChildElems.collectFirst { case e: ModelGroupReference => e }.isDefined) {
+          if (isMixed) ContentType.Mixed else ContentType.ElementOnly
+        } else {
+          ContentType.Empty
+        }
+    }
+  }
+}
+
+final case class NamedSimpleTypeDefinition(underlyingElem: BackingNodes.Elem)
+    extends ElemInXsNamespace
+    with NamedTypeDefinition
+    with SimpleTypeDefinition
+    with XmlSchemaDialect.NamedSimpleTypeDefinition {
+
+  requireName(ENames.XsSimpleTypeEName)
+}
+
+final case class AnonymousSimpleTypeDefinition(underlyingElem: BackingNodes.Elem)
+    extends ElemInXsNamespace
+    with AnonymousTypeDefinition
+    with SimpleTypeDefinition
+    with XmlSchemaDialect.AnonymousSimpleTypeDefinition {
+
+  requireName(ENames.XsSimpleTypeEName)
+}
+
+final case class NamedComplexTypeDefinition(underlyingElem: BackingNodes.Elem)
+    extends ElemInXsNamespace
+    with NamedTypeDefinition
+    with ComplexTypeDefinition
+    with XmlSchemaDialect.NamedComplexTypeDefinition {
+
+  requireName(ENames.XsComplexTypeEName)
+}
+
+final case class AnonymousComplexTypeDefinition(underlyingElem: BackingNodes.Elem)
+    extends ElemInXsNamespace
+    with AnonymousTypeDefinition
+    with ComplexTypeDefinition
+    with XmlSchemaDialect.AnonymousComplexTypeDefinition {
+
+  requireName(ENames.XsComplexTypeEName)
+}
+
+final case class AttributeGroupDefinition(underlyingElem: BackingNodes.Elem)
+    extends ElemInXsNamespace
+    with XmlSchemaDialect.AttributeGroupDefinition {
+
+  requireName(ENames.XsAttributeGroupEName)
+}
+
+final case class AttributeGroupReference(underlyingElem: BackingNodes.Elem)
+    extends ElemInXsNamespace
+    with XmlSchemaDialect.AttributeGroupReference {
+
+  requireName(ENames.XsAttributeGroupEName)
+}
+
+final case class ModelGroupDefinition(underlyingElem: BackingNodes.Elem)
+    extends ElemInXsNamespace
+    with XmlSchemaDialect.ModelGroupDefinition {
+
+  requireName(ENames.XsGroupEName)
+}
+
+final case class ModelGroupReference(underlyingElem: BackingNodes.Elem)
+    extends ElemInXsNamespace
+    with XmlSchemaDialect.ModelGroupReference {
+
+  requireName(ENames.XsGroupEName)
+}
+
+sealed trait ModelGroup extends ElemInXsNamespace with XmlSchemaDialect.ModelGroup
+
+final case class SequenceModelGroup(underlyingElem: BackingNodes.Elem)
+    extends ElemInXsNamespace
+    with ModelGroup
+    with XmlSchemaDialect.SequenceModelGroup {
+
+  requireName(ENames.XsSequenceEName)
+}
+
+final case class ChoiceModelGroup(underlyingElem: BackingNodes.Elem)
+    extends ElemInXsNamespace
+    with ModelGroup
+    with XmlSchemaDialect.ChoiceModelGroup {
+
+  requireName(ENames.XsChoiceEName)
+}
+
+final case class AllModelGroup(underlyingElem: BackingNodes.Elem)
+    extends ElemInXsNamespace
+    with ModelGroup
+    with XmlSchemaDialect.AllModelGroup {
+
+  requireName(ENames.XsAllEName)
+}
+
+final case class Restriction(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.Restriction {
+  requireName(ENames.XsRestrictionEName)
+}
+
+final case class Extension(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.Extension {
+  requireName(ENames.XsExtensionEName)
+}
+
+final case class SimpleContent(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.SimpleContent {
+  requireName(ENames.XsSimpleContentEName)
+}
+
+final case class ComplexContent(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.ComplexContent {
+  requireName(ENames.XsComplexContentEName)
+}
+
+final case class Annotation(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.Annotation {
+  requireName(ENames.XsAnnotationEName)
+}
+
+final case class Appinfo(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.Appinfo {
+  requireName(ENames.XsAppinfoEName)
+}
+
+final case class Import(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.Import {
+  requireName(ENames.XsImportEName)
+}
+
+/**
+ * Other element in the XML Schema namespace. Either valid other schema content, or invalid content, such as an xs:element
+ * that has both a name and a ref attribute.
+ */
+final case class OtherElemInXsNamespace(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace
+
+// Companion objects
+
 object TaxonomyNode {
 
   def opt(underlyingNode: BackingNodes.Node): Option[TaxonomyNode] = {
     underlyingNode match {
-      case e: BackingNodes.Elem => Some(TaxonomyElem(e))
-      case t: BackingNodes.Text => Some(TaxonomyTextNode(t.text))
-      case c: BackingNodes.Comment => Some(TaxonomyCommentNode(c.text))
+      case e: BackingNodes.Elem                   => Some(TaxonomyElem(e))
+      case t: BackingNodes.Text                   => Some(TaxonomyTextNode(t.text))
+      case c: BackingNodes.Comment                => Some(TaxonomyCommentNode(c.text))
       case pi: BackingNodes.ProcessingInstruction => Some(TaxonomyProcessingInstructionNode(pi.target, pi.data))
     }
   }
@@ -381,6 +737,145 @@ object TaxonomyNode {
 object TaxonomyElem {
 
   def apply(underlyingElem: BackingNodes.Elem): TaxonomyElem = {
+    val name = underlyingElem.name
+
+    elemFactoryMap
+      .get(name.namespaceUriOption.getOrElse(""))
+      .map(_.forName(name))
+      .map(f => f(underlyingElem))
+      .getOrElse(fallbackElem(underlyingElem))
+  }
+
+  private def optElementDeclarationOrReference(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
+    val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
+    val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
+    val hasRef = underlyingElem.attrOption(ENames.RefEName).nonEmpty
+
+    if (parentIsSchema && hasName && !hasRef) {
+      Some(GlobalElementDeclaration(underlyingElem))
+    } else if (!parentIsSchema && hasName && !hasRef) {
+      Some(LocalElementDeclaration(underlyingElem))
+    } else if (!parentIsSchema && !hasName && hasRef) {
+      Some(ElementReference(underlyingElem))
+    } else {
+      None
+    }
+  }
+
+  private def optAttributeDeclarationOrReference(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
+    val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
+    val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
+    val hasRef = underlyingElem.attrOption(ENames.RefEName).nonEmpty
+
+    if (parentIsSchema && hasName && !hasRef) {
+      Some(GlobalAttributeDeclaration(underlyingElem))
+    } else if (!parentIsSchema && hasName && !hasRef) {
+      Some(LocalAttributeDeclaration(underlyingElem))
+    } else if (!parentIsSchema && !hasName && hasRef) {
+      Some(AttributeReference(underlyingElem))
+    } else {
+      None
+    }
+  }
+
+  private def optSimpleTypeDefinition(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
+    val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
+    val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
+
+    if (parentIsSchema && hasName) {
+      Some(NamedSimpleTypeDefinition(underlyingElem))
+    } else if (!parentIsSchema && !hasName) {
+      Some(AnonymousSimpleTypeDefinition(underlyingElem))
+    } else {
+      None
+    }
+  }
+
+  private def optComplexTypeDefinition(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
+    val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
+    val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
+
+    if (parentIsSchema && hasName) {
+      Some(NamedComplexTypeDefinition(underlyingElem))
+    } else if (!parentIsSchema && !hasName) {
+      Some(AnonymousComplexTypeDefinition(underlyingElem))
+    } else {
+      None
+    }
+  }
+
+  private def optAttributeGroupDefinitionOrReference(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
+    val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
+    val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
+    val hasRef = underlyingElem.attrOption(ENames.RefEName).nonEmpty
+
+    if (parentIsSchema && hasName && !hasRef) {
+      Some(AttributeGroupDefinition(underlyingElem))
+    } else if (!parentIsSchema && !hasName && hasRef) {
+      Some(AttributeGroupReference(underlyingElem))
+    } else {
+      None
+    }
+  }
+
+  private def optModelGroupDefinitionOrReference(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
+    val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
+    val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
+    val hasRef = underlyingElem.attrOption(ENames.RefEName).nonEmpty
+
+    if (parentIsSchema && hasName && !hasRef) {
+      Some(ModelGroupDefinition(underlyingElem))
+    } else if (!parentIsSchema && !hasName && hasRef) {
+      Some(ModelGroupReference(underlyingElem))
+    } else {
+      None
+    }
+  }
+
+  private def fallbackElem(underlyingElem: BackingNodes.Elem): TaxonomyElem = {
+    // TODO
     ???
+  }
+
+  private val elemFactoryMap: Map[String, ElemFactoryWithFallback] =
+    Map(
+      Namespaces.XsNamespace -> new ElemFactoryWithFallback(
+        Map(
+          ENames.XsSchemaEName -> (e => XsSchema(e)),
+          ENames.XsElementEName -> (e => optElementDeclarationOrReference(e).getOrElse(OtherElemInXsNamespace(e))),
+          ENames.XsAttributeEName -> (e => optAttributeDeclarationOrReference(e).getOrElse(OtherElemInXsNamespace(e))),
+          ENames.XsSimpleTypeEName -> (e => optSimpleTypeDefinition(e).getOrElse(OtherElemInXsNamespace(e))),
+          ENames.XsComplexTypeEName -> (e => optComplexTypeDefinition(e).getOrElse(OtherElemInXsNamespace(e))),
+          ENames.XsAttributeGroupEName -> (e => optAttributeGroupDefinitionOrReference(e).getOrElse(OtherElemInXsNamespace(e))),
+          ENames.XsGroupEName -> (e => optModelGroupDefinitionOrReference(e).getOrElse(OtherElemInXsNamespace(e))),
+          ENames.XsSequenceEName -> (e => SequenceModelGroup(e)),
+          ENames.XsChoiceEName -> (e => ChoiceModelGroup(e)),
+          ENames.XsAllEName -> (e => AllModelGroup(e)),
+          ENames.XsRestrictionEName -> (e => Restriction(e)),
+          ENames.XsExtensionEName -> (e => Extension(e)),
+          ENames.XsSimpleContentEName -> (e => SimpleContent(e)),
+          ENames.XsComplexContentEName -> (e => ComplexContent(e)),
+          ENames.XsAnnotationEName -> (e => Annotation(e)),
+          ENames.XsAppinfoEName -> (e => Appinfo(e)),
+          ENames.XsImportEName -> (e => Import(e))
+        ),
+        e => OtherElemInXsNamespace(e)
+      ),
+      Namespaces.LinkNamespace -> new ElemFactoryWithFallback( // TODO
+        Map[EName, BackingNodes.Elem => TaxonomyElem](
+          ),
+        (e: BackingNodes.Elem) => ???),
+      Namespaces.GenNamespace -> new ElemFactoryWithFallback(fallbackElem)
+    )
+
+  private[TaxonomyElem] final class ElemFactoryWithFallback(
+      val elemFactory: Map[EName, BackingNodes.Elem => TaxonomyElem],
+      val fallback: BackingNodes.Elem => TaxonomyElem) {
+
+    def this(fallback: BackingNodes.Elem => TaxonomyElem) = this(Map.empty, fallback)
+
+    def forName(name: EName): BackingNodes.Elem => TaxonomyElem = {
+      elemFactory.getOrElse(name, fallback)
+    }
   }
 }
