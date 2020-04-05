@@ -42,7 +42,7 @@ class TaxonomyElemTest extends AnyFunSuite {
 
     elemClasses should equal(Set(classOf[XsSchema], classOf[GlobalElementDeclaration], classOf[Import]))
 
-    val globalElemDecls = schema.findAllGlobalElementDeclarations()
+    val globalElemDecls = schema.findAllGlobalElementDeclarations
 
     globalElemDecls should have size 8
 

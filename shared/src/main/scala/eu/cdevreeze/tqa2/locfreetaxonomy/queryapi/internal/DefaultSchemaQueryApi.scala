@@ -73,7 +73,7 @@ trait DefaultSchemaQueryApi extends SchemaQueryApi {
   // Global element declarations, across documents
 
   def findAllGlobalElementDeclarations: Seq[GlobalElementDeclaration] = {
-    findAllXsdSchemas.flatMap(_.findAllGlobalElementDeclarations())
+    findAllXsdSchemas.flatMap(_.findAllGlobalElementDeclarations)
   }
 
   def filterGlobalElementDeclarations(p: GlobalElementDeclaration => Boolean): Seq[GlobalElementDeclaration] = {
@@ -114,7 +114,7 @@ trait DefaultSchemaQueryApi extends SchemaQueryApi {
   // Global attribute declarations, across documents
 
   def findAllGlobalAttributeDeclarations: Seq[GlobalAttributeDeclaration] = {
-    findAllXsdSchemas.flatMap(_.findAllGlobalAttributeDeclarations())
+    findAllXsdSchemas.flatMap(_.findAllGlobalAttributeDeclarations)
   }
 
   def filterGlobalAttributeDeclarations(p: GlobalAttributeDeclaration => Boolean): Seq[GlobalAttributeDeclaration] = {
@@ -136,7 +136,7 @@ trait DefaultSchemaQueryApi extends SchemaQueryApi {
   // Named type definitions, across documents
 
   def findAllNamedTypeDefinitions: Seq[NamedTypeDefinition] = {
-    findAllXsdSchemas.flatMap(_.findAllNamedTypeDefinitions())
+    findAllXsdSchemas.flatMap(_.findAllNamedTypeDefinitions)
   }
 
   def filterNamedTypeDefinitions(p: NamedTypeDefinition => Boolean): Seq[NamedTypeDefinition] = {

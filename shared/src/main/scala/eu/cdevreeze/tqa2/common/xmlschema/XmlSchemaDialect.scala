@@ -151,15 +151,15 @@ object XmlSchemaDialect {
 
     def filterGlobalElementDeclarations(p: GlobalElementDeclarationType => Boolean): Seq[GlobalElementDeclarationType]
 
-    def findAllGlobalElementDeclarations(): Seq[GlobalElementDeclarationType]
+    def findAllGlobalElementDeclarations: Seq[GlobalElementDeclarationType]
 
     def filterGlobalAttributeDeclarations(p: GlobalAttributeDeclarationType => Boolean): Seq[GlobalAttributeDeclarationType]
 
-    def findAllGlobalAttributeDeclarations(): Seq[GlobalAttributeDeclarationType]
+    def findAllGlobalAttributeDeclarations: Seq[GlobalAttributeDeclarationType]
 
     def filterNamedTypeDefinitions(p: NamedTypeDefinitionType => Boolean): Seq[NamedTypeDefinitionType]
 
-    def findAllNamedTypeDefinitions(): Seq[NamedTypeDefinitionType]
+    def findAllNamedTypeDefinitions: Seq[NamedTypeDefinitionType]
   }
 
   // Traits that are specific to schema components or parts thereof

@@ -337,7 +337,7 @@ final case class XsSchema(underlyingElem: BackingNodes.Elem) extends ElemInXsNam
     filterChildElems(named(ENames.XsElementEName)).collect { case e: GlobalElementDeclaration if p(e) => e }
   }
 
-  def findAllGlobalElementDeclarations(): Seq[GlobalElementDeclaration] = {
+  def findAllGlobalElementDeclarations: Seq[GlobalElementDeclaration] = {
     filterGlobalElementDeclarations(anyElem)
   }
 
@@ -345,7 +345,7 @@ final case class XsSchema(underlyingElem: BackingNodes.Elem) extends ElemInXsNam
     filterChildElems(named(ENames.XsAttributeEName)).collect { case e: GlobalAttributeDeclaration if p(e) => e }
   }
 
-  def findAllGlobalAttributeDeclarations(): Seq[GlobalAttributeDeclaration] = {
+  def findAllGlobalAttributeDeclarations: Seq[GlobalAttributeDeclaration] = {
     filterGlobalAttributeDeclarations(anyElem)
   }
 
@@ -354,7 +354,7 @@ final case class XsSchema(underlyingElem: BackingNodes.Elem) extends ElemInXsNam
       .collect { case e: NamedTypeDefinition if p(e) => e }
   }
 
-  def findAllNamedTypeDefinitions(): Seq[NamedTypeDefinition] = {
+  def findAllNamedTypeDefinitions: Seq[NamedTypeDefinition] = {
     filterNamedTypeDefinitions(anyElem)
   }
 }
@@ -375,11 +375,11 @@ final case class Linkbase(underlyingElem: BackingNodes.Elem) extends ElemInLinkN
     findAllChildElems.collect { case e: ExtendedLink => e }
   }
 
-  def findAllRoleRefs(): Seq[RoleRef] = {
+  def findAllRoleRefs: Seq[RoleRef] = {
     filterChildElems(named(ENames.LinkRoleRefEName)).collect { case e: RoleRef => e }
   }
 
-  def findAllArcroleRefs(): Seq[ArcroleRef] = {
+  def findAllArcroleRefs: Seq[ArcroleRef] = {
     filterChildElems(named(ENames.LinkArcroleRefEName)).collect { case e: ArcroleRef => e }
   }
 }

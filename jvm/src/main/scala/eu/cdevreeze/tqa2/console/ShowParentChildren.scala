@@ -65,7 +65,7 @@ object ShowParentChildren {
     val parentChildElrs: Seq[String] = parentChildRels.map(_.elr).distinct.sorted
 
     val conceptsInParentChildRels: Seq[EName] =
-      parentChildRels.flatMap(rel => Seq(rel.sourceConcept, rel.targetConcept)).distinct.sortBy(_.toString())
+      parentChildRels.flatMap(rel => Seq(rel.sourceConcept, rel.targetConcept)).distinct.sortBy(_.toString)
 
     println()
     println(s"Number of parent-child relationship ELRs: ${parentChildElrs.size}")
@@ -76,7 +76,7 @@ object ShowParentChildren {
 
     parentChildElrs.foreach { elr =>
       val rels = taxo.filterParentChildRelationships(_.elr == elr)
-      val roots: Seq[EName] = rels.map(_.sourceConcept).toSet.diff(rels.map(_.targetConcept).toSet).toSeq.sortBy(_.toString())
+      val roots: Seq[EName] = rels.map(_.sourceConcept).toSet.diff(rels.map(_.targetConcept).toSet).toSeq.sortBy(_.toString)
 
       val paths = roots.flatMap(root => taxo.filterOutgoingConsecutiveParentChildRelationshipPaths(root)(_.firstRelationship.elr == elr))
 
