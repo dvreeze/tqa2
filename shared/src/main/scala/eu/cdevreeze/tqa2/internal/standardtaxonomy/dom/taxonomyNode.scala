@@ -936,8 +936,14 @@ object TaxonomyElem {
   }
 
   private def fallbackElem(underlyingElem: BackingNodes.Elem): TaxonomyElem = {
-    // TODO
-    ???
+    underlyingElem.attrOption(ENames.XLinkTypeEName) match {
+      case Some("extended") => NonStandardLink(underlyingElem)
+      case Some("arc") => NonStandardArc(underlyingElem)
+      case Some("resource") => NonStandardResource(underlyingElem)
+      case Some("locator") => NonStandardLocator(underlyingElem)
+      case Some("simple") => NonStandardSimpleLink(underlyingElem)
+      case _ => OtherNonXLinkElem(underlyingElem)
+    }
   }
 
   private val elemFactoryMap: Map[String, ElemFactoryWithFallback] =
@@ -964,10 +970,32 @@ object TaxonomyElem {
         ),
         e => OtherElemInXsNamespace(e)
       ),
-      Namespaces.LinkNamespace -> new ElemFactoryWithFallback( // TODO
-        Map[EName, BackingNodes.Elem => TaxonomyElem](
-          ),
-        (e: BackingNodes.Elem) => ???),
+      Namespaces.LinkNamespace -> new ElemFactoryWithFallback(
+        Map(
+          ENames.LinkLinkbaseEName -> (e => Linkbase(e)),
+          ENames.LinkDefinitionLinkEName -> (e => DefinitionLink(e)),
+          ENames.LinkPresentationLinkEName -> (e => PresentationLink(e)),
+          ENames.LinkCalculationLinkEName -> (e => CalculationLink(e)),
+          ENames.LinkLabelLinkEName -> (e => LabelLink(e)),
+          ENames.LinkReferenceLinkEName -> (e => ReferenceLink(e)),
+          ENames.LinkDefinitionArcEName -> (e => DefinitionArc(e)),
+          ENames.LinkPresentationArcEName -> (e => PresentationArc(e)),
+          ENames.LinkCalculationArcEName -> (e => CalculationArc(e)),
+          ENames.LinkLabelArcEName -> (e => LabelArc(e)),
+          ENames.LinkReferenceArcEName -> (e => ReferenceArc(e)),
+          ENames.LinkLabelEName -> (e => ConceptLabelResource(e)),
+          ENames.LinkReferenceEName -> (e => ConceptReferenceResource(e)),
+          ENames.LinkLocEName -> (e => StandardLoc(e)),
+          ENames.LinkRoleRefEName -> (e => RoleRef(e)),
+          ENames.LinkArcroleRefEName -> (e => ArcroleRef(e)),
+          ENames.LinkLinkbaseRefEName -> (e => LinkbaseRef(e)),
+          ENames.LinkSchemaRefEName -> (e => SchemaRef(e)),
+          ENames.LinkRoleTypeEName -> (e => RoleType(e)),
+          ENames.LinkArcroleTypeEName -> (e => ArcroleType(e)),
+          ENames.LinkDefinitionEName -> (e => Definition(e)),
+          ENames.LinkUsedOnEName -> (e => UsedOn(e))
+        ),
+        e => OtherElemInLinkNamespace(e)),
       Namespaces.GenNamespace -> new ElemFactoryWithFallback(fallbackElem)
     )
 
