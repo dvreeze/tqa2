@@ -20,8 +20,9 @@ import scala.collection.immutable.ArraySeq
 
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.Namespaces
-import eu.cdevreeze.tqa2.common.FragmentKey
 import eu.cdevreeze.tqa2.common.datatypes.XsBooleans
+import eu.cdevreeze.tqa2.common.datatypes.XsDoubles
+import eu.cdevreeze.tqa2.common.FragmentKey
 import eu.cdevreeze.tqa2.common.xlink
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.common.xmlschema.XmlSchemaDialect
@@ -237,7 +238,7 @@ sealed trait ExtendedLink extends XLinkLink with xlink.ExtendedLink {
     findAllChildElems.collect { case e: ChildXLink => e }
   }
 
-  final def labeledXLinkChildren: Seq[LabeledXLink] = {
+  final def labeledXlinkChildren: Seq[LabeledXLink] = {
     findAllChildElems.collect { case e: LabeledXLink => e }
   }
 
@@ -251,7 +252,7 @@ sealed trait ExtendedLink extends XLinkLink with xlink.ExtendedLink {
    * be called only once per extended link.
    */
   final def labeledXlinkMap: Map[String, Seq[LabeledXLink]] = {
-    labeledXLinkChildren.groupBy(_.xlinkLabel)
+    labeledXlinkChildren.groupBy(_.xlinkLabel)
   }
 }
 
@@ -308,7 +309,7 @@ sealed trait ElemInXsNamespace extends TaxonomyElem with XmlSchemaDialect.Elem {
   type NamedTypeDefinitionType = NamedTypeDefinition
 }
 
-sealed trait ElemInLinkNamespace extends TaxonomyElem
+sealed trait ElemInLinkNamespace extends TaxonomyElem with LinkDialect.Elem
 
 // Named top-level schema component
 
@@ -360,7 +361,28 @@ final case class XsSchema(underlyingElem: BackingNodes.Elem) extends ElemInXsNam
 
 // Linkbase root element
 
-// TODO Linkbase root element
+final case class Linkbase(underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace with LinkDialect.Linkbase with RootElement {
+  requireName(ENames.LinkLinkbaseEName)
+
+  def isSchema: Boolean = false
+
+  def isLinkbase: Boolean = true
+
+  /**
+   * Finds all ("taxonomy DOM") extended links
+   */
+  def findAllExtendedLinks: Seq[ExtendedLink] = {
+    findAllChildElems.collect { case e: ExtendedLink => e }
+  }
+
+  def findAllRoleRefs(): Seq[RoleRef] = {
+    filterChildElems(named(ENames.LinkRoleRefEName)).collect { case e: RoleRef => e }
+  }
+
+  def findAllArcroleRefs(): Seq[ArcroleRef] = {
+    filterChildElems(named(ENames.LinkArcroleRefEName)).collect { case e: ArcroleRef => e }
+  }
+}
 
 // Schema content.
 
@@ -637,6 +659,169 @@ final case class Import(underlyingElem: BackingNodes.Elem) extends ElemInXsNames
  * that has both a name and a ref attribute.
  */
 final case class OtherElemInXsNamespace(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace
+
+// Linkbase content.
+
+sealed trait StandardLink extends ElemInLinkNamespace with ExtendedLink with LinkDialect.StandardLink
+
+final case class DefinitionLink(underlyingElem: BackingNodes.Elem) extends StandardLink with LinkDialect.DefinitionLink {
+  requireName(ENames.LinkDefinitionLinkEName)
+}
+
+final case class PresentationLink(underlyingElem: BackingNodes.Elem) extends StandardLink with LinkDialect.PresentationLink {
+  requireName(ENames.LinkPresentationLinkEName)
+}
+
+final case class CalculationLink(underlyingElem: BackingNodes.Elem) extends StandardLink with LinkDialect.CalculationLink {
+  requireName(ENames.LinkCalculationLinkEName)
+}
+
+final case class LabelLink(underlyingElem: BackingNodes.Elem) extends StandardLink with LinkDialect.LabelLink {
+  requireName(ENames.LinkLabelLinkEName)
+}
+
+final case class ReferenceLink(underlyingElem: BackingNodes.Elem) extends StandardLink with LinkDialect.ReferenceLink {
+  requireName(ENames.LinkReferenceLinkEName)
+}
+
+sealed trait StandardArc extends ElemInLinkNamespace with XLinkArc with LinkDialect.StandardArc
+
+sealed trait InterConceptArc extends StandardArc with LinkDialect.InterConceptArc
+
+sealed trait ConceptResourceArc extends StandardArc with LinkDialect.ConceptResourceArc
+
+final case class DefinitionArc(underlyingElem: BackingNodes.Elem) extends InterConceptArc with LinkDialect.DefinitionArc {
+  requireName(ENames.LinkDefinitionArcEName)
+}
+
+final case class PresentationArc(underlyingElem: BackingNodes.Elem) extends InterConceptArc with LinkDialect.PresentationArc {
+  requireName(ENames.LinkPresentationArcEName)
+}
+
+final case class CalculationArc(underlyingElem: BackingNodes.Elem) extends InterConceptArc with LinkDialect.CalculationArc {
+  requireName(ENames.LinkCalculationArcEName)
+
+  def weight: Double = {
+    XsDoubles.parseDouble(attr(ENames.WeightEName))
+  }
+}
+
+final case class LabelArc(underlyingElem: BackingNodes.Elem) extends ConceptResourceArc with LinkDialect.LabelArc {
+  requireName(ENames.LinkLabelArcEName)
+}
+
+final case class ReferenceArc(underlyingElem: BackingNodes.Elem) extends ConceptResourceArc with LinkDialect.ReferenceArc {
+  requireName(ENames.LinkReferenceArcEName)
+}
+
+sealed trait StandardResource extends ElemInLinkNamespace with XLinkResource with LinkDialect.StandardResource
+
+final case class ConceptLabelResource(underlyingElem: BackingNodes.Elem) extends StandardResource with LinkDialect.ConceptLabelResource {
+  requireName(ENames.LinkLabelEName)
+}
+
+final case class ConceptReferenceResource(underlyingElem: BackingNodes.Elem)
+    extends StandardResource
+    with LinkDialect.ConceptReferenceResource {
+
+  requireName(ENames.LinkReferenceEName)
+}
+
+final case class StandardLoc(underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace with XLinkLocator with LinkDialect.StandardLoc {
+  requireName(ENames.LinkLocEName)
+}
+
+sealed trait StandardSimpleLink extends ElemInLinkNamespace with SimpleLink with LinkDialect.StandardSimpleLink
+
+final case class RoleRef(underlyingElem: BackingNodes.Elem) extends StandardSimpleLink with LinkDialect.RoleRef {
+  requireName(ENames.LinkRoleRefEName)
+}
+
+final case class ArcroleRef(underlyingElem: BackingNodes.Elem) extends StandardSimpleLink with LinkDialect.ArcroleRef {
+  requireName(ENames.LinkArcroleRefEName)
+}
+
+final case class LinkbaseRef(underlyingElem: BackingNodes.Elem) extends StandardSimpleLink with LinkDialect.LinkbaseRef {
+  requireName(ENames.LinkLinkbaseRefEName)
+}
+
+final case class SchemaRef(underlyingElem: BackingNodes.Elem) extends StandardSimpleLink with LinkDialect.SchemaRef {
+  requireName(ENames.LinkSchemaRefEName)
+}
+
+final case class RoleType(underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace with LinkDialect.RoleType {
+  requireName(ENames.LinkRoleTypeEName)
+
+  def definitionOption: Option[Definition] = {
+    filterChildElems(named(ENames.LinkDefinitionEName)).collectFirst { case e: Definition => e }
+  }
+
+  def usedOn: Seq[UsedOn] = {
+    filterChildElems(named(ENames.LinkUsedOnEName)).collect { case e: UsedOn => e }
+  }
+}
+
+final case class ArcroleType(underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace with LinkDialect.ArcroleType {
+  requireName(ENames.LinkArcroleTypeEName)
+
+  /**
+   * Returns the cyclesAllowed attribute.
+   */
+  def cyclesAllowed: CyclesAllowed = {
+    CyclesAllowed.fromString(attr(ENames.CyclesAllowedEName))
+  }
+
+  def definitionOption: Option[Definition] = {
+    filterChildElems(named(ENames.LinkDefinitionEName)).collectFirst { case e: Definition => e }
+  }
+
+  def usedOn: Seq[UsedOn] = {
+    filterChildElems(named(ENames.LinkUsedOnEName)).collect { case e: UsedOn => e }
+  }
+}
+
+final case class Definition(underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace with LinkDialect.Definition {
+  requireName(ENames.LinkDefinitionEName)
+}
+
+final case class UsedOn(underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace with LinkDialect.UsedOn {
+  requireName(ENames.LinkUsedOnEName)
+}
+
+/**
+ * Other element in the Link namespace. Either valid other Link content, or invalid content.
+ */
+final case class OtherElemInLinkNamespace(underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace
+
+/**
+ * Non-standard extended link
+ */
+final case class NonStandardLink(underlyingElem: BackingNodes.Elem) extends TaxonomyElem with ExtendedLink
+
+/**
+ * Non-standard arc
+ */
+final case class NonStandardArc(underlyingElem: BackingNodes.Elem) extends TaxonomyElem with XLinkArc
+
+/**
+ * Non-standard resource
+ */
+final case class NonStandardResource(underlyingElem: BackingNodes.Elem) extends TaxonomyElem with XLinkResource
+
+/**
+ * Non-standard locator
+ */
+final case class NonStandardLocator(underlyingElem: BackingNodes.Elem) extends TaxonomyElem with XLinkLocator
+
+/**
+ * Non-standard simple link
+ */
+final case class NonStandardSimpleLink(underlyingElem: BackingNodes.Elem) extends TaxonomyElem with SimpleLink
+
+/**
+ * Any other non-XLink element, not in the "xs" or "link" namespaces.
+ */
+final case class OtherNonXLinkElem(underlyingElem: BackingNodes.Elem) extends TaxonomyElem
 
 // Companion objects
 

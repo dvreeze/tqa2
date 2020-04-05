@@ -16,8 +16,6 @@
 
 package eu.cdevreeze.tqa2.internal.standardtaxonomy.dom
 
-import java.net.URI
-
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.xlink
 import eu.cdevreeze.yaidom2.queryapi.BackingElemApi
@@ -108,21 +106,9 @@ object LinkDialect {
 
   // Standard simple links in entrypoint schemas
 
-  trait LinkbaseRef extends StandardSimpleLink {
+  trait LinkbaseRef extends StandardSimpleLink
 
-    final def href: URI = {
-      attrOption(ENames.XLinkHrefEName).map(URI.create)
-        .getOrElse(sys.error(s"Expected xlink:href attribute. Document: $docUri. Element: $name"))
-    }
-  }
-
-  trait SchemaRef extends StandardSimpleLink {
-
-    final def href: URI = {
-      attrOption(ENames.XLinkHrefEName).map(URI.create)
-        .getOrElse(sys.error(s"Expected xlink:href attribute. Document: $docUri. Element: $name"))
-    }
-  }
+  trait SchemaRef extends StandardSimpleLink
 
   // Other elements
 

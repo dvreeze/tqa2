@@ -27,7 +27,7 @@ import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.queryapi.BackingElemApi
 
 /**
- * XLink dialect, free from locators and simple links.
+ * XLink dialect, including locators and simple links.
  *
  * The elements in this dialect extend the yaidom `BackingElemApi` API and not the more specific `BackingNodes.Elem` API.
  * It is meant to be mixed in by more concrete locator-free XLink-based dialects that do extend the `BackingNodes.Elem` API.
