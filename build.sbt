@@ -71,6 +71,8 @@ lazy val tqa2 = crossProject(JSPlatform, JVMPlatform)
 
     libraryDependencies += "net.sf.saxon" % "Saxon-HE" % "9.9.1-7",
 
+    libraryDependencies += "com.github.ben-manes.caffeine" % "caffeine" % "2.8.1",
+
     libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.14.3" % "test"
   )
   .jsSettings(
