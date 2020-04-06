@@ -14,15 +14,15 @@
  * limitations under the License.
  */
 
-package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy
+package eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy
 
 import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom._
-import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal.DefaultSchemaQueryApi
-import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal.DefaultTaxonomySchemaQueryApi
+import eu.cdevreeze.tqa2.internal.standardtaxonomy.dom._
+import eu.cdevreeze.tqa2.internal.standardtaxonomy.queryapi.internal.DefaultSchemaQueryApi
+import eu.cdevreeze.tqa2.internal.standardtaxonomy.queryapi.internal.DefaultTaxonomySchemaQueryApi
 import eu.cdevreeze.yaidom2.core.EName
 
 /**
