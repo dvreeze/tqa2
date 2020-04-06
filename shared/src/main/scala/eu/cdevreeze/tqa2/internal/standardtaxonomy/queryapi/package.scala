@@ -17,7 +17,7 @@
 package eu.cdevreeze.tqa2.internal.standardtaxonomy
 
 /**
- * Minimal taxonomy query API, for querying locator-free DOM content, without knowing anything about relationships.
+ * Minimal taxonomy query API, for querying standard XBRL taxonomy DOM content, without knowing anything about relationships.
  *
  * @author Chris de Vreeze
  */

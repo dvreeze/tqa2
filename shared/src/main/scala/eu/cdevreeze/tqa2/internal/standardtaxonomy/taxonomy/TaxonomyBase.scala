@@ -26,8 +26,7 @@ import eu.cdevreeze.tqa2.internal.standardtaxonomy.queryapi.internal.DefaultTaxo
 import eu.cdevreeze.yaidom2.core.EName
 
 /**
- * Taxonomy base, which is like a taxonomy without knowledge about relationships. It forms the basis for building BasicTaxonomy
- * instances.
+ * Taxonomy base, which is like a taxonomy without knowledge about relationships.
  *
  * @author Chris de Vreeze
  */
