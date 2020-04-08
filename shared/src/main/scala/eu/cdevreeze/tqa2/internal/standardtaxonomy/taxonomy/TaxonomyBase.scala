@@ -42,6 +42,10 @@ final class TaxonomyBase private (
 
   override def substitutionGroupMap: SubstitutionGroupMap = netSubstitutionGroupMap
 
+  def findAllLinkbases: Seq[Linkbase] = {
+    rootElems.flatMap(_.findTopmostElemsOrSelf(_.name == ENames.LinkLinkbaseEName)).collect { case e: Linkbase => e }
+  }
+
   def rootElemMap: Map[URI, TaxonomyElem] = {
     rootElems.groupBy(_.docUri).view.mapValues(_.head).toMap
   }
