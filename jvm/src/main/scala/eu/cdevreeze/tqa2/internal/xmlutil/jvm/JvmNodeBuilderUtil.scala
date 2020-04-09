@@ -46,13 +46,12 @@ final class JvmNodeBuilderUtil(namespacePrefixMapper: NamespacePrefixMapper, doc
   private val saxonProcessor: Processor = new Processor(false)
 
   def prettify(elem: nodebuilder.Elem): nodebuilder.Elem = {
-    // See https://self-learning-java-tutorial.blogspot.com/2018/03/pretty-print-xml-string-in-java.html
     val tf = TransformerFactory.newInstance().asInstanceOf[SAXTransformerFactory]
-    val indent = 2
-    tf.setAttribute("indent-number", indent)
 
     val serializeHandler: TransformerHandler = tf.newTransformerHandler()
     serializeHandler.getTransformer.setOutputProperty(OutputKeys.INDENT, "yes")
+    val indent = 2
+    serializeHandler.getTransformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", indent.toString)
     val sw: StringWriter = new StringWriter()
     serializeHandler.setResult(new StreamResult(sw))
 

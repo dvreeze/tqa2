@@ -71,7 +71,7 @@ abstract class NodeBuilderUtil(val namespacePrefixMapper: NamespacePrefixMapper,
    * Calls `elem.pipe(stripUnusedNamespaceDeclarations).pipe(pushUpPrefixedNamespaceDeclarations).pipe(prettify)`.
    */
   final def sanitize(elem: nodebuilder.Elem): nodebuilder.Elem = {
-    elem.pipe(stripUnusedNamespaceDeclarations).pipe(pushUpPrefixedNamespaceDeclarations).pipe(prettify)
+    elem.pipe(stripUnusedNamespaceDeclarations).pipe(pushUpPrefixedNamespaceDeclarations) // .pipe(prettify) // TODO
   }
 
   /**
