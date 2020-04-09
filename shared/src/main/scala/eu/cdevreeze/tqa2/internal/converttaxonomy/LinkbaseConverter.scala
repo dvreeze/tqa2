@@ -21,6 +21,7 @@ import java.net.URI
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.xpointer.XPointer
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
+import eu.cdevreeze.tqa2.internal.xmlutil.NodeBuilderUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Linkbase
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.yaidom2.core.EName
@@ -30,18 +31,21 @@ import eu.cdevreeze.yaidom2.node.indexed
 import eu.cdevreeze.yaidom2.node.nodebuilder
 import eu.cdevreeze.yaidom2.node.resolved
 import eu.cdevreeze.yaidom2.node.simple
+import eu.cdevreeze.yaidom2.utils.namespaces.DocumentENameExtractor
 
 /**
  * Converter from standard taxonomy linkbases to locator-free taxonomy linkbases.
  *
  * @author Chris de Vreeze
  */
-final class LinkbaseConverter(val namespacePrefixMapper: NamespacePrefixMapper, val xlinkResourceConverter: XLinkResourceConverter) {
+final class LinkbaseConverter(val xlinkResourceConverter: XLinkResourceConverter)(
+    implicit val namespacePrefixMapper: NamespacePrefixMapper,
+    val documentENameExtractor: DocumentENameExtractor,
+    val nodeBuilderUtil: NodeBuilderUtil) {
 
   private val xlinkLocatorConverter = new XLinkLocatorConverter(namespacePrefixMapper)
 
-  implicit private val nsPrefixMapper: NamespacePrefixMapper = namespacePrefixMapper
-  implicit private val elemCreator: nodebuilder.NodeBuilderCreator = nodebuilder.NodeBuilderCreator(nsPrefixMapper)
+  implicit private val elemCreator: nodebuilder.NodeBuilderCreator = nodebuilder.NodeBuilderCreator(namespacePrefixMapper)
 
   import elemCreator._
   import nodebuilder.NodeBuilderCreator._
@@ -50,11 +54,26 @@ final class LinkbaseConverter(val namespacePrefixMapper: NamespacePrefixMapper, 
    * Converts a linkbase in the given (2nd parameter) TaxonomyBase to its locator-free counterparts, resulting in
    * a locator-free Linkbase returned by this function.
    *
+   * The returned locator-free linkbase contains XLink resources (namely taxonomy element keys) instead of locators,
+   * it contains no simple links (there are no counterparts for roleRef etc.), and it contains other element names
+   * for extended links and for the linkbase itself.
+   *
    * The input TaxonomyBase parameter (2nd parameter) should be closed under DTS discovery rules.
    */
   def convertLinkbase(inputLinkbase: standardtaxonomy.dom.Linkbase, inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase): Linkbase = {
+    val parentScope: PrefixedScope = PrefixedScope.empty
 
-    ???
+    val startLinkbaseElem: nodebuilder.Elem = emptyElem(ENames.CLinkLinkbaseEName, parentScope)
+
+    val startLinkbase: Linkbase = makeLinkbase(inputLinkbase.docUriOption, startLinkbaseElem)
+
+    val rawLinkbase: Linkbase = inputLinkbase.findAllExtendedLinks.foldLeft(startLinkbase) {
+      case (accLinkbase, extLink) =>
+        convertAndAddExtendedLink(extLink, inputTaxonomyBase, accLinkbase)
+    }
+
+    val sanitizedLinkbaseElem = nodeBuilderUtil.sanitize(nodebuilder.Elem.from(rawLinkbase))
+    makeLinkbase(startLinkbase.docUriOption, sanitizedLinkbaseElem)
   }
 
   def convertAndAddExtendedLink(
@@ -160,7 +179,7 @@ final class LinkbaseConverter(val namespacePrefixMapper: NamespacePrefixMapper, 
       .underlying
 
     val resultElem: nodebuilder.Elem = nodebuilder.Elem.from(currentLinkbase).creationApi.plusChild(extLink).underlying
-    TaxonomyElem(indexed.Elem.ofRoot(currentLinkbase.docUriOption, simple.Elem.from(resultElem))).asInstanceOf[Linkbase]
+    makeLinkbase(currentLinkbase.docUriOption, resultElem)
   }
 
   private def convertAndAddInterConceptLink(
@@ -405,6 +424,10 @@ final class LinkbaseConverter(val namespacePrefixMapper: NamespacePrefixMapper, 
       }
 
     arcGroups.flatten.distinctBy(e => resolved.Elem.from(e))
+  }
+
+  private def makeLinkbase(docUriOption: Option[URI], linkbaseRootElem: nodebuilder.Elem): Linkbase = {
+    TaxonomyElem(indexed.Elem.ofRoot(docUriOption, simple.Elem.from(linkbaseRootElem))).asInstanceOf[Linkbase]
   }
 
   private def convertLinkName(inputLinkName: EName): EName = {
