@@ -18,16 +18,17 @@ package eu.cdevreeze.tqa2.internal.converttaxonomy
 
 import java.net.URI
 
-import eu.cdevreeze.tqa2.ENames
-import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.tqa2.common.namespaceutils.XbrlDocumentENameExtractor
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
 import eu.cdevreeze.tqa2.internal.xmlutil.NodeBuilderUtil
+import eu.cdevreeze.tqa2.internal.xmlutil.ScopeUtil._
 import eu.cdevreeze.tqa2.internal.xmlutil.jvm.JvmNodeBuilderUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.ConceptKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Linkbase
+import eu.cdevreeze.tqa2.ENames
+import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.core.PrefixedScope
@@ -53,10 +54,13 @@ class LinkbaseConversionTest extends AnyFunSuite {
     val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
       standardtaxonomy.taxonomy.TaxonomyBase.build(Seq(inputLinkbase, inputSchema), SubstitutionGroupMap.Empty)
 
-    // TODO Does not work. Is VectorMap.++ consistent in its semantics with HashMap.++?
+    // TODO Scope uses VectorMap, which is broken. See https://github.com/scala/scala/pull/8854 and https://github.com/scala/bug/issues/11933.
 
     val scope: PrefixedScope = PrefixedScope
-      .ignoringDefaultNamespace(inputLinkbase.scope.append(inputSchema.scope))
+      .ignoringDefaultNamespace(inputLinkbase.scope)
+      .usingListMap
+      .append(PrefixedScope.ignoringDefaultNamespace(inputSchema.scope))
+      .usingListMap
       .append(PrefixedScope.from("clink" -> Namespaces.CLinkNamespace, "ckey" -> Namespaces.CKeyNamespace))
 
     implicit val namespacePrefixMapper: NamespacePrefixMapper =
@@ -85,6 +89,20 @@ class LinkbaseConversionTest extends AnyFunSuite {
         "venj-bw2-dim_ClassesOfEquityAxis_loc",
         "resource"
       ))
+
+    // Unused namespace declarations have been pruned, so we can test for used namespaces
+
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.LinkNamespace)) should be(empty)
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.XsNamespace)) should be(empty)
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.XbrliNamespace)) should be(empty)
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.XbrldtNamespace)) should be(empty)
+
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.CLinkNamespace)) should not be (empty)
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.CKeyNamespace)) should not be (empty)
+
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.XLinkNamespace)) should not be (empty)
+
+    locFreeLinkbase.scope.filterNamespaces(Set("http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes")) should not be (empty)
   }
 
   private val processor = new Processor(false)

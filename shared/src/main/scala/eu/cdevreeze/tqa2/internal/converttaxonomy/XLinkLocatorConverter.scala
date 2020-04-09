@@ -19,6 +19,7 @@ package eu.cdevreeze.tqa2.internal.converttaxonomy
 import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
+import eu.cdevreeze.tqa2.internal.xmlutil.ScopeUtil._
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
@@ -153,7 +154,7 @@ final class XLinkLocatorConverter(val namespacePrefixMapper: NamespacePrefixMapp
       parentScope: PrefixedScope): nodebuilder.Elem = {
 
     val targetEName: EName = locatedSchemaComponent.targetEName
-    val effectiveScope: PrefixedScope = parentScope.append(extractScope(targetEName))
+    val effectiveScope: PrefixedScope = parentScope.usingListMap.append(extractScope(targetEName))
 
     emptyElem(targetElemName, effectiveScope).creationApi
       .plusAttribute(ENames.KeyEName, effectiveScope.getQName(targetEName).toString)

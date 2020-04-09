@@ -16,6 +16,7 @@
 
 package eu.cdevreeze.tqa2.internal.xmlutil
 
+import eu.cdevreeze.tqa2.internal.xmlutil.ScopeUtil._
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.core.PrefixedScope
@@ -47,7 +48,7 @@ abstract class NodeBuilderUtil(val namespacePrefixMapper: NamespacePrefixMapper,
       .map(_.prefixedScope)
       .distinct
       .reverse
-      .reduceLeft(_.append(_))
+      .reduceLeft(_.usingListMap.append(_))
 
     elem.creationApi.usingParentScope(parentScope).underlying
   }

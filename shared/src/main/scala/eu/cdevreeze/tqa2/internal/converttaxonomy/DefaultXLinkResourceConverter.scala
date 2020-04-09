@@ -16,7 +16,9 @@
 
 package eu.cdevreeze.tqa2.internal.converttaxonomy
 
+import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
+import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.core.PrefixedScope
 import eu.cdevreeze.yaidom2.node.nodebuilder
@@ -24,7 +26,7 @@ import eu.cdevreeze.yaidom2.node.nodebuilder
 /**
  * Trivial default converter from standard taxonomy XLink resources to their locator-free counterparts, as nodebuilder elements.
  * This is a low level class, used internally by LinkbaseConverter etc. The resource must have no default namespace (anywhere
- * in its element tree), and is basically copied as-is.
+ * in its element tree), and is basically copied as-is, but maybe using another namespace for the element name.
  *
  * @author Chris de Vreeze
  */
@@ -34,6 +36,7 @@ final class DefaultXLinkResourceConverter(val namespacePrefixMapper: NamespacePr
   implicit private val elemCreator: nodebuilder.NodeBuilderCreator = nodebuilder.NodeBuilderCreator(nsPrefixMapper)
 
   import nodebuilder.NodeBuilderCreator._
+  import elemCreator._
 
   def convertResource(
       res: standardtaxonomy.dom.XLinkResource,
@@ -44,6 +47,24 @@ final class DefaultXLinkResourceConverter(val namespacePrefixMapper: NamespacePr
       res.findAllDescendantElemsOrSelf.forall(_.scope.defaultNamespaceOption.isEmpty),
       s"Default namespace not allowed in resource '${res.fragmentKey}'")
 
-    nodebuilder.Elem.from(res).creationApi.usingParentScope(parentScope).underlying
+    convertName(nodebuilder.Elem.from(res)).creationApi.usingParentScope(parentScope).underlying
+  }
+
+  private def convertName(elem: nodebuilder.Elem): nodebuilder.Elem = {
+    withName(elem, convertName(elem.name))
+  }
+
+  private def convertName(name: EName): EName = {
+    name match {
+      case ENames.LinkLabelEName     => ENames.CLinkLabelEName
+      case ENames.LinkReferenceEName => ENames.CLinkReferenceEName
+      case n                         => n
+    }
+  }
+
+  // TODO In yaidom2, make this name update easier
+
+  private def withName(elem: nodebuilder.Elem, newName: EName): nodebuilder.Elem = {
+    emptyElem(newName, extractScope(newName)).creationApi.plusAttributes(elem.attributes).withChildren(elem.children).underlying
   }
 }
