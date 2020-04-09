@@ -3,7 +3,7 @@
                 xmlns:ckey="http://www.locfreexbrl.org/2019/key"
                 xmlns:venj-bw2-dim="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes"
                 xmlns:xlink="http://www.w3.org/1999/xlink">
-   <clink:labelLink xlink:role="http://www.xbrl.org/2003/role/link" xlink:type="extended">
+  <clink:labelLink xlink:role="http://www.xbrl.org/2003/role/link" xlink:type="extended">
       <clink:label id="venj-bw2-dim_BasisOfPreparationAxis_label_fr"
                    xlink:label="venj-bw2-dim_BasisOfPreparationAxis_label_fr"
                    xlink:role="http://www.xbrl.org/2003/role/label"

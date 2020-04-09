@@ -18,6 +18,8 @@ package eu.cdevreeze.tqa2.internal.converttaxonomy
 
 import java.net.URI
 
+import eu.cdevreeze.tqa2.ENames
+import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.tqa2.common.namespaceutils.XbrlDocumentENameExtractor
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
@@ -25,11 +27,11 @@ import eu.cdevreeze.tqa2.internal.xmlutil.ScopeUtil._
 import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.ConceptKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Linkbase
-import eu.cdevreeze.tqa2.ENames
-import eu.cdevreeze.tqa2.Namespaces
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.core.PrefixedScope
+import eu.cdevreeze.yaidom2.node.resolved
 import eu.cdevreeze.yaidom2.node.saxon
 import eu.cdevreeze.yaidom2.utils.namespaces.DocumentENameExtractor
 import net.sf.saxon.s9api.Processor
@@ -99,6 +101,47 @@ class LinkbaseConversionTest extends AnyFunSuite {
     locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.XLinkNamespace)) should not be (empty)
 
     locFreeLinkbase.scope.filterNamespaces(Set("http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes")) should not be (empty)
+
+    // Compare with expected linkbase
+
+    val expectedLinkbase = getLocatorFreeTaxonomyElement(URI.create("testfiles/venj-bw2-axes-lab-fr.xml")).asInstanceOf[Linkbase]
+
+    val arcs = locFreeLinkbase.filterDescendantElems(_.name == ENames.CLinkLabelArcEName)
+    val expectedArcs = expectedLinkbase.filterDescendantElems(_.name == ENames.CLinkLabelArcEName)
+
+    (arcs should have).size(26)
+
+    arcs.map(resolved.Elem.from(_).removeAllInterElementWhitespace).toSet should be(
+      expectedArcs.map(resolved.Elem.from(_).removeAllInterElementWhitespace).toSet)
+
+    val taxoElemKeys = locFreeLinkbase.filterDescendantElems(_.name == ENames.CKeyConceptKeyEName)
+    val expectedTaxoElemKeys = expectedLinkbase.filterDescendantElems(_.name == ENames.CKeyConceptKeyEName)
+
+    (taxoElemKeys should have).size(26)
+
+    taxoElemKeys.map(resolved.Elem.from(_).removeAllInterElementWhitespace).toSet should be(
+      expectedTaxoElemKeys.map(resolved.Elem.from(_).removeAllInterElementWhitespace).toSet)
+
+    val labels = locFreeLinkbase.filterDescendantElems(_.name == ENames.CLinkLabelEName)
+    val expectedLabels = expectedLinkbase.filterDescendantElems(_.name == ENames.CLinkLabelEName)
+
+    (labels should have).size(26)
+
+    labels.map(resolved.Elem.from(_).removeAllInterElementWhitespace).toSet should be(
+      expectedLabels.map(resolved.Elem.from(_).removeAllInterElementWhitespace).toSet)
+
+    val envelope = resolved.Elem.from(locFreeLinkbase).transformDescendantElemsToNodeSeq {
+      case e if e.name == ENames.CLinkLabelLinkEName => Nil
+      case e                                         => Seq(e)
+    }
+
+    val expectedEnvelope = resolved.Elem.from(expectedLinkbase).transformDescendantElemsToNodeSeq {
+      case e if e.name == ENames.CLinkLabelLinkEName => Nil
+      case e                                         => Seq(e)
+    }
+
+    // TODO Is resolved.Elem.removeAllInterElementWhitespace broken?
+    envelope.removeAllInterElementWhitespace should be(expectedEnvelope.removeAllInterElementWhitespace)
   }
 
   private val processor = new Processor(false)
@@ -107,5 +150,11 @@ class LinkbaseConversionTest extends AnyFunSuite {
     val doc: saxon.Document = TestResourceUtil.buildSaxonDocumentFromClasspathResource(relativeFilePath, processor)
 
     standardtaxonomy.dom.TaxonomyElem(doc.documentElement)
+  }
+
+  private def getLocatorFreeTaxonomyElement(relativeFilePath: URI): TaxonomyElem = {
+    val doc: saxon.Document = TestResourceUtil.buildSaxonDocumentFromClasspathResource(relativeFilePath, processor)
+
+    TaxonomyElem(doc.documentElement)
   }
 }
