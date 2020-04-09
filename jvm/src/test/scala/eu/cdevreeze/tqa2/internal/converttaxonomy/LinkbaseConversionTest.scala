@@ -21,9 +21,7 @@ import java.net.URI
 import eu.cdevreeze.tqa2.common.namespaceutils.XbrlDocumentENameExtractor
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
-import eu.cdevreeze.tqa2.internal.xmlutil.NodeBuilderUtil
 import eu.cdevreeze.tqa2.internal.xmlutil.ScopeUtil._
-import eu.cdevreeze.tqa2.internal.xmlutil.jvm.JvmNodeBuilderUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.ConceptKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Linkbase
@@ -67,8 +65,6 @@ class LinkbaseConversionTest extends AnyFunSuite {
       NamespacePrefixMapper.fromMapWithFallback(scope.scope.inverse.view.mapValues(_.head).toMap)
 
     implicit val documentENameExtractor: DocumentENameExtractor = XbrlDocumentENameExtractor.defaultInstance
-
-    implicit val nodeBuilderUtil: NodeBuilderUtil = JvmNodeBuilderUtil(namespacePrefixMapper, documentENameExtractor)
 
     val xlinkResourceConverter = new DefaultXLinkResourceConverter(namespacePrefixMapper)
     val linkbaseConverter: LinkbaseConverter = new LinkbaseConverter(xlinkResourceConverter)

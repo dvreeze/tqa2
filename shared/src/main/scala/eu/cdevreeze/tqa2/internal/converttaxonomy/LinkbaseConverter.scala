@@ -40,10 +40,11 @@ import eu.cdevreeze.yaidom2.utils.namespaces.DocumentENameExtractor
  */
 final class LinkbaseConverter(val xlinkResourceConverter: XLinkResourceConverter)(
     implicit val namespacePrefixMapper: NamespacePrefixMapper,
-    val documentENameExtractor: DocumentENameExtractor,
-    val nodeBuilderUtil: NodeBuilderUtil) {
+    val documentENameExtractor: DocumentENameExtractor) {
 
   private val xlinkLocatorConverter = new XLinkLocatorConverter(namespacePrefixMapper)
+
+  private val nodeBuilderUtil: NodeBuilderUtil = new NodeBuilderUtil(namespacePrefixMapper, documentENameExtractor)
 
   implicit private val elemCreator: nodebuilder.NodeBuilderCreator = nodebuilder.NodeBuilderCreator(namespacePrefixMapper)
 
