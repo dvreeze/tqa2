@@ -47,11 +47,11 @@ final class DefaultXLinkResourceConverter(val namespacePrefixMapper: NamespacePr
       res.findAllDescendantElemsOrSelf.forall(_.scope.defaultNamespaceOption.isEmpty),
       s"Default namespace not allowed in resource '${res.fragmentKey}'")
 
-    convertName(nodebuilder.Elem.from(res)).creationApi.usingParentScope(parentScope).underlying
+    convertName(nodebuilder.Elem.from(res), parentScope).creationApi.usingParentScope(parentScope).underlying
   }
 
-  private def convertName(elem: nodebuilder.Elem): nodebuilder.Elem = {
-    withName(elem, convertName(elem.name))
+  private def convertName(elem: nodebuilder.Elem, parentScope: PrefixedScope): nodebuilder.Elem = {
+    withName(elem, convertName(elem.name), parentScope)
   }
 
   private def convertName(name: EName): EName = {
@@ -64,7 +64,7 @@ final class DefaultXLinkResourceConverter(val namespacePrefixMapper: NamespacePr
 
   // TODO In yaidom2, make this name update easier
 
-  private def withName(elem: nodebuilder.Elem, newName: EName): nodebuilder.Elem = {
-    emptyElem(newName, extractScope(newName)).creationApi.plusAttributes(elem.attributes).withChildren(elem.children).underlying
+  private def withName(elem: nodebuilder.Elem, newName: EName, parentScope: PrefixedScope): nodebuilder.Elem = {
+    emptyElem(newName, parentScope).creationApi.plusAttributes(elem.attributes).withChildren(elem.children).underlying
   }
 }
