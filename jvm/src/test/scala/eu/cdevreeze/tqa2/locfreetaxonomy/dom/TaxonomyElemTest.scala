@@ -36,7 +36,8 @@ import org.scalatest.matchers.should.Matchers._
 class TaxonomyElemTest extends AnyFunSuite {
 
   test("TQA should be able to parse and query a schema") {
-    val schema = XsSchema(getTaxonomyElement(URI.create("testfiles/kvk-data.xsd")).underlyingElem)
+    val schema =
+      XsSchema(getTaxonomyElement(URI.create("testfiles/www.nltaxonomie.nl/nt12/kvk/20170714.a/dictionary/kvk-data.xsd")).underlyingElem)
 
     val elemClasses = schema.findAllDescendantElemsOrSelf.map(_.getClass).toSet
 
@@ -44,7 +45,7 @@ class TaxonomyElemTest extends AnyFunSuite {
 
     val globalElemDecls = schema.findAllGlobalElementDeclarations
 
-    globalElemDecls should have size 8
+    (globalElemDecls should have).size(8)
 
     globalElemDecls.map(e => resolved.Elem.from(e)) should equal {
       schema.filterChildElems(named(ENames.XsElementEName)).map(e => resolved.Elem.from(e))
@@ -52,7 +53,7 @@ class TaxonomyElemTest extends AnyFunSuite {
 
     val imports = schema.findAllImports
 
-    imports should have size 6
+    (imports should have).size(6)
 
     imports.map(e => resolved.Elem.from(e)) should equal {
       schema.filterChildElems(named(ENames.XsImportEName)).map(e => resolved.Elem.from(e))
@@ -60,7 +61,8 @@ class TaxonomyElemTest extends AnyFunSuite {
   }
 
   test("TQA should be able to parse and query a standard label linkbase") {
-    val linkbase = Linkbase(getTaxonomyElement(URI.create("testfiles/venj-bw2-axes-lab-fr.xml")).underlyingElem)
+    val linkbase = Linkbase(getTaxonomyElement(
+      URI.create("testfiles/www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes-lab-fr.xml")).underlyingElem)
 
     val elemClasses = linkbase.findAllDescendantElemsOrSelf.map(_.getClass).toSet
 
@@ -70,13 +72,13 @@ class TaxonomyElemTest extends AnyFunSuite {
 
     val extendedLinks = linkbase.findAllExtendedLinks
 
-    extendedLinks should have size 1
+    (extendedLinks should have).size(1)
 
     val labeledResourceMap: Map[String, Seq[XLinkResource]] = extendedLinks.head.labeledXlinkResourceMap
 
     val venjBw2DimNs = "http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes"
 
-    extendedLinks.head.arcs.filter { arc =>
+    (extendedLinks.head.arcs.filter { arc =>
       labeledResourceMap
         .getOrElse(arc.from, Seq.empty)
         .collect { case k: ConceptKey if k.key == EName(venjBw2DimNs, "ClassesOfDirectorsAndPersonnelAxis") => k }
@@ -85,7 +87,7 @@ class TaxonomyElemTest extends AnyFunSuite {
         .getOrElse(arc.to, Seq.empty)
         .collect { case r: ConceptLabelResource if r.text == "Classes des administrateurs et du personnel [axe]" => r }
         .nonEmpty
-    } should have size 1
+    } should have).size(1)
 
     extendedLinks.head.xlinkResourceChildren.collect { case k: ConceptKey if k.key.localPart.endsWith("Axis") => k } should equal {
       extendedLinks.head.xlinkResourceChildren.collect { case k: ConceptKey => k }

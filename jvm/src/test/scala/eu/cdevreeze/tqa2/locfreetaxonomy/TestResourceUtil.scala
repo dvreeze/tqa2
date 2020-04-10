@@ -35,8 +35,9 @@ object TestResourceUtil {
    * Converts a relative URI, interpreted as relative to the root of the classpath, to an absolute "file" URI.
    */
   def convertClasspathUriToAbsoluteUri(relativeFilePath: URI): URI = {
-    require(!relativeFilePath.isAbsolute,
-            s"Expected relative URI, to be resolved against the root of the classpath, but got '$relativeFilePath'")
+    require(
+      !relativeFilePath.isAbsolute,
+      s"Expected relative URI, to be resolved against the root of the classpath, but got '$relativeFilePath'")
 
     TestResourceUtil.getClass.getResource("/" + relativeFilePath.toString).toURI
   }

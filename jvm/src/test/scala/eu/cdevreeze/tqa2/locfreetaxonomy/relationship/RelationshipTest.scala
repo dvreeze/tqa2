@@ -35,7 +35,8 @@ import org.scalatest.matchers.should.Matchers._
 class RelationshipTest extends AnyFunSuite {
 
   test("TQA should be able to extract and query standard label relationships") {
-    val linkbase = Linkbase(getTaxonomyElement(URI.create("testfiles/venj-bw2-axes-lab-fr.xml")).underlyingElem)
+    val linkbase = Linkbase(getTaxonomyElement(
+      URI.create("testfiles/www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes-lab-fr.xml")).underlyingElem)
 
     val relationshipFactory = DefaultRelationshipFactory
 
@@ -45,10 +46,10 @@ class RelationshipTest extends AnyFunSuite {
 
     val venjBw2DimNs = "http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes"
 
-    relationships.collect { case rel: ConceptLabelRelationship => rel }.filter { rel =>
+    (relationships.collect { case rel: ConceptLabelRelationship => rel }.filter { rel =>
       rel.sourceConcept == EName(venjBw2DimNs, "ClassesOfDirectorsAndPersonnelAxis") &&
       rel.labelText == "Classes des administrateurs et du personnel [axe]"
-    } should have size 1
+    } should have).size(1)
   }
 
   private val processor = new Processor(false)

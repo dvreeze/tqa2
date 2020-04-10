@@ -36,13 +36,14 @@ import org.scalatest.matchers.should.Matchers._
 class TaxonomyBaseTest extends AnyFunSuite {
 
   test("TQA should be able to create a single-document TaxonomyBase") {
-    val schema = XsSchema(getTaxonomyElement(URI.create("testfiles/kvk-data.xsd")).underlyingElem)
+    val schema =
+      XsSchema(getTaxonomyElement(URI.create("testfiles/www.nltaxonomie.nl/nt12/kvk/20170714.a/dictionary/kvk-data.xsd")).underlyingElem)
 
     val taxonomyBase: TaxonomyBase = TaxonomyBase.build(Seq(schema), SubstitutionGroupMap.Empty)
 
     val globalElemDecls = taxonomyBase.findAllGlobalElementDeclarations
 
-    globalElemDecls should have size 8
+    (globalElemDecls should have).size(8)
 
     taxonomyBase.findAllItemDeclarations.map(_.globalElementDeclaration) should equal(globalElemDecls)
 

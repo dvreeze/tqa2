@@ -46,10 +46,12 @@ import org.scalatest.matchers.should.Matchers._
 class LinkbaseConversionTest extends AnyFunSuite {
 
   test("TQA should be able to convert a label linkbase") {
-    val inputLinkbase = getStandardTaxonomyElement(URI.create("standard-xbrl-testfiles/venj-bw2-axes-lab-fr.xml"))
+    val inputLinkbase = getStandardTaxonomyElement(
+      URI.create("standard-xbrl-testfiles/www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes-lab-fr.xml"))
       .asInstanceOf[standardtaxonomy.dom.Linkbase]
-    val inputSchema = getStandardTaxonomyElement(URI.create("standard-xbrl-testfiles/venj-bw2-axes.xsd"))
-      .asInstanceOf[standardtaxonomy.dom.XsSchema]
+    val inputSchema =
+      getStandardTaxonomyElement(URI.create("standard-xbrl-testfiles/www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes.xsd"))
+        .asInstanceOf[standardtaxonomy.dom.XsSchema]
 
     val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
       standardtaxonomy.taxonomy.TaxonomyBase.build(Seq(inputLinkbase, inputSchema), SubstitutionGroupMap.Empty)
@@ -104,7 +106,8 @@ class LinkbaseConversionTest extends AnyFunSuite {
 
     // Compare with expected linkbase
 
-    val expectedLinkbase = getLocatorFreeTaxonomyElement(URI.create("testfiles/venj-bw2-axes-lab-fr.xml")).asInstanceOf[Linkbase]
+    val expectedLinkbase = getLocatorFreeTaxonomyElement(
+      URI.create("testfiles/www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes-lab-fr.xml")).asInstanceOf[Linkbase]
 
     val arcs = locFreeLinkbase.filterDescendantElems(_.name == ENames.CLinkLabelArcEName)
     val expectedArcs = expectedLinkbase.filterDescendantElems(_.name == ENames.CLinkLabelArcEName)
