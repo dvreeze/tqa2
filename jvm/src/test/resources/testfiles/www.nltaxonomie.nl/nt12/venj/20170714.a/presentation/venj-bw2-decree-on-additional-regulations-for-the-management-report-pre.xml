@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<!--
+  This file is part of the Dutch Taxonomy (Nederlandse Taxonomie; NT)
+  Intellectual Property of the State of the Netherlands
+  Architecture: NT12
+  Version: 20170714.a
+  Release date: Friday July 14 09:00:00 2017
+-->
+<clink:linkbase xmlns:clink="http://www.locfreexbrl.org/2003/linkbase" xmlns:ckey="http://www.locfreexbrl.org/2019/key" xmlns:venj-bw2-abstr="http://www.nltaxonomie.nl/nt12/venj/20170714.a/presentation/venj-bw2-abstracts" xmlns:venj-bw2-i="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-data" xmlns:xlink="http://www.w3.org/1999/xlink">
+  <clink:roleRef roleURI="urn:venj:linkrole:decree-on-additional-regulations-for-the-management-report"/>
+  <clink:presentationLink xlink:role="urn:venj:linkrole:decree-on-additional-regulations-for-the-management-report" xlink:type="extended">
+    <ckey:conceptKey key="venj-bw2-abstr:Article2aTitle" xlink:label="venj-bw2-abstr_Article2aTitle_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-abstr:Article3Title" xlink:label="venj-bw2-abstr_Article3Title_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-abstr:Article3aTitle" xlink:label="venj-bw2-abstr_Article3aTitle_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-abstr:Article3bTitle" xlink:label="venj-bw2-abstr_Article3bTitle_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-abstr:DecreeOnAdditionalRegulationsForTheManagementReportTitle" xlink:label="venj-bw2-abstr_DecreeOnAdditionalRegulationsForTheManagementReportTitle_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:CommunicationOnComplianceWithThePrinciplesAndBestPracticesOfOtherCodesOfConduct" xlink:label="venj-bw2-i_CommunicationOnComplianceWithThePrinciplesAndBestPracticesOfOtherCodesOfConduct_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:CommunicationOnComplianceWithThePrinciplesAndBestPracticesOfTheDutchCorporateGovernanceCode" xlink:label="venj-bw2-i_CommunicationOnComplianceWithThePrinciplesAndBestPracticesOfTheDutchCorporateGovernanceCode_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:CommunicationOnEquityStakesInTheCompanyToWhichANotificationRequirementApplies" xlink:label="venj-bw2-i_CommunicationOnEquityStakesInTheCompanyToWhichANotificationRequirementApplies_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:CommunicationOnExtraordinaryGovernanceControlRightsAttachedToSharesAndTheEntitledPerson" xlink:label="venj-bw2-i_CommunicationOnExtraordinaryGovernanceControlRightsAttachedToSharesAndTheEntitledPerson_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:CommunicationOnRestrictionsOfVotingRightsTermsForExercisingVotingRightsOrTheIssuanceOfShareCertificates" xlink:label="venj-bw2-i_CommunicationOnRestrictionsOfVotingRightsTermsForExercisingVotingRightsOrTheIssuanceOfShareCertificates_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:CommunicationOnTheAuthorityOfManagement" xlink:label="venj-bw2-i_CommunicationOnTheAuthorityOfManagement_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:CommunicationOnTheCompositionAndFunctioningOfManagementAndItsCommittees" xlink:label="venj-bw2-i_CommunicationOnTheCompositionAndFunctioningOfManagementAndItsCommittees_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:CommunicationOnTheCompositionAndFunctioningOfTheSupervisoryBoardAndItsCommittees" xlink:label="venj-bw2-i_CommunicationOnTheCompositionAndFunctioningOfTheSupervisoryBoardAndItsCommittees_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:CommunicationOnTheFunctioningOfTheShareholdersMeetingAndItsKeyPowers" xlink:label="venj-bw2-i_CommunicationOnTheFunctioningOfTheShareholdersMeetingAndItsKeyPowers_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:CommunicationOnTheMainFeaturesOfTheManagementAndControlSystemOfTheCompanyRelatingToTheFinancialReportingProcess" xlink:label="venj-bw2-i_CommunicationOnTheMainFeaturesOfTheManagementAndControlSystemOfTheCompanyRelatingToTheFinancialReportingProcess_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:CommunicationOnTheRegulationsForAdjustingTheArticlesAssociation" xlink:label="venj-bw2-i_CommunicationOnTheRegulationsForAdjustingTheArticlesAssociation_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:CommunicationOnTheRegulationsForAppointingOrDismissingManagingOrSupervisoryDirectors" xlink:label="venj-bw2-i_CommunicationOnTheRegulationsForAppointingOrDismissingManagingOrSupervisoryDirectors_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:CommunicationOnTheRightsOfShareholdersAndHowTheseRightsCanBeEnvoked" xlink:label="venj-bw2-i_CommunicationOnTheRightsOfShareholdersAndHowTheseRightsCanBeEnvoked_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:CorporateGovernanceStatement" xlink:label="venj-bw2-i_CorporateGovernanceStatement_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:LinkToPubliclyAvailableStatementOnCorporateGovernance" xlink:label="venj-bw2-i_LinkToPubliclyAvailableStatementOnCorporateGovernance_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:LinkToThePubliclyAvailableTextOfOtherCodesOfConduct" xlink:label="venj-bw2-i_LinkToThePubliclyAvailableTextOfOtherCodesOfConduct_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:LinkToThePubliclyAvailableTextOfTheDutchCorporateGovernanceCode" xlink:label="venj-bw2-i_LinkToThePubliclyAvailableTextOfTheDutchCorporateGovernanceCode_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:ProvisionsArticlesAssociationSpecialGoverningControlStructureDisclosure" xlink:label="venj-bw2-i_ProvisionsArticlesAssociationSpecialGoverningControlStructureDisclosure_loc" xlink:type="resource"/>
+    <clink:presentationArc order="1" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article2aTitle_loc" xlink:to="venj-bw2-i_CorporateGovernanceStatement_loc" xlink:type="arc"/>
+    <clink:presentationArc order="2" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article2aTitle_loc" xlink:to="venj-bw2-i_LinkToPubliclyAvailableStatementOnCorporateGovernance_loc" xlink:type="arc"/>
+    <clink:presentationArc order="1" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3Title_loc" xlink:to="venj-bw2-i_CommunicationOnComplianceWithThePrinciplesAndBestPracticesOfTheDutchCorporateGovernanceCode_loc" xlink:type="arc"/>
+    <clink:presentationArc order="2" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3Title_loc" xlink:to="venj-bw2-i_LinkToThePubliclyAvailableTextOfTheDutchCorporateGovernanceCode_loc" xlink:type="arc"/>
+    <clink:presentationArc order="3" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3Title_loc" xlink:to="venj-bw2-i_CommunicationOnComplianceWithThePrinciplesAndBestPracticesOfOtherCodesOfConduct_loc" xlink:type="arc"/>
+    <clink:presentationArc order="4" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3Title_loc" xlink:to="venj-bw2-i_LinkToThePubliclyAvailableTextOfOtherCodesOfConduct_loc" xlink:type="arc"/>
+    <clink:presentationArc order="1" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3aTitle_loc" xlink:to="venj-bw2-i_CommunicationOnTheMainFeaturesOfTheManagementAndControlSystemOfTheCompanyRelatingToTheFinancialReportingProcess_loc" xlink:type="arc"/>
+    <clink:presentationArc order="2" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3aTitle_loc" xlink:to="venj-bw2-i_CommunicationOnTheFunctioningOfTheShareholdersMeetingAndItsKeyPowers_loc" xlink:type="arc"/>
+    <clink:presentationArc order="3" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3aTitle_loc" xlink:to="venj-bw2-i_CommunicationOnTheRightsOfShareholdersAndHowTheseRightsCanBeEnvoked_loc" xlink:type="arc"/>
+    <clink:presentationArc order="4" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3aTitle_loc" xlink:to="venj-bw2-i_CommunicationOnTheCompositionAndFunctioningOfManagementAndItsCommittees_loc" xlink:type="arc"/>
+    <clink:presentationArc order="5" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3aTitle_loc" xlink:to="venj-bw2-i_CommunicationOnTheCompositionAndFunctioningOfTheSupervisoryBoardAndItsCommittees_loc" xlink:type="arc"/>
+    <clink:presentationArc order="1" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3bTitle_loc" xlink:to="venj-bw2-i_CommunicationOnEquityStakesInTheCompanyToWhichANotificationRequirementApplies_loc" xlink:type="arc"/>
+    <clink:presentationArc order="2" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3bTitle_loc" xlink:to="venj-bw2-i_CommunicationOnExtraordinaryGovernanceControlRightsAttachedToSharesAndTheEntitledPerson_loc" xlink:type="arc"/>
+    <clink:presentationArc order="3" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3bTitle_loc" xlink:to="venj-bw2-i_CommunicationOnRestrictionsOfVotingRightsTermsForExercisingVotingRightsOrTheIssuanceOfShareCertificates_loc" xlink:type="arc"/>
+    <clink:presentationArc order="4" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3bTitle_loc" xlink:to="venj-bw2-i_CommunicationOnTheRegulationsForAppointingOrDismissingManagingOrSupervisoryDirectors_loc" xlink:type="arc"/>
+    <clink:presentationArc order="5" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3bTitle_loc" xlink:to="venj-bw2-i_CommunicationOnTheRegulationsForAdjustingTheArticlesAssociation_loc" xlink:type="arc"/>
+    <clink:presentationArc order="6" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3bTitle_loc" xlink:to="venj-bw2-i_CommunicationOnTheAuthorityOfManagement_loc" xlink:type="arc"/>
+    <clink:presentationArc order="7" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_Article3bTitle_loc" xlink:to="venj-bw2-i_ProvisionsArticlesAssociationSpecialGoverningControlStructureDisclosure_loc" xlink:type="arc"/>
+    <clink:presentationArc order="1" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_DecreeOnAdditionalRegulationsForTheManagementReportTitle_loc" xlink:to="venj-bw2-abstr_Article2aTitle_loc" xlink:type="arc"/>
+    <clink:presentationArc order="2" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_DecreeOnAdditionalRegulationsForTheManagementReportTitle_loc" xlink:to="venj-bw2-abstr_Article3Title_loc" xlink:type="arc"/>
+    <clink:presentationArc order="3" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_DecreeOnAdditionalRegulationsForTheManagementReportTitle_loc" xlink:to="venj-bw2-abstr_Article3aTitle_loc" xlink:type="arc"/>
+    <clink:presentationArc order="4" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="venj-bw2-abstr_DecreeOnAdditionalRegulationsForTheManagementReportTitle_loc" xlink:to="venj-bw2-abstr_Article3bTitle_loc" xlink:type="arc"/>
+  </clink:presentationLink>
+</clink:linkbase>

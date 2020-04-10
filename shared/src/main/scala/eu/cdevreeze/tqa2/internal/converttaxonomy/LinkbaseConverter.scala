@@ -56,7 +56,7 @@ final class LinkbaseConverter(val xlinkResourceConverter: XLinkResourceConverter
    * a locator-free Linkbase returned by this function.
    *
    * The returned locator-free linkbase contains XLink resources (namely taxonomy element keys) instead of locators,
-   * it contains no simple links (there are no counterparts for roleRef etc.), and it contains other element names
+   * it contains no simple links (there are non-XLink counterparts for roleRef etc.), and it contains other element names
    * for extended links and for the linkbase itself.
    *
    * The input TaxonomyBase parameter (2nd parameter) should be closed under DTS discovery rules.
@@ -64,7 +64,24 @@ final class LinkbaseConverter(val xlinkResourceConverter: XLinkResourceConverter
   def convertLinkbase(inputLinkbase: standardtaxonomy.dom.Linkbase, inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase): Linkbase = {
     val parentScope: PrefixedScope = PrefixedScope.empty
 
-    val startLinkbaseElem: nodebuilder.Elem = emptyElem(ENames.CLinkLinkbaseEName, parentScope)
+    val inputRoleRefsAndArcroleRefs =
+      inputLinkbase.filterChildElems(e => e.name == ENames.LinkRoleRefEName || e.name == ENames.LinkArcroleRefEName)
+
+    val startLinkbaseElem: nodebuilder.Elem = emptyElem(ENames.CLinkLinkbaseEName, parentScope).creationApi
+      .plusChildren(inputRoleRefsAndArcroleRefs.map { e =>
+        e.name match {
+          case ENames.LinkRoleRefEName =>
+            emptyElem(ENames.CLinkRoleRefEName, parentScope).creationApi
+              .plusAttribute(ENames.RoleURIEName, e.attr(ENames.RoleURIEName))
+              .underlying
+          case _ =>
+            assert(e.name == ENames.LinkArcroleRefEName)
+            emptyElem(ENames.CLinkArcroleRefEName, parentScope).creationApi
+              .plusAttribute(ENames.ArcroleURIEName, e.attr(ENames.ArcroleURIEName))
+              .underlying
+        }
+      })
+      .underlying
 
     val startLinkbase: Linkbase = makeLinkbase(inputLinkbase.docUriOption, startLinkbaseElem)
 
@@ -322,7 +339,7 @@ final class LinkbaseConverter(val xlinkResourceConverter: XLinkResourceConverter
         toLocOrRes <- labeledXLinkMap.getOrElse(inputArc.to, sys.error(s"Missing XLink 'to' (${inputArc.docUri})"))
         toLoc = toLocOrRes.asInstanceOf[standardtaxonomy.dom.XLinkLocator]
         toUri = getLocatorHref(toLoc, parentBaseUri)
-        toTaxoElem = locatorHrefResolutions.getOrElse(fromUri, sys.error(s"Missing XML element at '$toUri'"))
+        toTaxoElem = locatorHrefResolutions.getOrElse(toUri, sys.error(s"Missing XML element at '$toUri'"))
       } yield {
         require(fromTaxoElem.isInstanceOf[standardtaxonomy.dom.GlobalElementDeclaration], s"Not a concept declaration: '$fromUri'")
         require(toTaxoElem.isInstanceOf[standardtaxonomy.dom.GlobalElementDeclaration], s"Not a concept declaration: '$toUri'")
