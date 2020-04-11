@@ -424,8 +424,7 @@ final class LinkbaseConverter(val xlinkResourceConverter: XLinkResourceConverter
           case loc: standardtaxonomy.dom.XLinkLocator =>
             val locUri = getLocatorHref(loc, parentBaseUri)
             val locatedElem = locatorHrefResolutions.getOrElse(locUri, sys.error(s"Missing XML element at '$locUri'"))
-            val res = locatedElem.asInstanceOf[standardtaxonomy.dom.XLinkResource]
-            xlinkLocatorConverter.convertLocToTaxonomyElemKey(loc, res, inputTaxonomyBase, parentScope)
+            xlinkLocatorConverter.convertLocToTaxonomyElemKey(loc, locatedElem, inputTaxonomyBase, parentScope)
         }
 
         val to: nodebuilder.Elem = toLocOrRes match {
@@ -434,8 +433,7 @@ final class LinkbaseConverter(val xlinkResourceConverter: XLinkResourceConverter
           case loc: standardtaxonomy.dom.XLinkLocator =>
             val locUri = getLocatorHref(loc, parentBaseUri)
             val locatedElem = locatorHrefResolutions.getOrElse(locUri, sys.error(s"Missing XML element at '$locUri'"))
-            val res = locatedElem.asInstanceOf[standardtaxonomy.dom.XLinkResource]
-            xlinkLocatorConverter.convertLocToTaxonomyElemKey(loc, res, inputTaxonomyBase, parentScope)
+            xlinkLocatorConverter.convertLocToTaxonomyElemKey(loc, locatedElem, inputTaxonomyBase, parentScope)
         }
 
         Seq(arc, from, to)
