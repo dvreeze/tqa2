@@ -569,6 +569,114 @@ class LinkbaseConversionTest extends AnyFunSuite {
     envelope.removeAllInterElementWhitespace should be(expectedEnvelope.removeAllInterElementWhitespace)
   }
 
+  test("TQA should be able to convert a custom generic linkbase") {
+    val inputLinkbase = getStandardTaxonomyElement(
+      URI.create("standard-xbrl-testfiles/www.nltaxonomie.nl/nt12/venj/20170714.a/presentation/venj-bw2-generic-linkrole-order.xml"))
+      .asInstanceOf[standardtaxonomy.dom.Linkbase]
+    val inputSchema =
+      getStandardTaxonomyElement(
+        URI.create("standard-xbrl-testfiles/www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-linkroles.xsd"))
+        .asInstanceOf[standardtaxonomy.dom.XsSchema]
+
+    val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
+      standardtaxonomy.taxonomy.TaxonomyBase.build(Seq(inputLinkbase, inputSchema), SubstitutionGroupMap.Empty)
+
+    // TODO Scope uses VectorMap, which is broken. See https://github.com/scala/scala/pull/8854 and https://github.com/scala/bug/issues/11933.
+
+    val scope: PrefixedScope = PrefixedScope
+      .ignoringDefaultNamespace(inputLinkbase.scope)
+      .usingListMap
+      .append(PrefixedScope.ignoringDefaultNamespace(inputSchema.scope))
+      .usingListMap
+      .append(PrefixedScope.from("clink" -> Namespaces.CLinkNamespace, "ckey" -> Namespaces.CKeyNamespace))
+
+    implicit val namespacePrefixMapper: NamespacePrefixMapper =
+      NamespacePrefixMapper.fromMapWithFallback(scope.scope.inverse.view.mapValues(_.head).toMap)
+
+    implicit val documentENameExtractor: DocumentENameExtractor = XbrlDocumentENameExtractor.defaultInstance
+
+    val xlinkResourceConverter = new DefaultXLinkResourceConverter(namespacePrefixMapper)
+    val linkbaseConverter: LinkbaseConverter = new LinkbaseConverter(xlinkResourceConverter)
+
+    val locFreeLinkbase: Linkbase = linkbaseConverter.convertLinkbase(inputLinkbase, inputTaxonomyBase)
+
+    (locFreeLinkbase.findAllExtendedLinks should have).size(1)
+
+    val roleKeyData: Seq[(String, String, String)] =
+      locFreeLinkbase
+        .filterDescendantElems(_.name == ENames.CKeyRoleKeyEName)
+        .collect { case e: RoleKey => e }
+        .map(e => (e.key, e.xlinkLabel, e.xlinkType))
+
+    roleKeyData should contain(
+      (
+        "urn:venj:linkrole:decree-on-uniform-fiscal-valuation-principles",
+        "venj-bw2-lr_DecreeOnUniformFiscalValuationPrinciples_loc",
+        "resource"
+      ))
+
+    // Unused namespace declarations have been pruned, so we can test for used namespaces
+
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.LinkNamespace)) should be(empty)
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.XsNamespace)) should be(empty)
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.XbrliNamespace)) should be(empty)
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.XbrldtNamespace)) should be(empty)
+
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.CLinkNamespace)) should not be empty
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.CKeyNamespace)) should not be empty
+
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.XLinkNamespace)) should not be empty
+
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.GenNamespace)) should not be empty
+    locFreeLinkbase.scope.filterNamespaces(Set(Namespaces.CGenNamespace)) should not be empty
+
+    locFreeLinkbase.scope.filterNamespaces(Set("http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension")) should not be empty
+
+    // Compare with expected linkbase
+
+    val expectedLinkbase = getLocatorFreeTaxonomyElement(
+      URI.create("testfiles/www.nltaxonomie.nl/nt12/venj/20170714.a/presentation/venj-bw2-generic-linkrole-order.xml"))
+      .asInstanceOf[Linkbase]
+
+    val arcs = locFreeLinkbase.filterDescendantElems(_.name == ENames.GenArcEName)
+    val expectedArcs = expectedLinkbase.filterDescendantElems(_.name == ENames.GenArcEName)
+
+    (arcs should have).size(25)
+
+    arcs.map(resolved.Elem.from(_).removeAllInterElementWhitespace).toSet should be(
+      expectedArcs.map(resolved.Elem.from(_).removeAllInterElementWhitespace).toSet)
+
+    val taxoElemKeys = locFreeLinkbase.filterDescendantElems(_.name == ENames.CKeyRoleKeyEName)
+    val expectedTaxoElemKeys = expectedLinkbase.filterDescendantElems(_.name == ENames.CKeyRoleKeyEName)
+
+    (taxoElemKeys should have).size(25)
+
+    taxoElemKeys.map(resolved.Elem.from(_).removeAllInterElementWhitespace).toSet should be(
+      expectedTaxoElemKeys.map(resolved.Elem.from(_).removeAllInterElementWhitespace).toSet)
+
+    val ns = "http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension"
+    val linkroleOrders = locFreeLinkbase.filterDescendantElems(_.name == EName(ns, "linkroleOrder"))
+    val expectedLinkroleOrders = expectedLinkbase.filterDescendantElems(_.name == EName(ns, "linkroleOrder"))
+
+    (linkroleOrders should have).size(25)
+
+    linkroleOrders.map(resolved.Elem.from(_).removeAllInterElementWhitespace).toSet should be(
+      expectedLinkroleOrders.map(resolved.Elem.from(_).removeAllInterElementWhitespace).toSet)
+
+    val envelope = resolved.Elem.from(locFreeLinkbase).transformDescendantElemsToNodeSeq {
+      case e if e.name == ENames.CGenLinkEName => Nil
+      case e                                   => Seq(e)
+    }
+
+    val expectedEnvelope = resolved.Elem.from(expectedLinkbase).transformDescendantElemsToNodeSeq {
+      case e if e.name == ENames.CGenLinkEName => Nil
+      case e                                   => Seq(e)
+    }
+
+    // TODO Is resolved.Elem.removeAllInterElementWhitespace broken?
+    envelope.removeAllInterElementWhitespace should be(expectedEnvelope.removeAllInterElementWhitespace)
+  }
+
   private val processor = new Processor(false)
 
   private def getStandardTaxonomyElement(relativeFilePath: URI): standardtaxonomy.dom.TaxonomyElem = {
