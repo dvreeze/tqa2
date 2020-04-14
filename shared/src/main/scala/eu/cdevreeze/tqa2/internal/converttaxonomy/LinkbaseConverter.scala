@@ -36,6 +36,12 @@ import eu.cdevreeze.yaidom2.utils.namespaces.DocumentENameExtractor
 /**
  * Converter from standard taxonomy linkbases to locator-free taxonomy linkbases.
  *
+ * The locator-free linkbases are not XBRL linkbases (due to the use of another namespace), and they contain neither XLink
+ * locators nor XLink simple links. The locators have been replaced by XLink resources representing taxonomy element keys
+ * (which are mostly semantic instead of containing some URI to another XML element in the taxonomy). The simple links
+ * (like roleRef elements) have been replaced by non-XLink counterparts. Also, locator-free linkbases do not contribute
+ * to DTS discovery, because that is limited to entrypoint schemas in the locator-free model.
+ *
  * @author Chris de Vreeze
  */
 final class LinkbaseConverter(val xlinkResourceConverter: XLinkResourceConverter)(

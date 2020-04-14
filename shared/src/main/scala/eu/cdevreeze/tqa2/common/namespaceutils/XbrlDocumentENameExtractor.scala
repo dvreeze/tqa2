@@ -100,7 +100,7 @@ object XbrlDocumentENameExtractor {
         EName.parse("ref") -> QNameTextENameExtractor,
         EName.parse("substitutionGroup") -> QNameTextENameExtractor,
         EName.parse("type") -> QNameTextENameExtractor,
-        EName.parse("typedDomainKey") -> QNameTextENameExtractor, // loc-free model attribute
+        EName.parse("{http://locfreexbrl.org/2005/xbrldt}typedDomainKey") -> QNameTextENameExtractor, // loc-free model attribute
       ),
       EName.parse("{http://www.w3.org/2001/XMLSchema}attribute") -> Map(
         EName.parse("ref") -> QNameTextENameExtractor,

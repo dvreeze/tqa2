@@ -16,16 +16,50 @@
 
 package eu.cdevreeze.tqa2.internal.converttaxonomy
 
+import java.net.URI
+
+import eu.cdevreeze.tqa2.ENames
+import eu.cdevreeze.tqa2.Namespaces
+import eu.cdevreeze.tqa2.common.xpointer.XPointer
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
+import eu.cdevreeze.tqa2.internal.xmlutil.NodeBuilderUtil
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
+import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
+import eu.cdevreeze.yaidom2.core.PrefixedScope
+import eu.cdevreeze.yaidom2.core.QName
+import eu.cdevreeze.yaidom2.node.indexed
+import eu.cdevreeze.yaidom2.node.nodebuilder
+import eu.cdevreeze.yaidom2.node.simple
+import eu.cdevreeze.yaidom2.utils.namespaces.DocumentENameExtractor
+
+import scala.collection.immutable.SeqMap
 
 /**
  * Converter from standard taxonomy non-entrypoint schema documents to locator-free taxonomy schema documents.
  *
+ * Non-entrypoint schemas contain no XLink locators (obviously) and they contain no XLink simple links. The latter is
+ * easy to see given that non-entrypoint schemas in the locator-free model do not contribute to DTS discovery, so there
+ * is no need for linkbaseRef elements etc.
+ *
+ * Moreover, xs:include is not allowed in the locator-free model, and xs:import elements contain no schemaLocation attribute
+ * in the locator-free model. Finally, xbrldt:typedDomainRef attributes are replaced by cxbrldt:typedDomainKey attributes.
+ *
+ * All in all, all URIs to other taxonomy elements are thus removed from non-entrypoint schemas in the locator-free model.
+ *
  * @author Chris de Vreeze
  */
-final class NonEntrypointSchemaConverter(val namespacePrefixMapper: NamespacePrefixMapper) {
+final class NonEntrypointSchemaConverter(
+    implicit val namespacePrefixMapper: NamespacePrefixMapper,
+    val documentENameExtractor: DocumentENameExtractor) {
+
+  private val nodeBuilderUtil: NodeBuilderUtil = new NodeBuilderUtil(namespacePrefixMapper, documentENameExtractor)
+
+  implicit private val elemCreator: nodebuilder.NodeBuilderCreator = nodebuilder.NodeBuilderCreator(namespacePrefixMapper)
+
+  import elemCreator._
+  import nodebuilder.NodeBuilderCreator._
 
   /**
    * Converts a non-entrypoint schema in the given (2nd parameter) TaxonomyBase to its locator-free counterpart, resulting in
@@ -33,10 +67,126 @@ final class NonEntrypointSchemaConverter(val namespacePrefixMapper: NamespacePre
    *
    * The input TaxonomyBase parameter (2nd parameter) should be closed under DTS discovery rules.
    */
-  def convertSchema(
-      inputSchema: standardtaxonomy.dom.XsSchema,
-      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase): XsSchema = {
+  def convertSchema(inputSchema: standardtaxonomy.dom.XsSchema, inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase): XsSchema = {
+    val parentScope: PrefixedScope = PrefixedScope.from(
+      namespacePrefixMapper.getPrefix(Namespaces.XsNamespace) -> Namespaces.XsNamespace,
+      namespacePrefixMapper.getPrefix(Namespaces.XbrldtNamespace) -> Namespaces.XbrldtNamespace
+    )
 
-    ???
+    require(
+      inputSchema.findAllDescendantElemsOrSelf.forall(_.scope.defaultNamespaceOption.isEmpty),
+      s"Currently no default namespace is allowed in any input schema (violation: ${inputSchema.docUri})"
+    )
+
+    val tns = inputSchema.targetNamespaceOption.getOrElse(sys.error(s"Missing targetNamespace in schema '${inputSchema.docUri}''"))
+
+    val rawSchemaElem: nodebuilder.Elem = emptyElem(ENames.XsSchemaEName, parentScope).creationApi
+      .plusAttribute(ENames.TargetNamespaceEName, tns)
+      .plusAttributeOption(ENames.IdEName, inputSchema.attrOption(ENames.IdEName))
+      .plusAttributeOption(ENames.AttributeFormDefaultEName, inputSchema.attrOption(ENames.AttributeFormDefaultEName))
+      .plusAttributeOption(ENames.ElementFormDefaultEName, inputSchema.attrOption(ENames.ElementFormDefaultEName))
+      .plusChildren(inputSchema.findAllChildElems.map {
+        case annotation: standardtaxonomy.dom.Annotation =>
+          convertAnnotation(annotation, inputTaxonomyBase, parentScope)
+        case xsImport: standardtaxonomy.dom.Import =>
+          convertImport(xsImport, inputTaxonomyBase, parentScope)
+        case elemDecl: standardtaxonomy.dom.GlobalElementDeclaration =>
+          convertGlobalElementDeclaration(elemDecl, inputTaxonomyBase, parentScope)
+        case che =>
+          // TODO Make sure no default namespace is used or that it is "converted away"
+          nodebuilder.Elem.from(che)
+      })
+      .underlying
+      .transformChildElemsToNodeSeq(e => removeIfEmptyAnnotation(e).toSeq)
+
+    val sanitizedSchemaElem = nodeBuilderUtil.sanitize(nodebuilder.Elem.from(rawSchemaElem))
+    makeSchema(inputSchema.docUriOption, sanitizedSchemaElem)
+  }
+
+  private def convertGlobalElementDeclaration(
+      inputGlobalElemDecl: standardtaxonomy.dom.GlobalElementDeclaration,
+      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
+      parentScope: PrefixedScope): nodebuilder.Elem = {
+
+    var extraScope: PrefixedScope = PrefixedScope.empty
+
+    val attributes: SeqMap[EName, String] = inputGlobalElemDecl.attributes.map {
+      case (ENames.XbrldtTypedDomainRefEName, attrValue) =>
+        val ref: URI = inputGlobalElemDecl.baseUri.resolve(attrValue)
+        val docUri: URI = withoutFragment(ref)
+        val fragment: String = Option(ref.getFragment).getOrElse("")
+
+        val docElem: standardtaxonomy.dom.TaxonomyElem = inputTaxonomyBase.rootElemMap
+          .getOrElse(docUri, sys.error(s"Could not resolve URI '$docUri'"))
+
+        val typedDomainElemDecl: standardtaxonomy.dom.GlobalElementDeclaration = XPointer
+          .findElem(docElem, XPointer.parseXPointers(fragment))
+          .getOrElse(sys.error(s"Could not resolve URI '$ref'"))
+          .asInstanceOf[standardtaxonomy.dom.GlobalElementDeclaration]
+
+        val typedDomainEName: EName = typedDomainElemDecl.targetEName
+        val typedDomainPrefixOption = typedDomainEName.namespaceUriOption.map(ns => namespacePrefixMapper.getPrefix(ns))
+        extraScope = typedDomainPrefixOption
+          .map(pref => PrefixedScope.from(pref -> typedDomainEName.namespaceUriOption.get)).getOrElse(PrefixedScope.empty)
+        val typedDomainQName: QName = QName(typedDomainPrefixOption, typedDomainEName.localPart)
+
+        ENames.CXbrldtTypedDomainKeyEName -> typedDomainQName.toString
+      case (attrName, attrValue) =>
+        attrName -> attrValue
+    }
+
+    emptyElem(ENames.XsElementEName, parentScope.append(extraScope)).creationApi
+      .plusAttributes(attributes)
+      .plusChildren(inputGlobalElemDecl.children.map(n => nodebuilder.Node.from(n)))
+      .underlying
+  }
+
+  private def convertAnnotation(
+      inputAnnotation: standardtaxonomy.dom.Annotation,
+      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
+      parentScope: PrefixedScope): nodebuilder.Elem = {
+
+    // TODO Make sure no default namespace is used or that it is "converted away"
+
+    nodebuilder.Elem.from(inputAnnotation).transformDescendantElemsToNodeSeq { e =>
+      e.name match {
+        case ENames.LinkLinkbaseRefEName => Seq.empty
+        case ENames.LinkSchemaRefEName   => Seq.empty
+        case _                           => Seq(e)
+      }
+    }
+  }
+
+  private def convertImport(
+      inputImport: standardtaxonomy.dom.Import,
+      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
+      parentScope: PrefixedScope): nodebuilder.Elem = {
+
+    emptyElem(ENames.XsImportEName, parentScope).creationApi
+      .plusAttributes(inputImport.attributes.filterNot(Set(ENames.SchemaLocationEName)))
+      .underlying
+  }
+
+  private def makeSchema(docUriOption: Option[URI], schemaRootElem: nodebuilder.Elem): XsSchema = {
+    TaxonomyElem(indexed.Elem.ofRoot(docUriOption, simple.Elem.from(schemaRootElem))).asInstanceOf[XsSchema]
+  }
+
+  private def removeIfEmptyAnnotation(elem: nodebuilder.Elem): Option[nodebuilder.Elem] = {
+    elem.name match {
+      case ENames.XsAnnotationEName =>
+        val onlyAppinfo = elem.findAllChildElems.forall(_.name == ENames.XsAppinfoEName)
+
+        if (onlyAppinfo && elem.findAllChildElems.forall(_.findAllChildElems.isEmpty)) {
+          None
+        } else {
+          Some(elem)
+        }
+      case _ =>
+        Some(elem)
+    }
+  }
+
+  private def withoutFragment(uri: URI): URI = {
+    new URI(uri.getScheme, uri.getSchemeSpecificPart, null) // scalastyle:off null
   }
 }
