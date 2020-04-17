@@ -71,9 +71,8 @@ class TaxonomyConversionTest extends AnyFunSuite {
     val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
       standardtaxonomy.taxonomy.TaxonomyBase.build(inputDocs, sgMap)
 
-    // TODO Scope uses VectorMap, which is broken. See https://github.com/scala/scala/pull/8854 and https://github.com/scala/bug/issues/11933.
-
-    val scope: PrefixedScope = PrefixedScope.ignoringDefaultNamespace(ScopedElemApi.unionScope(inputTaxonomyBase.rootElems))
+    val scope: PrefixedScope = PrefixedScope
+      .ignoringDefaultNamespace(ScopedElemApi.unionScope(inputTaxonomyBase.rootElems))
       .append(PrefixedScope
         .from("clink" -> Namespaces.CLinkNamespace, "ckey" -> Namespaces.CKeyNamespace, "cxbrldt" -> Namespaces.CXbrldtNamespace))
 

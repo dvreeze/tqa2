@@ -23,7 +23,6 @@ import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.tqa2.common.namespaceutils.XbrlDocumentENameExtractor
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
-import eu.cdevreeze.tqa2.internal.xmlutil.ScopeUtil._
 import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.ConceptKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Linkbase
@@ -57,13 +56,9 @@ class LinkbaseConversionTest extends AnyFunSuite {
     val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
       standardtaxonomy.taxonomy.TaxonomyBase.build(Seq(inputLinkbase, inputSchema), SubstitutionGroupMap.Empty)
 
-    // TODO Scope uses VectorMap, which is broken. See https://github.com/scala/scala/pull/8854 and https://github.com/scala/bug/issues/11933.
-
     val scope: PrefixedScope = PrefixedScope
       .ignoringDefaultNamespace(inputLinkbase.scope)
-      .usingListMap
       .append(PrefixedScope.ignoringDefaultNamespace(inputSchema.scope))
-      .usingListMap
       .append(PrefixedScope.from("clink" -> Namespaces.CLinkNamespace, "ckey" -> Namespaces.CKeyNamespace))
 
     implicit val namespacePrefixMapper: NamespacePrefixMapper =
@@ -159,13 +154,9 @@ class LinkbaseConversionTest extends AnyFunSuite {
     val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
       standardtaxonomy.taxonomy.TaxonomyBase.build(Seq(inputLinkbase, inputSchema), SubstitutionGroupMap.Empty)
 
-    // TODO Scope uses VectorMap, which is broken. See https://github.com/scala/scala/pull/8854 and https://github.com/scala/bug/issues/11933.
-
     val scope: PrefixedScope = PrefixedScope
       .ignoringDefaultNamespace(inputLinkbase.scope)
-      .usingListMap
       .append(PrefixedScope.ignoringDefaultNamespace(inputSchema.scope))
-      .usingListMap
       .append(PrefixedScope.from("clink" -> Namespaces.CLinkNamespace, "ckey" -> Namespaces.CKeyNamespace))
 
     implicit val namespacePrefixMapper: NamespacePrefixMapper =
@@ -270,15 +261,10 @@ class LinkbaseConversionTest extends AnyFunSuite {
           Map(EName.parse("{http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension}presentationItem") -> ENames.XbrliItemEName))
       )
 
-    // TODO Scope uses VectorMap, which is broken. See https://github.com/scala/scala/pull/8854 and https://github.com/scala/bug/issues/11933.
-
     val scope: PrefixedScope = PrefixedScope
       .ignoringDefaultNamespace(inputLinkbase.scope)
-      .usingListMap
       .append(PrefixedScope.ignoringDefaultNamespace(inputSchema1.scope))
-      .usingListMap
       .append(PrefixedScope.ignoringDefaultNamespace(inputSchema2.scope))
-      .usingListMap
       .append(PrefixedScope.from("clink" -> Namespaces.CLinkNamespace, "ckey" -> Namespaces.CKeyNamespace))
 
     implicit val namespacePrefixMapper: NamespacePrefixMapper =
@@ -374,15 +360,10 @@ class LinkbaseConversionTest extends AnyFunSuite {
           Map(EName.parse("{http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension}primaryDomainItem") -> ENames.XbrliItemEName))
       )
 
-    // TODO Scope uses VectorMap, which is broken. See https://github.com/scala/scala/pull/8854 and https://github.com/scala/bug/issues/11933.
-
     val scope: PrefixedScope = PrefixedScope
       .ignoringDefaultNamespace(inputLinkbase.scope)
-      .usingListMap
       .append(PrefixedScope.ignoringDefaultNamespace(inputSchema1.scope))
-      .usingListMap
       .append(PrefixedScope.ignoringDefaultNamespace(inputSchema2.scope))
-      .usingListMap
       .append(PrefixedScope.from("clink" -> Namespaces.CLinkNamespace, "ckey" -> Namespaces.CKeyNamespace))
 
     implicit val namespacePrefixMapper: NamespacePrefixMapper =
@@ -476,13 +457,9 @@ class LinkbaseConversionTest extends AnyFunSuite {
     val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
       standardtaxonomy.taxonomy.TaxonomyBase.build(Seq(inputLinkbase, inputSchema), SubstitutionGroupMap.Empty)
 
-    // TODO Scope uses VectorMap, which is broken. See https://github.com/scala/scala/pull/8854 and https://github.com/scala/bug/issues/11933.
-
     val scope: PrefixedScope = PrefixedScope
       .ignoringDefaultNamespace(inputLinkbase.scope)
-      .usingListMap
       .append(PrefixedScope.ignoringDefaultNamespace(inputSchema.scope))
-      .usingListMap
       .append(PrefixedScope.from("clink" -> Namespaces.CLinkNamespace, "ckey" -> Namespaces.CKeyNamespace))
 
     implicit val namespacePrefixMapper: NamespacePrefixMapper =
@@ -581,13 +558,9 @@ class LinkbaseConversionTest extends AnyFunSuite {
     val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
       standardtaxonomy.taxonomy.TaxonomyBase.build(Seq(inputLinkbase, inputSchema), SubstitutionGroupMap.Empty)
 
-    // TODO Scope uses VectorMap, which is broken. See https://github.com/scala/scala/pull/8854 and https://github.com/scala/bug/issues/11933.
-
     val scope: PrefixedScope = PrefixedScope
       .ignoringDefaultNamespace(inputLinkbase.scope)
-      .usingListMap
       .append(PrefixedScope.ignoringDefaultNamespace(inputSchema.scope))
-      .usingListMap
       .append(PrefixedScope.from("clink" -> Namespaces.CLinkNamespace, "ckey" -> Namespaces.CKeyNamespace))
 
     implicit val namespacePrefixMapper: NamespacePrefixMapper =

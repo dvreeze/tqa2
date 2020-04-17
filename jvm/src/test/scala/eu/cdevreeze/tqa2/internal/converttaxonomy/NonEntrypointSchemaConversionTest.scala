@@ -56,8 +56,6 @@ class NonEntrypointSchemaConversionTest extends AnyFunSuite {
     val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
       standardtaxonomy.taxonomy.TaxonomyBase.build(Seq(inputSchema1, inputSchema2), SubstitutionGroupMap.Empty)
 
-    // TODO Scope uses VectorMap, which is broken. See https://github.com/scala/scala/pull/8854 and https://github.com/scala/bug/issues/11933.
-
     val scope: PrefixedScope = PrefixedScope
       .ignoringDefaultNamespace(ScopedElemApi.unionScope(Seq(inputSchema1, inputSchema2)))
       .append(PrefixedScope.from("cxbrldt" -> Namespaces.CXbrldtNamespace))
