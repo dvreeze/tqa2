@@ -34,7 +34,7 @@ import eu.cdevreeze.yaidom2.node.nodebuilder
 import eu.cdevreeze.yaidom2.node.simple
 import eu.cdevreeze.yaidom2.utils.namespaces.DocumentENameExtractor
 
-import scala.collection.immutable.SeqMap
+import scala.collection.immutable.ListMap
 
 /**
  * Converter from standard taxonomy non-entrypoint schema documents to locator-free taxonomy schema documents.
@@ -51,7 +51,7 @@ import scala.collection.immutable.SeqMap
  * @author Chris de Vreeze
  */
 final class NonEntrypointSchemaConverter(
-    implicit val namespacePrefixMapper: NamespacePrefixMapper,
+    val namespacePrefixMapper: NamespacePrefixMapper,
     val documentENameExtractor: DocumentENameExtractor) {
 
   private val nodeBuilderUtil: NodeBuilderUtil = new NodeBuilderUtil(namespacePrefixMapper, documentENameExtractor)
@@ -94,7 +94,7 @@ final class NonEntrypointSchemaConverter(
           convertGlobalElementDeclaration(elemDecl, inputTaxonomyBase, parentScope)
         case che =>
           // TODO Make sure no default namespace is used or that it is "converted away"
-          nodebuilder.Elem.from(che)
+          nodebuilder.Elem.from(che).creationApi.usingNonConflictingParentScope(parentScope).underlyingElem
       })
       .underlying
       .transformChildElemsToNodeSeq(e => removeIfEmptyAnnotation(e).toSeq)
@@ -110,7 +110,7 @@ final class NonEntrypointSchemaConverter(
 
     var extraScope: PrefixedScope = PrefixedScope.empty
 
-    val attributes: SeqMap[EName, String] = inputGlobalElemDecl.attributes.map {
+    val attributes: ListMap[EName, String] = inputGlobalElemDecl.attributes.map {
       case (ENames.XbrldtTypedDomainRefEName, attrValue) =>
         val ref: URI = inputGlobalElemDecl.baseUri.resolve(attrValue)
         val docUri: URI = withoutFragment(ref)
@@ -126,12 +126,25 @@ final class NonEntrypointSchemaConverter(
 
         val typedDomainEName: EName = typedDomainElemDecl.targetEName
         val typedDomainPrefixOption = typedDomainEName.namespaceUriOption.map(ns => namespacePrefixMapper.getPrefix(ns))
-        extraScope = typedDomainPrefixOption
-          .map(pref => PrefixedScope.from(pref -> typedDomainEName.namespaceUriOption.get)).getOrElse(PrefixedScope.empty)
+        extraScope = extraScope.append(
+          typedDomainPrefixOption
+            .map(pref => PrefixedScope.from(pref -> typedDomainEName.namespaceUriOption.get))
+            .getOrElse(PrefixedScope.empty))
         val typedDomainQName: QName = QName(typedDomainPrefixOption, typedDomainEName.localPart)
 
         ENames.CXbrldtTypedDomainKeyEName -> typedDomainQName.toString
       case (attrName, attrValue) =>
+        val textENameExtractorOption = documentENameExtractor.findAttributeValueENameExtractor(inputGlobalElemDecl, attrName)
+
+        val usedNamespaces: Set[String] = textENameExtractorOption
+          .map(_.extractENames(inputGlobalElemDecl.scope.withoutDefaultNamespace, attrValue).flatMap(_.namespaceUriOption))
+          .getOrElse(Set.empty)
+
+        extraScope = extraScope.append(usedNamespaces.foldLeft(PrefixedScope.empty) {
+          case (accScope, ns) =>
+            accScope.append(PrefixedScope.from(namespacePrefixMapper.getPrefix(ns) -> ns))
+        })
+
         attrName -> attrValue
     }
 

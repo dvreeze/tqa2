@@ -37,7 +37,7 @@ lazy val commonSettings = Seq(
   pomExtra := pomData,
   pomIncludeRepository := { _ => false },
 
-  libraryDependencies += "eu.cdevreeze.yaidom2" %%% "yaidom2" % "0.8.0",
+  libraryDependencies += "eu.cdevreeze.yaidom2" %%% "yaidom2" % "0.10.0",
 
   libraryDependencies += "eu.cdevreeze.xpathparser" %%% "xpathparser" % "0.6.1",
 

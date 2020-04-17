@@ -23,7 +23,6 @@ import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.tqa2.common.namespaceutils.XbrlDocumentENameExtractor
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
-import eu.cdevreeze.tqa2.internal.xmlutil.ScopeUtil._
 import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
@@ -32,6 +31,7 @@ import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.core.PrefixedScope
 import eu.cdevreeze.yaidom2.node.resolved
 import eu.cdevreeze.yaidom2.node.saxon
+import eu.cdevreeze.yaidom2.queryapi.ScopedElemApi
 import eu.cdevreeze.yaidom2.utils.namespaces.DocumentENameExtractor
 import net.sf.saxon.s9api.Processor
 import org.scalatest.funsuite.AnyFunSuite
@@ -59,18 +59,15 @@ class NonEntrypointSchemaConversionTest extends AnyFunSuite {
     // TODO Scope uses VectorMap, which is broken. See https://github.com/scala/scala/pull/8854 and https://github.com/scala/bug/issues/11933.
 
     val scope: PrefixedScope = PrefixedScope
-      .ignoringDefaultNamespace(inputSchema1.scope)
-      .usingListMap
-      .append(PrefixedScope.ignoringDefaultNamespace(inputSchema2.scope))
-      .usingListMap
+      .ignoringDefaultNamespace(ScopedElemApi.unionScope(Seq(inputSchema1, inputSchema2)))
       .append(PrefixedScope.from("cxbrldt" -> Namespaces.CXbrldtNamespace))
 
     implicit val namespacePrefixMapper: NamespacePrefixMapper =
-      NamespacePrefixMapper.fromMapWithFallback(scope.scope.inverse.view.mapValues(_.head).toMap)
+      NamespacePrefixMapper.fromPrefixToNamespaceMapWithFallback(scope.scope.prefixNamespaceMap)
 
     implicit val documentENameExtractor: DocumentENameExtractor = XbrlDocumentENameExtractor.defaultInstance
 
-    val schemaConverter: NonEntrypointSchemaConverter = new NonEntrypointSchemaConverter()
+    val schemaConverter: NonEntrypointSchemaConverter = new NonEntrypointSchemaConverter(namespacePrefixMapper, documentENameExtractor)
 
     val locFreeSchema: XsSchema = schemaConverter.convertSchema(inputSchema1, inputTaxonomyBase)
 

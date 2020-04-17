@@ -72,7 +72,7 @@ class LinkbaseConversionTest extends AnyFunSuite {
     implicit val documentENameExtractor: DocumentENameExtractor = XbrlDocumentENameExtractor.defaultInstance
 
     val xlinkResourceConverter = new DefaultXLinkResourceConverter(namespacePrefixMapper)
-    val linkbaseConverter: LinkbaseConverter = new LinkbaseConverter(xlinkResourceConverter)
+    val linkbaseConverter: LinkbaseConverter = new LinkbaseConverter(xlinkResourceConverter, namespacePrefixMapper, documentENameExtractor)
 
     val locFreeLinkbase: Linkbase = linkbaseConverter.convertLinkbase(inputLinkbase, inputTaxonomyBase)
 
@@ -174,7 +174,7 @@ class LinkbaseConversionTest extends AnyFunSuite {
     implicit val documentENameExtractor: DocumentENameExtractor = XbrlDocumentENameExtractor.defaultInstance
 
     val xlinkResourceConverter = new DefaultXLinkResourceConverter(namespacePrefixMapper)
-    val linkbaseConverter: LinkbaseConverter = new LinkbaseConverter(xlinkResourceConverter)
+    val linkbaseConverter: LinkbaseConverter = new LinkbaseConverter(xlinkResourceConverter, namespacePrefixMapper, documentENameExtractor)
 
     val locFreeLinkbase: Linkbase = linkbaseConverter.convertLinkbase(inputLinkbase, inputTaxonomyBase)
 
@@ -287,7 +287,7 @@ class LinkbaseConversionTest extends AnyFunSuite {
     implicit val documentENameExtractor: DocumentENameExtractor = XbrlDocumentENameExtractor.defaultInstance
 
     val xlinkResourceConverter = new DefaultXLinkResourceConverter(namespacePrefixMapper)
-    val linkbaseConverter: LinkbaseConverter = new LinkbaseConverter(xlinkResourceConverter)
+    val linkbaseConverter: LinkbaseConverter = new LinkbaseConverter(xlinkResourceConverter, namespacePrefixMapper, documentENameExtractor)
 
     val locFreeLinkbase: Linkbase = linkbaseConverter.convertLinkbase(inputLinkbase, inputTaxonomyBase)
 
@@ -391,7 +391,7 @@ class LinkbaseConversionTest extends AnyFunSuite {
     implicit val documentENameExtractor: DocumentENameExtractor = XbrlDocumentENameExtractor.defaultInstance
 
     val xlinkResourceConverter = new DefaultXLinkResourceConverter(namespacePrefixMapper)
-    val linkbaseConverter: LinkbaseConverter = new LinkbaseConverter(xlinkResourceConverter)
+    val linkbaseConverter: LinkbaseConverter = new LinkbaseConverter(xlinkResourceConverter, namespacePrefixMapper, documentENameExtractor)
 
     val locFreeLinkbase: Linkbase = linkbaseConverter.convertLinkbase(inputLinkbase, inputTaxonomyBase)
 
@@ -491,7 +491,7 @@ class LinkbaseConversionTest extends AnyFunSuite {
     implicit val documentENameExtractor: DocumentENameExtractor = XbrlDocumentENameExtractor.defaultInstance
 
     val xlinkResourceConverter = new DefaultXLinkResourceConverter(namespacePrefixMapper)
-    val linkbaseConverter: LinkbaseConverter = new LinkbaseConverter(xlinkResourceConverter)
+    val linkbaseConverter: LinkbaseConverter = new LinkbaseConverter(xlinkResourceConverter, namespacePrefixMapper, documentENameExtractor)
 
     val locFreeLinkbase: Linkbase = linkbaseConverter.convertLinkbase(inputLinkbase, inputTaxonomyBase)
 
@@ -596,7 +596,7 @@ class LinkbaseConversionTest extends AnyFunSuite {
     implicit val documentENameExtractor: DocumentENameExtractor = XbrlDocumentENameExtractor.defaultInstance
 
     val xlinkResourceConverter = new DefaultXLinkResourceConverter(namespacePrefixMapper)
-    val linkbaseConverter: LinkbaseConverter = new LinkbaseConverter(xlinkResourceConverter)
+    val linkbaseConverter: LinkbaseConverter = new LinkbaseConverter(xlinkResourceConverter, namespacePrefixMapper, documentENameExtractor)
 
     val locFreeLinkbase: Linkbase = linkbaseConverter.convertLinkbase(inputLinkbase, inputTaxonomyBase)
 

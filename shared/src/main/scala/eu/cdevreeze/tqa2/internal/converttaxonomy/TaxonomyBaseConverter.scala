@@ -18,18 +18,22 @@ package eu.cdevreeze.tqa2.internal.converttaxonomy
 
 import java.net.URI
 
-import eu.cdevreeze.tqa2.ENames
+import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
-import eu.cdevreeze.tqa2.internal.standardtaxonomy.dom.{Linkbase, TaxonomyElem, XsSchema}
-import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyBase
+import eu.cdevreeze.tqa2.ENames
+import eu.cdevreeze.tqa2.locfreetaxonomy
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
+import eu.cdevreeze.yaidom2.utils.namespaces.DocumentENameExtractor
 
 /**
  * Converter from standard taxonomies to locator-free taxonomies as TaxonomyBase instances.
  *
  * @author Chris de Vreeze
  */
-final class TaxonomyBaseConverter(val namespacePrefixMapper: NamespacePrefixMapper) {
+final class TaxonomyBaseConverter(
+    val xlinkResourceConverter: XLinkResourceConverter,
+    val namespacePrefixMapper: NamespacePrefixMapper,
+    val documentENameExtractor: DocumentENameExtractor) {
 
   /**
    * Checks if the conversion through method convertTaxonomyBaseIgnoringEntrypoints (with the same parameters as this method)
@@ -51,13 +55,13 @@ final class TaxonomyBaseConverter(val namespacePrefixMapper: NamespacePrefixMapp
       inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
       excludedEntrypointFilter: URI => Boolean): Unit = {
 
-    val rootElems: Seq[TaxonomyElem] = inputTaxonomyBase.rootElems
-    val schemas: Seq[XsSchema] = inputTaxonomyBase.findAllXsdSchemas
-    val linkbases: Seq[Linkbase] = inputTaxonomyBase.findAllLinkbases
+    val rootElems: Seq[standardtaxonomy.dom.TaxonomyElem] = inputTaxonomyBase.rootElems
+    val schemas: Seq[standardtaxonomy.dom.XsSchema] = inputTaxonomyBase.findAllXsdSchemas
+    val linkbases: Seq[standardtaxonomy.dom.Linkbase] = inputTaxonomyBase.findAllLinkbases
 
     // Document root elements must be xs:schema or link:linkbase.
 
-    val nonRootElemDocElems: Seq[TaxonomyElem] = rootElems.filter(!_.isRootElement)
+    val nonRootElemDocElems: Seq[standardtaxonomy.dom.TaxonomyElem] = rootElems.filter(!_.isRootElement)
 
     if (nonRootElemDocElems.nonEmpty) {
       throw new IllegalStateException(s"Not all documents are schemas or linkbases (e.g. ${nonRootElemDocElems.head.docUri})")
@@ -65,20 +69,21 @@ final class TaxonomyBaseConverter(val namespacePrefixMapper: NamespacePrefixMapp
 
     // All xs:schema and link:linkbase elements must be document roots. Hence embedded linkbases are not allowed.
 
-    val nonRootSchemas: Seq[XsSchema] = schemas.filter(_.underlyingElem.findParentElem.nonEmpty)
-    val nonRootLinkbases: Seq[Linkbase] = linkbases.filter(_.underlyingElem.findParentElem.nonEmpty)
+    val nonRootSchemas: Seq[standardtaxonomy.dom.XsSchema] = schemas.filter(_.underlyingElem.findParentElem.nonEmpty)
+    val nonRootLinkbases: Seq[standardtaxonomy.dom.Linkbase] = linkbases.filter(_.underlyingElem.findParentElem.nonEmpty)
 
     if (nonRootSchemas.nonEmpty) {
       throw new IllegalStateException((s"Not all xs:schema elements are document root elements (e.g. in ${nonRootSchemas.head.docUri})"))
     }
     if (nonRootLinkbases.nonEmpty) {
       // So embedded linkbases are also not allowed
-      throw new IllegalStateException((s"Not all link:linkbase elements are document root elements (e.g. in ${nonRootLinkbases.head.docUri})"))
+      throw new IllegalStateException(
+        (s"Not all link:linkbase elements are document root elements (e.g. in ${nonRootLinkbases.head.docUri})"))
     }
 
     // All schemas must have a (non-empty) targetNamespace attribute.
 
-    val schemasWithoutTns: Seq[XsSchema] = schemas.filter(e => e.targetNamespaceOption.forall(_.trim.isEmpty))
+    val schemasWithoutTns: Seq[standardtaxonomy.dom.XsSchema] = schemas.filter(e => e.targetNamespaceOption.forall(_.trim.isEmpty))
 
     if (schemasWithoutTns.nonEmpty) {
       throw new IllegalStateException(s"Not all schemas have a (non-empty) targetNamespace (e.g. ${schemasWithoutTns.head.docUri})")
@@ -86,7 +91,7 @@ final class TaxonomyBaseConverter(val namespacePrefixMapper: NamespacePrefixMapp
 
     // No xs:include elements are allowed.
 
-    val xsIncludes: Seq[TaxonomyElem] = schemas.flatMap(_.filterDescendantElemsOrSelf(_.name == ENames.XsIncludeEName))
+    val xsIncludes: Seq[standardtaxonomy.dom.TaxonomyElem] = schemas.flatMap(_.filterDescendantElemsOrSelf(_.name == ENames.XsIncludeEName))
 
     if (xsIncludes.nonEmpty) {
       throw new IllegalStateException(s"Element(s) xs:include not allowed (e.g. in ${xsIncludes.head.docUri})")
@@ -94,7 +99,7 @@ final class TaxonomyBaseConverter(val namespacePrefixMapper: NamespacePrefixMapp
 
     // No 2 different schema documents are allowed to have the same target namespace.
 
-    val schemasByTns: Map[String, Seq[XsSchema]] = schemas.groupBy(_.targetNamespaceOption.ensuring(_.nonEmpty).get)
+    val schemasByTns: Map[String, Seq[standardtaxonomy.dom.XsSchema]] = schemas.groupBy(_.targetNamespaceOption.ensuring(_.nonEmpty).get)
 
     if (schemasByTns.exists(_._2.sizeIs >= 2)) {
       val aViolatingTns: String = schemasByTns.find(_._2.sizeIs >= 2).get._1
@@ -106,16 +111,48 @@ final class TaxonomyBaseConverter(val namespacePrefixMapper: NamespacePrefixMapp
    * Converts all non-entrypoint documents in the input TaxonomyBase to their locator-free counterparts, resulting in
    * a locator-free TaxonomyBase returned by this function. Only "non-core" taxonomy documents are converted.
    *
-   * The input TaxonomyBase should be closed under DTS discovery rules.
+   * The input TaxonomyBase should be closed under DTS discovery rules, if we want to add entrypoints with method
+   * addSingleDocumentEntrypoint later.
    *
    * The conversion starts with calling method checkInputTaxonomyBaseIgnoringEntrypoints, so fails early on errors.
    */
   def convertTaxonomyBaseIgnoringEntrypoints(
       inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
-      excludedEntrypointFilter: URI => Boolean): TaxonomyBase = {
+      excludedEntrypointFilter: URI => Boolean): locfreetaxonomy.taxonomy.TaxonomyBase = {
 
     checkInputTaxonomyBaseIgnoringEntrypoints(inputTaxonomyBase, excludedEntrypointFilter)
 
+    val nonEntrypointSchemaConverter: NonEntrypointSchemaConverter =
+      new NonEntrypointSchemaConverter(namespacePrefixMapper, documentENameExtractor)
+    val linkbaseConverter: LinkbaseConverter =
+      new LinkbaseConverter(xlinkResourceConverter, namespacePrefixMapper, documentENameExtractor)
+
+    val rootElems: Seq[locfreetaxonomy.dom.TaxonomyElem] = inputTaxonomyBase.rootElems
+      .filterNot(e => excludedEntrypointFilter(e.docUri))
+      .flatMap {
+        case e: standardtaxonomy.dom.XsSchema if Taxonomies.isCoreDocumentUri(e.docUri) =>
+          Some(locfreetaxonomy.dom.TaxonomyElem(e.underlyingElem))
+        case e: standardtaxonomy.dom.XsSchema =>
+          // TODO Require non-entrypoint schema in terms of content
+          Some(nonEntrypointSchemaConverter.convertSchema(e, inputTaxonomyBase))
+        case e: standardtaxonomy.dom.Linkbase if Taxonomies.isCoreDocumentUri(e.docUri) =>
+          Some(locfreetaxonomy.dom.TaxonomyElem(e.underlyingElem))
+        case e: standardtaxonomy.dom.Linkbase =>
+          Some(linkbaseConverter.convertLinkbase(e, inputTaxonomyBase))
+        case _ =>
+          None
+      }
+
+    // TODO Add new core schemas for locator-free model
+
+    locfreetaxonomy.taxonomy.TaxonomyBase.build(rootElems, SubstitutionGroupMap.Empty)
+  }
+
+  def addSingleDocumentEntrypoint(
+      taxonomyBase: locfreetaxonomy.taxonomy.TaxonomyBase,
+      entrypointDocUri: URI,
+      dtsUris: Set[URI]
+  ): locfreetaxonomy.taxonomy.TaxonomyBase = {
     ???
   }
 
@@ -125,12 +162,15 @@ final class TaxonomyBaseConverter(val namespacePrefixMapper: NamespacePrefixMapp
       excludedEntrypointFilter: URI => Boolean): Seq[TaxonomyElem] = {
     inputTaxonomyBase.rootElems.filter(e => !excludedEntrypointFilter(e.docUri))
   }
-  */
+ */
 }
 
 object TaxonomyBaseConverter {
 
-  def apply(namespacePrefixMapper: NamespacePrefixMapper): TaxonomyBaseConverter = {
-    new TaxonomyBaseConverter(namespacePrefixMapper)
+  def apply(
+      xlinkResourceConverter: XLinkResourceConverter,
+      namespacePrefixMapper: NamespacePrefixMapper,
+      documentENameExtractor: DocumentENameExtractor): TaxonomyBaseConverter = {
+    new TaxonomyBaseConverter(xlinkResourceConverter, namespacePrefixMapper, documentENameExtractor)
   }
 }

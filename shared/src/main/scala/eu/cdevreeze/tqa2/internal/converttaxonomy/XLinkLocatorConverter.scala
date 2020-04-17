@@ -19,11 +19,11 @@ package eu.cdevreeze.tqa2.internal.converttaxonomy
 import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
-import eu.cdevreeze.tqa2.internal.xmlutil.ScopeUtil._
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.core.PrefixedScope
+import eu.cdevreeze.yaidom2.core.PrefixedScopeUtil
 import eu.cdevreeze.yaidom2.node.nodebuilder
 
 /**
@@ -37,8 +37,11 @@ final class XLinkLocatorConverter(val namespacePrefixMapper: NamespacePrefixMapp
   implicit private val nsPrefixMapper: NamespacePrefixMapper = namespacePrefixMapper
   implicit private val elemCreator: nodebuilder.NodeBuilderCreator = nodebuilder.NodeBuilderCreator(nsPrefixMapper)
 
+  private val prefixedScopeUtil = new PrefixedScopeUtil(nsPrefixMapper)
+
   import elemCreator._
   import nodebuilder.NodeBuilderCreator._
+  import prefixedScopeUtil.extractScope
 
   def convertLocToTaxonomyElemKey(
       loc: standardtaxonomy.dom.XLinkLocator,
@@ -154,7 +157,7 @@ final class XLinkLocatorConverter(val namespacePrefixMapper: NamespacePrefixMapp
       parentScope: PrefixedScope): nodebuilder.Elem = {
 
     val targetEName: EName = locatedSchemaComponent.targetEName
-    val effectiveScope: PrefixedScope = parentScope.usingListMap.append(extractScope(targetEName))
+    val effectiveScope: PrefixedScope = extractScope(targetEName, parentScope)
 
     emptyElem(targetElemName, effectiveScope).creationApi
       .plusAttribute(ENames.KeyEName, effectiveScope.getQName(targetEName).toString)

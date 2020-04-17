@@ -3,6 +3,7 @@
            xmlns:xs="http://www.w3.org/2001/XMLSchema"
            xmlns:xbrldt="http://xbrl.org/2005/xbrldt"
            xmlns:cxbrldt="http://locfreexbrl.org/2005/xbrldt"
+           xmlns:venj-bw2-dm="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-domains"
            attributeFormDefault="unqualified"
            elementFormDefault="qualified"
            targetNamespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes">

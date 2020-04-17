@@ -44,8 +44,9 @@ import eu.cdevreeze.yaidom2.utils.namespaces.DocumentENameExtractor
  *
  * @author Chris de Vreeze
  */
-final class LinkbaseConverter(val xlinkResourceConverter: XLinkResourceConverter)(
-    implicit val namespacePrefixMapper: NamespacePrefixMapper,
+final class LinkbaseConverter(
+    val xlinkResourceConverter: XLinkResourceConverter,
+    val namespacePrefixMapper: NamespacePrefixMapper,
     val documentENameExtractor: DocumentENameExtractor) {
 
   private val xlinkLocatorConverter = new XLinkLocatorConverter(namespacePrefixMapper)
