@@ -59,6 +59,8 @@ final class TaxonomyBaseConverter(
     val schemas: Seq[standardtaxonomy.dom.XsSchema] = inputTaxonomyBase.findAllXsdSchemas
     val linkbases: Seq[standardtaxonomy.dom.Linkbase] = inputTaxonomyBase.findAllLinkbases
 
+    // TODO Check that all documents have no conflicting scopes
+
     // Document root elements must be xs:schema or link:linkbase.
 
     val nonRootElemDocElems: Seq[standardtaxonomy.dom.TaxonomyElem] = rootElems.filter(!_.isRootElement)

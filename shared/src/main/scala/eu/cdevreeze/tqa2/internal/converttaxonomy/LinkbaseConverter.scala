@@ -31,6 +31,7 @@ import eu.cdevreeze.yaidom2.node.indexed
 import eu.cdevreeze.yaidom2.node.nodebuilder
 import eu.cdevreeze.yaidom2.node.resolved
 import eu.cdevreeze.yaidom2.node.simple
+import eu.cdevreeze.yaidom2.queryapi.ScopedElemApi
 import eu.cdevreeze.yaidom2.utils.namespaces.DocumentENameExtractor
 
 /**
@@ -69,6 +70,8 @@ final class LinkbaseConverter(
    * The input TaxonomyBase parameter (2nd parameter) should be closed under DTS discovery rules.
    */
   def convertLinkbase(inputLinkbase: standardtaxonomy.dom.Linkbase, inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase): Linkbase = {
+    require(ScopedElemApi.containsNoConflictingScopes(inputLinkbase), s"Conflicting scopes not allowed (document ${inputLinkbase.docUri})")
+
     val parentScope: PrefixedScope = PrefixedScope.empty
 
     val inputRoleRefsAndArcroleRefs =

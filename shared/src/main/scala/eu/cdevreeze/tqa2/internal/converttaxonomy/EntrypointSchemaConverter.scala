@@ -35,10 +35,7 @@ final class EntrypointSchemaConverter(val namespacePrefixMapper: NamespacePrefix
    *
    * The result entrypoint schema must explicitly sum up the entire DTS.
    */
-  def convertSchema(
-      inputSchema: standardtaxonomy.dom.XsSchema,
-      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase): XsSchema = {
-
+  def convertSchema(inputSchema: standardtaxonomy.dom.XsSchema, inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase): XsSchema = {
     ???
   }
 }

@@ -34,7 +34,7 @@ import eu.cdevreeze.yaidom2.node.nodebuilder
  */
 final class XLinkLocatorConverter(val namespacePrefixMapper: NamespacePrefixMapper) {
 
-  implicit private val nsPrefixMapper: NamespacePrefixMapper = namespacePrefixMapper
+  private val nsPrefixMapper: NamespacePrefixMapper = namespacePrefixMapper
   implicit private val elemCreator: nodebuilder.NodeBuilderCreator = nodebuilder.NodeBuilderCreator(nsPrefixMapper)
 
   private val prefixedScopeUtil = new PrefixedScopeUtil(nsPrefixMapper)

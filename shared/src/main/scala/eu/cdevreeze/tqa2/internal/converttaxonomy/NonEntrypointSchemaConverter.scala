@@ -32,6 +32,7 @@ import eu.cdevreeze.yaidom2.core.QName
 import eu.cdevreeze.yaidom2.node.indexed
 import eu.cdevreeze.yaidom2.node.nodebuilder
 import eu.cdevreeze.yaidom2.node.simple
+import eu.cdevreeze.yaidom2.queryapi.ScopedElemApi
 import eu.cdevreeze.yaidom2.utils.namespaces.DocumentENameExtractor
 
 import scala.collection.immutable.ListMap
@@ -68,6 +69,8 @@ final class NonEntrypointSchemaConverter(
    * The input TaxonomyBase parameter (2nd parameter) should be closed under DTS discovery rules.
    */
   def convertSchema(inputSchema: standardtaxonomy.dom.XsSchema, inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase): XsSchema = {
+    require(ScopedElemApi.containsNoConflictingScopes(inputSchema), s"Conflicting scopes not allowed (document ${inputSchema.docUri})")
+
     val parentScope: PrefixedScope = PrefixedScope.from(
       namespacePrefixMapper.getPrefix(Namespaces.XsNamespace) -> Namespaces.XsNamespace,
       namespacePrefixMapper.getPrefix(Namespaces.XbrldtNamespace) -> Namespaces.XbrldtNamespace
@@ -126,10 +129,12 @@ final class NonEntrypointSchemaConverter(
 
         val typedDomainEName: EName = typedDomainElemDecl.targetEName
         val typedDomainPrefixOption = typedDomainEName.namespaceUriOption.map(ns => namespacePrefixMapper.getPrefix(ns))
+
         extraScope = extraScope.append(
           typedDomainPrefixOption
             .map(pref => PrefixedScope.from(pref -> typedDomainEName.namespaceUriOption.get))
             .getOrElse(PrefixedScope.empty))
+
         val typedDomainQName: QName = QName(typedDomainPrefixOption, typedDomainEName.localPart)
 
         ENames.CXbrldtTypedDomainKeyEName -> typedDomainQName.toString
@@ -145,6 +150,7 @@ final class NonEntrypointSchemaConverter(
             accScope.append(PrefixedScope.from(namespacePrefixMapper.getPrefix(ns) -> ns))
         })
 
+        // TODO Edit the attribute value (if QName-valued)?
         attrName -> attrValue
     }
 

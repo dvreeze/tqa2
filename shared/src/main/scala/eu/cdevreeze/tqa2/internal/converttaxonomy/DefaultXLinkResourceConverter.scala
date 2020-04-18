@@ -22,6 +22,7 @@ import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.core.PrefixedScope
 import eu.cdevreeze.yaidom2.node.nodebuilder
+import eu.cdevreeze.yaidom2.queryapi.ScopedElemApi
 
 /**
  * Trivial default converter from standard taxonomy XLink resources to their locator-free counterparts, as nodebuilder elements.
@@ -32,11 +33,10 @@ import eu.cdevreeze.yaidom2.node.nodebuilder
  */
 final class DefaultXLinkResourceConverter(val namespacePrefixMapper: NamespacePrefixMapper) extends XLinkResourceConverter {
 
-  implicit private val nsPrefixMapper: NamespacePrefixMapper = namespacePrefixMapper
+  private val nsPrefixMapper: NamespacePrefixMapper = namespacePrefixMapper
   implicit private val elemCreator: nodebuilder.NodeBuilderCreator = nodebuilder.NodeBuilderCreator(nsPrefixMapper)
 
   import nodebuilder.NodeBuilderCreator._
-  import elemCreator._
 
   def convertResource(
       res: standardtaxonomy.dom.XLinkResource,
@@ -46,12 +46,13 @@ final class DefaultXLinkResourceConverter(val namespacePrefixMapper: NamespacePr
     require(
       res.findAllDescendantElemsOrSelf.forall(_.scope.defaultNamespaceOption.isEmpty),
       s"Default namespace not allowed in resource '${res.fragmentKey}'")
+    require(ScopedElemApi.containsNoConflictingScopes(res), s"Conflicting scopes not allowed (document ${res.docUri})")
 
-    convertName(nodebuilder.Elem.from(res), parentScope).creationApi.usingParentScope(parentScope).underlying
+    convertName(nodebuilder.Elem.from(res), parentScope)
   }
 
   private def convertName(elem: nodebuilder.Elem, parentScope: PrefixedScope): nodebuilder.Elem = {
-    withName(elem, convertName(elem.name), parentScope)
+    elem.creationApi.usingNonConflictingParentScope(parentScope).withName(convertName(elem.name)).underlying
   }
 
   private def convertName(name: EName): EName = {
@@ -60,11 +61,5 @@ final class DefaultXLinkResourceConverter(val namespacePrefixMapper: NamespacePr
       case ENames.LinkReferenceEName => ENames.CLinkReferenceEName
       case n                         => n
     }
-  }
-
-  // TODO In yaidom2, make this name update easier
-
-  private def withName(elem: nodebuilder.Elem, newName: EName, parentScope: PrefixedScope): nodebuilder.Elem = {
-    emptyElem(newName, parentScope).creationApi.plusAttributes(elem.attributes).withChildren(elem.children).underlying
   }
 }
