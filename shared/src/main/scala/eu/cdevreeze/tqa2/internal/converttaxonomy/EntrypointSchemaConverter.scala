@@ -80,11 +80,13 @@ final class EntrypointSchemaConverter(
         .collect { case (docUri, _: standardtaxonomy.dom.Linkbase) => docUri }
         .toSet
 
-    val schemaUris: Set[URI] =
+    val schemas: Map[URI, standardtaxonomy.dom.XsSchema] =
       inputTaxonomyBase.rootElemMap.view
         .filterKeys(dtsUrisWithoutEntrypoint)
-        .collect { case (docUri, _: standardtaxonomy.dom.XsSchema) => docUri }
-        .toSet
+        .collect { case (docUri, e: standardtaxonomy.dom.XsSchema) => docUri -> e }
+        .toMap
+
+    val schemaUris: Set[URI] = schemas.keySet
 
     require(ScopedElemApi.containsNoConflictingScopes(inputSchema), s"Conflicting scopes not allowed (document ${inputSchema.docUri})")
 
@@ -115,6 +117,9 @@ final class EntrypointSchemaConverter(
       ))
       .plusChildren(schemaUris.toSeq.sortBy(_.toString).map { schemaUri =>
         emptyElem(ENames.XsImportEName, parentScope).creationApi
+          .plusAttribute(
+            ENames.NamespaceEName,
+            schemas.getOrElse(schemaUri, sys.error(s"Missing schema '$schemaUri'")).targetNamespaceOption.get)
           .plusAttribute(ENames.SchemaLocationEName, schemaUri.toString)
           .underlying
       })

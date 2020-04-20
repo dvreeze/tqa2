@@ -17,6 +17,7 @@
 package eu.cdevreeze.tqa2.internal.converttaxonomy
 
 import java.net.URI
+import java.util.regex.Pattern
 
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
@@ -158,10 +159,10 @@ final class TaxonomyBaseConverter(
     val entrypointSchemaConverter: EntrypointSchemaConverter =
       new EntrypointSchemaConverter(namespacePrefixMapper, documentENameExtractor)
 
-    val inputSchema =
+    val inputEntrypointSchema =
       inputTaxonomyBase.findXsdSchema(_.docUri == entrypointDocUri).getOrElse(sys.error(s"Missing document '$entrypointDocUri'"))
 
-    val entrypointSchema: locfreetaxonomy.dom.XsSchema = entrypointSchemaConverter.convertSchema(inputSchema, inputTaxonomyBase)
+    val entrypointSchema: locfreetaxonomy.dom.XsSchema = entrypointSchemaConverter.convertSchema(inputEntrypointSchema, inputTaxonomyBase)
 
     locfreetaxonomy.taxonomy.TaxonomyBase.build(
       taxonomyBase.rootElems.prepended(entrypointSchema),
@@ -169,13 +170,26 @@ final class TaxonomyBaseConverter(
     )
   }
 
-  /*
-  private def findAllNonEntrypointRootElems(
-      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
-      excludedEntrypointFilter: URI => Boolean): Seq[TaxonomyElem] = {
-    inputTaxonomyBase.rootElems.filter(e => !excludedEntrypointFilter(e.docUri))
+  def addSingleDocumentEntrypoints(
+      entrypointDocUriPattern: Pattern,
+      taxonomyBase: locfreetaxonomy.taxonomy.TaxonomyBase,
+      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase
+  ): locfreetaxonomy.taxonomy.TaxonomyBase = {
+    val entrypointSchemaConverter: EntrypointSchemaConverter =
+      new EntrypointSchemaConverter(namespacePrefixMapper, documentENameExtractor)
+
+    val inputEntrypointSchemas =
+      inputTaxonomyBase.filterXsdSchemas(e => entrypointDocUriPattern.matcher(e.docUri.toString).matches)
+
+    val entrypointSchemas: Seq[locfreetaxonomy.dom.XsSchema] = inputEntrypointSchemas.map { inputSchema =>
+      entrypointSchemaConverter.convertSchema(inputSchema, inputTaxonomyBase)
+    }
+
+    locfreetaxonomy.taxonomy.TaxonomyBase.build(
+      taxonomyBase.rootElems.prependedAll(entrypointSchemas),
+      taxonomyBase.extraProvidedSubstitutionGroupMap
+    )
   }
- */
 }
 
 object TaxonomyBaseConverter {
