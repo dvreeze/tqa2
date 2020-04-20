@@ -151,11 +151,22 @@ final class TaxonomyBaseConverter(
   }
 
   def addSingleDocumentEntrypoint(
-      taxonomyBase: locfreetaxonomy.taxonomy.TaxonomyBase,
       entrypointDocUri: URI,
-      dtsUris: Set[URI]
+      taxonomyBase: locfreetaxonomy.taxonomy.TaxonomyBase,
+      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase
   ): locfreetaxonomy.taxonomy.TaxonomyBase = {
-    ???
+    val entrypointSchemaConverter: EntrypointSchemaConverter =
+      new EntrypointSchemaConverter(namespacePrefixMapper, documentENameExtractor)
+
+    val inputSchema =
+      inputTaxonomyBase.findXsdSchema(_.docUri == entrypointDocUri).getOrElse(sys.error(s"Missing document '$entrypointDocUri'"))
+
+    val entrypointSchema: locfreetaxonomy.dom.XsSchema = entrypointSchemaConverter.convertSchema(inputSchema, inputTaxonomyBase)
+
+    locfreetaxonomy.taxonomy.TaxonomyBase.build(
+      taxonomyBase.rootElems.prepended(entrypointSchema),
+      taxonomyBase.extraProvidedSubstitutionGroupMap
+    )
   }
 
   /*
