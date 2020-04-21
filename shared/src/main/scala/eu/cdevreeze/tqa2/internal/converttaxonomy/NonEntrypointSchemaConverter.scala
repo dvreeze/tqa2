@@ -182,7 +182,7 @@ final class NonEntrypointSchemaConverter(
       parentScope: PrefixedScope): nodebuilder.Elem = {
 
     emptyElem(ENames.XsImportEName, parentScope).creationApi
-      .plusAttributes(inputImport.attributes.filterNot(Set(ENames.SchemaLocationEName)))
+      .plusAttributes(inputImport.attributes.filterNot(_._1 == ENames.SchemaLocationEName))
       .underlying
   }
 

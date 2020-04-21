@@ -107,7 +107,7 @@ object LocatorFreeTaxonomyLoader {
 
     println()
     println(s"Number of validations: ${validations.size}")
-    validations.foreach(v => println(s"\t${v.rule}"))
+    validations.foreach(v => println(s"""\tValidation: "${v.rule}""""))
 
     println()
     println(s"Validation OK: $validationOk")
