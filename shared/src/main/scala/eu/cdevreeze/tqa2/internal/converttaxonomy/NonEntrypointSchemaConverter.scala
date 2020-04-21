@@ -62,6 +62,10 @@ final class NonEntrypointSchemaConverter(
   import elemCreator._
   import nodebuilder.NodeBuilderCreator._
 
+  // TODO Add xs:import for every namespace used in an XML Schema sense (using another DocumentENameExtractor)
+
+  // TODO Convert values of link:usedOn elements in link:roleType and link:arcroleType
+
   /**
    * Converts a non-entrypoint schema in the given (2nd parameter) TaxonomyBase to its locator-free counterpart, resulting in
    * a locator-free XsSchema returned by this function.

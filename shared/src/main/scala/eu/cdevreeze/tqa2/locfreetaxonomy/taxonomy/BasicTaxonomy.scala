@@ -16,14 +16,14 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy
 
-import scala.reflect.ClassTag
-
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.TaxonomyElemKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom._
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal.DefaultTaxonomyQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship._
 import eu.cdevreeze.yaidom2.core.EName
+
+import scala.reflect.ClassTag
 
 /**
  * Basic taxonomy, and the default implementation of trait TaxonomyQueryApi.

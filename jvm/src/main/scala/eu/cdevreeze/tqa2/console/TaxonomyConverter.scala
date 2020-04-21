@@ -55,6 +55,8 @@ object TaxonomyConverter {
 
   private val processor = new Processor(false)
 
+  private val forceSaving: Boolean = System.getProperty("forceSaving", "false").toBoolean
+
   def main(args: Array[String]): Unit = {
     require(args.length == 3, s"Usage: TaxonomyConverter <input taxo root dir> <entrypoint URI regex> <output taxo root dir>")
 
@@ -198,9 +200,11 @@ object TaxonomyConverter {
 
       val file: File = new File(catalog.getMappedUri(rootElem.docUri))
 
-      val serializer = saxonDoc.newSerializer(file)
-      serializer.serializeNode(saxonDoc.xdmNode)
-      serializer.close()
+      if (!file.exists() || forceSaving) {
+        val serializer = saxonDoc.newSerializer(file)
+        serializer.serializeNode(saxonDoc.xdmNode)
+        serializer.close()
+      }
     }
   }
 

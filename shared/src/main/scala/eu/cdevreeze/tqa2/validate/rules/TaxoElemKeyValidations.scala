@@ -16,12 +16,11 @@
 
 package eu.cdevreeze.tqa2.validate.rules
 
+import java.net.URI
+
 import eu.cdevreeze.tqa2.ENames
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.ArcroleKey
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.ArcroleType
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.ConceptKey
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.RoleKey
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.RoleType
+import eu.cdevreeze.tqa2.common.xpointer.XPointer
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom._
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.validate.Rule
 import eu.cdevreeze.tqa2.validate.Taxonomies
@@ -38,9 +37,15 @@ object TaxoElemKeyValidations {
 
   val missingConceptRule: Rule = "Missing concept"
 
+  val missingElementRule: Rule = "Missing element declaration"
+
+  val missingTypeRule: Rule = "Missing type"
+
   val missingRoleTypeRule: Rule = "Missing role type"
 
   val missingArcroleTypeRule: Rule = "Missing arcrole type"
+
+  val missingAnyElementRule: Rule = "Missing XML element"
 
   object MissingConcept extends Validation {
 
@@ -55,6 +60,38 @@ object TaxoElemKeyValidations {
       val missingConcepts: Seq[EName] = keys.map(_.key).distinct.filter(c => taxo.findConceptDeclaration(c).isEmpty)
 
       missingConcepts.map(c => ValidationResult(rule, "Missing concept", c))
+    }
+  }
+
+  object MissingElement extends Validation {
+
+    def rule: Rule = missingElementRule
+
+    def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
+      val keys = taxo.rootElems
+        .filter(Taxonomies.isProperTaxonomyDocumentContent)
+        .flatMap(_.filterDescendantElemsOrSelf(_.name == ENames.CKeyElementKeyEName))
+        .collect { case key: ElementKey => key }
+
+      val missingElems: Seq[EName] = keys.map(_.key).distinct.filter(e => taxo.findGlobalElementDeclaration(e).isEmpty)
+
+      missingElems.map(c => ValidationResult(rule, "Missing element", c))
+    }
+  }
+
+  object MissingType extends Validation {
+
+    def rule: Rule = missingTypeRule
+
+    def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
+      val keys = taxo.rootElems
+        .filter(Taxonomies.isProperTaxonomyDocumentContent)
+        .flatMap(_.filterDescendantElemsOrSelf(_.name == ENames.CKeyTypeKeyEName))
+        .collect { case key: TypeKey => key }
+
+      val missingTypes: Seq[EName] = keys.map(_.key).distinct.filter(e => taxo.findNamedTypeDefinition(e).isEmpty)
+
+      missingTypes.map(c => ValidationResult(rule, "Missing type", c))
     }
   }
 
@@ -102,5 +139,32 @@ object TaxoElemKeyValidations {
     }
   }
 
-  val all: Seq[Validation] = Seq(MissingConcept, MissingRoleType, MissingArcroleType)
+  object MissingAnyElem extends Validation {
+
+    def rule: Rule = missingAnyElementRule
+
+    def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
+      val keys = taxo.rootElems
+        .filter(Taxonomies.isProperTaxonomyDocumentContent)
+        .flatMap(_.filterDescendantElemsOrSelf(_.name == ENames.CKeyAnyElemKeyEName))
+        .collect { case key: AnyElementKey => key }
+
+      val missingAnyElemKeys: Seq[URI] = keys.map(_.key).distinct.filter(k => findElem(k, taxo).isEmpty)
+
+      missingAnyElemKeys.map(c => ValidationResult(rule, "Missing XML element", c))
+    }
+  }
+
+  private def findElem(uri: URI, taxo: BasicTaxonomy): Option[TaxonomyElem] = {
+    taxo.taxonomyBase.rootElemMap
+      .get(withoutFragment(uri))
+      .flatMap(rootElem => XPointer.findElem(rootElem, XPointer.parseXPointers(uri.getFragment)))
+  }
+
+  private def withoutFragment(uri: URI): URI = {
+    val fragment: String = null // scalastyle:off
+    new URI(uri.getScheme, uri.getSchemeSpecificPart, fragment)
+  }
+
+  val all: Seq[Validation] = Seq(MissingConcept, MissingElement, MissingType, MissingRoleType, MissingArcroleType, MissingAnyElem)
 }

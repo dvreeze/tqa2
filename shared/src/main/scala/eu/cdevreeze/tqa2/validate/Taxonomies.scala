@@ -21,7 +21,8 @@ import java.net.URI
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 
 /**
- * Utility object with functions that offer some "knowledge" about locator-free taxonomies.
+ * Utility object with functions that offer some "knowledge" about locator-free taxonomies. This utility can also
+ * be used for standard taxonomy files.
  *
  * @author Chris de Vreeze
  */

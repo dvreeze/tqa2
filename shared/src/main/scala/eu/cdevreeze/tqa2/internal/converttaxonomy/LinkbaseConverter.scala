@@ -59,6 +59,8 @@ final class LinkbaseConverter(
   import elemCreator._
   import nodebuilder.NodeBuilderCreator._
 
+  // TODO Reorder arcs, keys and non-key resources
+
   /**
    * Converts a linkbase in the given (2nd parameter) TaxonomyBase to its locator-free counterparts, resulting in
    * a locator-free Linkbase returned by this function.
