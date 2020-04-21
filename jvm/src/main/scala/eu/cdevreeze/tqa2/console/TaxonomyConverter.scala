@@ -192,7 +192,8 @@ object TaxonomyConverter {
   private def serializeTaxonomy(taxo: BasicTaxonomy, rootDir: File, catalog: SimpleCatalog): Unit = {
     assert(rootDir.isDirectory)
 
-    taxo.rootElems.filter(Taxonomies.isProperTaxonomyDocumentContent).foreach { rootElem =>
+    // Also the core files
+    taxo.rootElems.foreach { rootElem =>
       val saxonDoc: saxon.Document = toLocalSaxonDocument(rootElem, catalog)
 
       val file: File = new File(catalog.getMappedUri(rootElem.docUri))
