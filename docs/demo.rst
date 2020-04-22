@@ -5,7 +5,7 @@ Locator-free taxonomies
 Why do we need a locator-free model?
 ====================================
 
-XBRL taxonomies in their standard XML format are powerful representations of metadata for XBRL instances
+XBRL taxonomies in their standard XML format are rich metadata representations for XBRL instances
 conforming to them, even more so if these taxonomies contain formula and table linkbases.
 
 Yet the documents making up a taxonomy are hard to decouple from each other. The URI references in XLink locators,
@@ -54,7 +54,7 @@ Locator-free taxonomies are characterized as follows:
 - Yet XLink in the locator-free model is restricted to *XLink without locators and without simple links*
 - Instead of XLink locators there are *taxonomy element keys*, which are XLink resources
 - For example, *concept keys* contain the QName (of schema type xs:QName) of the concept they refer to
-- This reminds somewhat of table and formula linkbases in standard taxonomies, which also lean heavily on XLink resources and much less so on XLink locators
+- This reminds somewhat of table and formula linkbases in standard taxonomies, which also lean heavily on XLink resources and much less on XLink locators
 - Schema files in the locator-free model contain no xs:include elements, and no schemaLocation attributes on xs:import elements
 - That is, unless they act as "entrypoints" in the locator-free model, but more about that later
 - Other than "entrypoints", all taxonomy files are "standalone" in that they contribute nothing to the DTS other than themselves
@@ -71,6 +71,8 @@ For "standalone" schemas:
 - The schemaLocation attribute in xs:import elements disappears
 - The xbrldt:typedDomainRef attribute (in xs:element) becomes cxbrldt:typedDomainKey, which is typed xs:QName
 
+See for example `venj-bw2-axes.xsd`_.
+
 For linkbases:
 
 - The outer element becomes clink:linkbase (so another namespace, so it is not an XBRL linkbase)
@@ -84,12 +86,16 @@ For presentation, definition and calculation extended links:
 - There may be clink:roleRef and clink:arcroleRef elements, which are not XLink simple links, and contain no href attribute
 - Arcroles, link roles and resource roles are the same as in the standard taxonomy
 
+See for example `venj-bw2-decree-on-additional-regulations-for-the-management-report-pre.xml`_.
+
 For (standard) label and reference extended links:
 
 - The names are clink:labelLink etc.
 - The arc names are clink:labelArc etc.
 - The label and reference resources have names like clink:label etc.
 - So the (extended) links contain only XLink arcs and XLink resources, some or many of them being ckey:conceptKey elements
+
+See for example `venj-bw2-axes-ref.xml`_.
 
 For generic links:
 
@@ -98,6 +104,8 @@ For generic links:
 - Again, instead of locators there are taxonomy element keys (which are XLink resources)
 - Non-key XLink resources retain their names they have in the standard taxonomy
 
+See for example `venj-bw2-generic-linkrole-order.xml`_.
+
 Entrypoints will be discussed later, but note how we can easily leave out the "label linkbase" and "reference linkbase"
 documents and still have a closed set of documents without any "dead keys".
 
@@ -105,6 +113,11 @@ So, if we want to do dimensional instance validation against a taxonomy in locat
 all "label linkbases" and "reference linkbases", and still have a closed taxonomy document set containing all
 dimensional taxonomy data needed for the validation. In practice this means that more or less half of the taxonomy
 does not have to be loaded into memory for dimensional instance validation (unless we need the labels, of course).
+
+.. _`venj-bw2-axes.xsd`: https://github.com/dvreeze/tqa2/blob/master/jvm/src/test/resources/testfiles/www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes.xsd
+.. _`venj-bw2-decree-on-additional-regulations-for-the-management-report-pre.xml`: https://github.com/dvreeze/tqa2/blob/master/jvm/src/test/resources/testfiles/www.nltaxonomie.nl/nt12/venj/20170714.a/presentation/venj-bw2-decree-on-additional-regulations-for-the-management-report-pre.xml
+.. _`venj-bw2-axes-ref.xml`: https://github.com/dvreeze/tqa2/blob/master/jvm/src/test/resources/testfiles/www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes-ref.xml
+.. _`venj-bw2-generic-linkrole-order.xml`: https://github.com/dvreeze/tqa2/blob/master/jvm/src/test/resources/testfiles/www.nltaxonomie.nl/nt12/venj/20170714.a/presentation/venj-bw2-generic-linkrole-order.xml
 
 Networks of relationships
 =========================
@@ -186,6 +199,8 @@ That is indeed the case.
 Single-document entrypoints in the locator-free model directly sum up the complete DTS, unlike their standard taxonomy
 entrypoint counterparts. These locator-free entrypoints contain xs:import elements with schemaLocation attribute and/or
 clink:linkbaseRef elements (with href attribute).
+
+TODO Add example entrypoint file.
 
 To prevent the tangling of standard taxonomy documents, only 1 level of URI indirection is allowed. That is, a schema
 document acting as entrypoint may refer to many other documents, but these referred documents must all be standalone
