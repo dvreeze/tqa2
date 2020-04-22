@@ -189,18 +189,27 @@ final class LinkbaseConverter(
     val parentPrefixedScope: PrefixedScope = PrefixedScope.ignoringDefaultNamespace(currentLinkbase.scope)
     val parentBaseUri: URI = currentLinkbase.baseUri
 
-    val xlinkChildren: Seq[nodebuilder.Elem] = inputExtendedLink.arcs
-      .collect { case e: standardtaxonomy.dom.NonStandardArc => e }
-      .flatMap { inputArc =>
-        convertNonStandardArcToArcsAndTaxoKeys(
-          inputArc,
-          labeledXLinkMap,
-          locatorHrefResolutions,
-          inputTaxonomyBase,
-          parentPrefixedScope,
-          parentBaseUri)
-      }
-      .distinctBy(e => resolved.Elem.from(e))
+    val inputArcs = inputExtendedLink.arcs
+
+    val xlinkChildren: Seq[nodebuilder.Elem] = if (inputArcs.isEmpty) {
+      // Possibly a parameter file, which has XLink resources but no arcs (and no locators)
+      inputExtendedLink.xlinkChildren
+        .collect { case e: standardtaxonomy.dom.XLinkResource => e }
+        .map(e => xlinkResourceConverter.convertResource(e, inputTaxonomyBase, parentPrefixedScope))
+    } else {
+      inputArcs
+        .collect { case e: standardtaxonomy.dom.NonStandardArc => e }
+        .flatMap { inputArc =>
+          convertNonStandardArcToArcsAndTaxoKeys(
+            inputArc,
+            labeledXLinkMap,
+            locatorHrefResolutions,
+            inputTaxonomyBase,
+            parentPrefixedScope,
+            parentBaseUri)
+        }
+        .distinctBy(e => resolved.Elem.from(e))
+    }
 
     val targetLinkName: EName = convertLinkName(inputExtendedLink.name)
 

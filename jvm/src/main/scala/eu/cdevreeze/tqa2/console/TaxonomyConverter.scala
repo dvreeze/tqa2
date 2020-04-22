@@ -66,8 +66,8 @@ object TaxonomyConverter {
 
   def main(args: Array[String]): Unit = {
     require(
-      args.length >= 3 && args.length <= 4,
-      s"Usage: TaxonomyConverter <input taxo root dir> <output taxo root dir> <entrypoint URI regex> [ <extra file URI regex> ]"
+      args.length == 3,
+      s"Usage: TaxonomyConverter <input taxo root dir> <output taxo root dir> <entrypoint URI regex>"
     )
 
     val start = System.currentTimeMillis()
@@ -80,9 +80,6 @@ object TaxonomyConverter {
     require(outputTaxoRootDir.isDirectory, s"Not a directory: '$outputTaxoRootDir'")
 
     val entrypointUriRegex: Pattern = Pattern.compile(URI.create(args(2)).toString)
-
-    // Regex for extra files not strictly in a DTS, such as parameter files
-    val extraFileUriRegexOption: Option[Pattern] = args.toSeq.drop(3).headOption.map(s => Pattern.compile(URI.create(s).toString))
 
     // Parsing the input taxonomy
 
@@ -100,13 +97,12 @@ object TaxonomyConverter {
     val fileUris: Set[URI] = findAllFiles(inputTaxoRootDir).map(f => reverseCatalog.getMappedUri(f.toURI)).toSet
 
     def isEntrypoint(uri: URI): Boolean = entrypointUriRegex.matcher(uri.toString).matches
-    def isExtraFile(uri: URI): Boolean = extraFileUriRegexOption.exists(_.matcher(uri.toString).matches)
 
     val combinedEntrypoint: Set[URI] = fileUris.filter(isEntrypoint).ensuring(_.nonEmpty)
 
     val inputTaxoBase: standardtaxonomy.taxonomy.TaxonomyBase = DefaultTaxonomyBaseBuilder
       .withDocumentBuilder(docBuilder)
-      .withDtsUriCollector(DefaultDtsUriCollector.instanceTakingExtraFiles(fileUris.filter(isExtraFile)))
+      .withDtsUriCollector(DefaultDtsUriCollector.instance)
       .build(combinedEntrypoint)
 
     println(s"Successfully parsed the input taxonomy. It contains ${inputTaxoBase.rootElems.size} documents") // scalastyle:off

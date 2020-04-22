@@ -164,14 +164,4 @@ trait DefaultDtsUriCollector extends DtsUriCollector {
 object DefaultDtsUriCollector {
 
   val instance: DefaultDtsUriCollector = new DefaultDtsUriCollector {}
-
-  def instanceTakingExtraFiles(extraFileUris: Set[URI]): DtsUriCollectorTakingExtraFiles =
-    new DtsUriCollectorTakingExtraFiles(extraFileUris)
-
-  final class DtsUriCollectorTakingExtraFiles(val extraFileUris: Set[URI]) extends DefaultDtsUriCollector {
-
-    override def findAllDtsUris(entrypoint: Set[URI], taxoElemBuilder: URI => TaxonomyElem): Set[URI] = {
-      super.findAllDtsUris(entrypoint.union(extraFileUris), taxoElemBuilder)
-    }
-  }
 }
