@@ -109,7 +109,8 @@ object TaxonomyConverter {
 
     // Converting the input taxonomy to the locator-free model
 
-    val scope: Scope = ScopedElemApi.unionScope(inputTaxoBase.rootElems).withoutDefaultNamespace.append(extraScope)
+    val scope: Scope = ScopedElemApi.unionScope(inputTaxoBase.rootElems)
+      .withoutDefaultNamespace.filterNamespaces(ns => !extraScope.namespaces.contains(ns)).append(extraScope)
 
     val namespacePrefixMapper: NamespacePrefixMapper =
       NamespacePrefixMapper.fromPrefixToNamespaceMapWithFallback(scope.prefixNamespaceMap)

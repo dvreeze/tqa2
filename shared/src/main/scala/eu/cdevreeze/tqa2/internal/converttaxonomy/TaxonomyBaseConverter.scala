@@ -137,10 +137,12 @@ final class TaxonomyBaseConverter(
           Some(locfreetaxonomy.dom.TaxonomyElem(e.underlyingElem))
         case e: standardtaxonomy.dom.XsSchema =>
           // TODO Require non-entrypoint schema in terms of content
+          println(s"Converting schema '${e.docUri}'") // scalastyle:off
           Some(nonEntrypointSchemaConverter.convertSchema(e, inputTaxonomyBase))
         case e: standardtaxonomy.dom.Linkbase if Taxonomies.isCoreDocumentUri(e.docUri) =>
           Some(locfreetaxonomy.dom.TaxonomyElem(e.underlyingElem))
         case e: standardtaxonomy.dom.Linkbase =>
+          println(s"Converting linkbase '${e.docUri}'") // scalastyle:off
           Some(linkbaseConverter.convertLinkbase(e, inputTaxonomyBase))
         case _ =>
           None
