@@ -19,7 +19,6 @@ package eu.cdevreeze.tqa2.validate.rules
 import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
-import eu.cdevreeze.tqa2.common.xpointer.XPointer
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom._
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.validate.Rule
@@ -156,14 +155,7 @@ object TaxoElemKeyValidations {
   }
 
   private def findElem(uri: URI, taxo: BasicTaxonomy): Option[TaxonomyElem] = {
-    taxo.taxonomyBase.rootElemMap
-      .get(withoutFragment(uri))
-      .flatMap(rootElem => XPointer.findElem(rootElem, XPointer.parseXPointers(uri.getFragment)))
-  }
-
-  private def withoutFragment(uri: URI): URI = {
-    val fragment: String = null // scalastyle:off
-    new URI(uri.getScheme, uri.getSchemeSpecificPart, fragment)
+    taxo.taxonomyBase.findElemByUri(uri)
   }
 
   val all: Seq[Validation] = Seq(MissingConcept, MissingElement, MissingType, MissingRoleType, MissingArcroleType, MissingAnyElem)

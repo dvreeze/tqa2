@@ -14,13 +14,15 @@
  * limitations under the License.
  */
 
-package eu.cdevreeze.tqa2.locfreetaxonomy.relationship
+package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy
 
 import java.net.URI
 
+import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Linkbase
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ConceptLabelRelationship
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.node.saxon
 import net.sf.saxon.s9api.Processor
@@ -40,7 +42,9 @@ class RelationshipTest extends AnyFunSuite {
 
     val relationshipFactory = DefaultRelationshipFactory
 
-    val relationships = relationshipFactory.extractRelationships(Map(linkbase.docUri -> linkbase), RelationshipFactory.AnyArc)
+    val taxo: TaxonomyBase = TaxonomyBase.build(Seq(linkbase), SubstitutionGroupMap.Empty)
+
+    val relationships = relationshipFactory.extractRelationships(taxo, RelationshipFactory.AnyArc)
 
     relationships.forall(_.isInstanceOf[ConceptLabelRelationship]) should equal(true)
 

@@ -18,10 +18,10 @@ package eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy.builder
 
 import java.net.URI
 
-import scala.annotation.tailrec
-
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.internal.standardtaxonomy.dom._
+
+import scala.annotation.tailrec
 
 /**
  * Default DTS URI collector, for 'standard' taxonomies.
@@ -34,7 +34,7 @@ trait DefaultDtsUriCollector extends DtsUriCollector {
    * Finds all URIs of taxonomy documents in the DTS, given the parameter entrypoint. If the entrypoint is an empty set
    * of URIs, an empty DTS is returned. The returned DTS always includes the entrypoint.
    */
-  final def findAllDtsUris(entrypoint: Set[URI], taxoElemBuilder: URI => TaxonomyElem): Set[URI] = {
+  def findAllDtsUris(entrypoint: Set[URI], taxoElemBuilder: URI => TaxonomyElem): Set[URI] = {
     if (entrypoint.isEmpty) {
       Set.empty
     } else {
@@ -48,8 +48,9 @@ trait DefaultDtsUriCollector extends DtsUriCollector {
    * this method returns all URIs contributed to the DTS by the given document (other than the document URI itself).
    */
   def findAllUsedDocUris(docElem: TaxonomyElem): Set[URI] = {
-    val taxoRootElems = docElem.findTopmostElemsOrSelf(_.isInstanceOf[TaxonomyRootElem])
-        .collect { case e: TaxonomyRootElem => e }
+    val taxoRootElems = docElem
+      .findTopmostElemsOrSelf(_.isInstanceOf[TaxonomyRootElem])
+      .collect { case e: TaxonomyRootElem => e }
 
     taxoRootElems.flatMap(e => findAllUsedDocUrisInTaxonomyRoot(e)).toSet
   }
@@ -99,9 +100,11 @@ trait DefaultDtsUriCollector extends DtsUriCollector {
         // Minding embedded linkbases
 
         findAllUsedDocUrisInXsSchema(xsSchema).union {
-          xsSchema.filterDescendantElems(_.isInstanceOf[Linkbase])
+          xsSchema
+            .filterDescendantElems(_.isInstanceOf[Linkbase])
             .collect { case e: Linkbase => e }
-            .flatMap(lb => findAllUsedDocUrisInLinkbase(lb)).toSet
+            .flatMap(lb => findAllUsedDocUrisInLinkbase(lb))
+            .toSet
         }
       case linkbase: Linkbase =>
         findAllUsedDocUrisInLinkbase(linkbase)
@@ -128,8 +131,8 @@ trait DefaultDtsUriCollector extends DtsUriCollector {
   private def findAllUsedDocUrisInLinkbase(rootElem: Linkbase): Set[URI] = {
     // Only link:loc locators are used in DTS discovery.
 
-    val locs = rootElem.filterDescendantElems(_.name == ENames.LinkLocEName).collect { case e: StandardLoc => e }
-    val roleRefs = rootElem.filterDescendantElems(_.name == ENames.LinkRoleRefEName).collect { case e: RoleRef => e }
+    val locs = rootElem.filterDescendantElems(_.name == ENames.LinkLocEName).collect { case e: StandardLoc              => e }
+    val roleRefs = rootElem.filterDescendantElems(_.name == ENames.LinkRoleRefEName).collect { case e: RoleRef          => e }
     val arcroleRefs = rootElem.filterDescendantElems(_.name == ENames.LinkArcroleRefEName).collect { case e: ArcroleRef => e }
 
     val locUris =
@@ -161,4 +164,14 @@ trait DefaultDtsUriCollector extends DtsUriCollector {
 object DefaultDtsUriCollector {
 
   val instance: DefaultDtsUriCollector = new DefaultDtsUriCollector {}
+
+  def instanceTakingExtraFiles(extraFileUris: Set[URI]): DtsUriCollectorTakingExtraFiles =
+    new DtsUriCollectorTakingExtraFiles(extraFileUris)
+
+  final class DtsUriCollectorTakingExtraFiles(val extraFileUris: Set[URI]) extends DefaultDtsUriCollector {
+
+    override def findAllDtsUris(entrypoint: Set[URI], taxoElemBuilder: URI => TaxonomyElem): Set[URI] = {
+      super.findAllDtsUris(entrypoint.union(extraFileUris), taxoElemBuilder)
+    }
+  }
 }

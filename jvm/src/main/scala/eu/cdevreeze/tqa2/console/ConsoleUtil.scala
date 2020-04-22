@@ -26,11 +26,11 @@ import eu.cdevreeze.tqa2.docbuilder.jvm.SaxUriResolvers
 import eu.cdevreeze.tqa2.docbuilder.jvm.SimpleCatalogs
 import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.jvm.DefaultParallelRelationshipFactory
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyBase
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder.DefaultDtsUriCollector
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder.DtsUriCollector
+import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.jvm.DefaultParallelRelationshipFactory
 import net.sf.saxon.s9api.Processor
 
 /**
@@ -42,8 +42,9 @@ private[console] object ConsoleUtil {
 
   def createTaxonomyForCombinedDts(entrypointsParentDirRemoteUri: URI, taxoRootDir: File, processor: Processor): BasicTaxonomy = {
     require(entrypointsParentDirRemoteUri.isAbsolute, s"Expected absolute URI, but got '$entrypointsParentDirRemoteUri'")
-    require(Option(entrypointsParentDirRemoteUri.getFragment).isEmpty,
-            s"Expected no fragment in the URI, but got URI '$entrypointsParentDirRemoteUri")
+    require(
+      Option(entrypointsParentDirRemoteUri.getFragment).isEmpty,
+      s"Expected no fragment in the URI, but got URI '$entrypointsParentDirRemoteUri")
     require(
       Set("http", "https").contains(entrypointsParentDirRemoteUri.getScheme),
       s"Expected scheme 'http' or 'https', but got URI '$entrypointsParentDirRemoteUri'"
@@ -80,7 +81,7 @@ private[console] object ConsoleUtil {
     println(s"Number of documents in the TaxonomyBase: ${taxoBase.rootElems.size}") // scalastyle:off
     println(s"Building BasicTaxonomy ...") // scalastyle:off
 
-    val taxo: BasicTaxonomy = BasicTaxonomy.build(taxoBase, new DefaultParallelRelationshipFactory)
+    val taxo: BasicTaxonomy = BasicTaxonomy.build(taxoBase, DefaultParallelRelationshipFactory)
 
     println(s"Number of relationships: ${taxo.relationships.size}") // scalastyle:off
     taxo

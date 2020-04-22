@@ -23,6 +23,7 @@ import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.locfreetaxonomy
+import eu.cdevreeze.tqa2.validate.Taxonomies
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.utils.namespaces.DocumentENameExtractor
 
@@ -76,12 +77,12 @@ final class TaxonomyBaseConverter(
     val nonRootLinkbases: Seq[standardtaxonomy.dom.Linkbase] = linkbases.filter(_.underlyingElem.findParentElem.nonEmpty)
 
     if (nonRootSchemas.nonEmpty) {
-      throw new IllegalStateException((s"Not all xs:schema elements are document root elements (e.g. in ${nonRootSchemas.head.docUri})"))
+      throw new IllegalStateException(s"Not all xs:schema elements are document root elements (e.g. in ${nonRootSchemas.head.docUri})")
     }
     if (nonRootLinkbases.nonEmpty) {
       // So embedded linkbases are also not allowed
       throw new IllegalStateException(
-        (s"Not all link:linkbase elements are document root elements (e.g. in ${nonRootLinkbases.head.docUri})"))
+        s"Not all link:linkbase elements are document root elements (e.g. in ${nonRootLinkbases.head.docUri})")
     }
 
     // All schemas must have a (non-empty) targetNamespace attribute.
@@ -106,7 +107,7 @@ final class TaxonomyBaseConverter(
 
     if (schemasByTns.exists(_._2.sizeIs >= 2)) {
       val aViolatingTns: String = schemasByTns.find(_._2.sizeIs >= 2).get._1
-      throw new IllegalStateException(s"Not all schema documents have a unique targetNamespace (e.g. for TNS '${aViolatingTns}')")
+      throw new IllegalStateException(s"Not all schema documents have a unique targetNamespace (e.g. for TNS '$aViolatingTns')")
     }
   }
 
@@ -134,12 +135,14 @@ final class TaxonomyBaseConverter(
       .filterNot(e => excludedEntrypointFilter(e.docUri))
       .flatMap {
         case e: standardtaxonomy.dom.XsSchema if Taxonomies.isCoreDocumentUri(e.docUri) =>
+          println(s"Parsing (not converting) schema '${e.docUri}'") // scalastyle:off
           Some(locfreetaxonomy.dom.TaxonomyElem(e.underlyingElem))
         case e: standardtaxonomy.dom.XsSchema =>
           // TODO Require non-entrypoint schema in terms of content
           println(s"Converting schema '${e.docUri}'") // scalastyle:off
           Some(nonEntrypointSchemaConverter.convertSchema(e, inputTaxonomyBase))
         case e: standardtaxonomy.dom.Linkbase if Taxonomies.isCoreDocumentUri(e.docUri) =>
+          println(s"Parsing (not converting) linkbase '${e.docUri}'") // scalastyle:off
           Some(locfreetaxonomy.dom.TaxonomyElem(e.underlyingElem))
         case e: standardtaxonomy.dom.Linkbase =>
           println(s"Converting linkbase '${e.docUri}'") // scalastyle:off

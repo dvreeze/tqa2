@@ -107,7 +107,7 @@ object BasicTaxonomy {
   }
 
   def build(taxonomyBase: TaxonomyBase, relationshipFactory: RelationshipFactory, arcFilter: XLinkArc => Boolean): BasicTaxonomy = {
-    val relationships = relationshipFactory.extractRelationships(taxonomyBase.rootElemMap, arcFilter)
+    val relationships = relationshipFactory.extractRelationships(taxonomyBase, arcFilter)
 
     build(taxonomyBase, relationships)
   }

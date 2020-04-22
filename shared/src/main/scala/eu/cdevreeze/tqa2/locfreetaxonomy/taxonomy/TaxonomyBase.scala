@@ -20,6 +20,8 @@ import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
+import eu.cdevreeze.tqa2.common.xpointer.ShorthandPointer
+import eu.cdevreeze.tqa2.common.xpointer.XPointer
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom._
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal.DefaultSchemaQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal.DefaultTaxonomySchemaQueryApi
@@ -33,6 +35,8 @@ import eu.cdevreeze.yaidom2.core.EName
  */
 final class TaxonomyBase private (
     val rootElems: Seq[TaxonomyElem],
+    val rootElemMap: Map[URI, TaxonomyElem],
+    val elemMap: Map[URI, Map[String, TaxonomyElem]],
     val conceptDeclarations: Seq[ConceptDeclaration],
     val conceptDeclarationsByEName: Map[EName, ConceptDeclaration],
     val extraProvidedSubstitutionGroupMap: SubstitutionGroupMap,
@@ -43,8 +47,30 @@ final class TaxonomyBase private (
 
   override def substitutionGroupMap: SubstitutionGroupMap = netSubstitutionGroupMap
 
-  def rootElemMap: Map[URI, TaxonomyElem] = {
-    rootElems.groupBy(_.docUri).view.mapValues(_.head).toMap
+  def findElemByUri(uri: URI): Option[TaxonomyElem] = {
+    require(uri.isAbsolute, s"Expected absolute URI but got relative URI '$uri'")
+    val docUri = withoutFragment(uri)
+    val fragmentOption: Option[String] = Option(uri.getFragment)
+    val xpointers: Seq[XPointer] = fragmentOption.map(fragment => XPointer.parseXPointers(fragment)).getOrElse(Seq.empty)
+
+    xpointers match {
+      case Seq(ShorthandPointer(id)) =>
+        // Fast lookup (the normal situation)
+        elemMap.get(docUri).flatMap(_.get(id))
+      case Nil =>
+        rootElemMap.get(docUri)
+      case _ =>
+        rootElemMap.get(docUri).flatMap(rootElem => XPointer.findElem(rootElem, xpointers))
+    }
+  }
+
+  def getElemByUri(uri: URI): TaxonomyElem = {
+    findElemByUri(uri).getOrElse(sys.error(s"Could not find element with URI '$uri"))
+  }
+
+  private def withoutFragment(uri: URI): URI = {
+    val fragment: String = null // scalastyle:off
+    new URI(uri.getScheme, uri.getSchemeSpecificPart, fragment)
   }
 }
 
@@ -67,8 +93,16 @@ object TaxonomyBase {
 
     val conceptDeclMap: Map[EName, ConceptDeclaration] = conceptDecls.groupBy(_.targetEName).view.mapValues(_.head).toMap
 
+    val rootElemMap: Map[URI, TaxonomyElem] = {
+      rootElems.groupBy(_.docUri).view.mapValues(_.head).toMap
+    }
+
+    val elemMap: Map[URI, Map[String, TaxonomyElem]] = computeElemMap(rootElems)
+
     new TaxonomyBase(
       rootElems,
+      rootElemMap,
+      elemMap,
       conceptDecls,
       conceptDeclMap,
       extraProvidedSubstitutionGroupMap,
@@ -124,5 +158,16 @@ object TaxonomyBase {
     val mappings: Map[EName, EName] = rawMappings.filter(kv => substGroups.contains(kv._1))
 
     SubstitutionGroupMap.from(mappings)
+  }
+
+  private def computeElemMap(rootElems: Seq[TaxonomyElem]): Map[URI, Map[String, TaxonomyElem]] = {
+    rootElems.map { rootElem =>
+      val elemMapInDoc: Map[String, TaxonomyElem] = rootElem
+        .filterDescendantElemsOrSelf(_.attrOption(ENames.IdEName).nonEmpty)
+        .map(e => e.attr(ENames.IdEName) -> e)
+        .toMap
+
+      rootElem.docUri -> elemMapInDoc
+    }.toMap
   }
 }

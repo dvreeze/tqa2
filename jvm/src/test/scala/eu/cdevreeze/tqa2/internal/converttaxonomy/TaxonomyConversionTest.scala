@@ -24,8 +24,8 @@ import eu.cdevreeze.tqa2.common.namespaceutils.XbrlDocumentENameExtractor
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
 import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DefaultRelationshipFactory
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
+import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.DefaultRelationshipFactory
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyBase
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper

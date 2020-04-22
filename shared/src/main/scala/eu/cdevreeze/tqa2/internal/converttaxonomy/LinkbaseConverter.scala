@@ -19,7 +19,6 @@ package eu.cdevreeze.tqa2.internal.converttaxonomy
 import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
-import eu.cdevreeze.tqa2.common.xpointer.XPointer
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
 import eu.cdevreeze.tqa2.internal.xmlutil.NodeBuilderUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Linkbase
@@ -56,6 +55,7 @@ final class LinkbaseConverter(
 
   implicit private val elemCreator: nodebuilder.NodeBuilderCreator = nodebuilder.NodeBuilderCreator(namespacePrefixMapper)
 
+  import NameConversions._
   import elemCreator._
   import nodebuilder.NodeBuilderCreator._
 
@@ -316,20 +316,7 @@ final class LinkbaseConverter(
 
     require(locatorHref.isAbsolute, s"Not an absolute locator href: '$locatorHref'")
 
-    val docUri: URI = withoutFragment(locatorHref)
-    val fragment: String = Option(locatorHref.getFragment).getOrElse("")
-
-    val docElem: standardtaxonomy.dom.TaxonomyElem = inputTaxonomyBase.rootElemMap
-      .getOrElse(docUri, sys.error(s"Could not resolve URI '$docUri'"))
-
-    val elem: standardtaxonomy.dom.TaxonomyElem =
-      if (fragment.trim.isEmpty) {
-        docElem
-      } else {
-        XPointer
-          .findElem(docElem, XPointer.parseXPointers(fragment))
-          .getOrElse(sys.error(s"Could not resolve URI '$locatorHref'"))
-      }
+    val elem: standardtaxonomy.dom.TaxonomyElem = inputTaxonomyBase.getElemByUri(locatorHref)
     elem
   }
 
@@ -456,32 +443,5 @@ final class LinkbaseConverter(
 
   private def makeLinkbase(docUriOption: Option[URI], linkbaseRootElem: nodebuilder.Elem): Linkbase = {
     TaxonomyElem(indexed.Elem.ofRoot(docUriOption, simple.Elem.from(linkbaseRootElem))).asInstanceOf[Linkbase]
-  }
-
-  private def convertLinkName(inputLinkName: EName): EName = {
-    inputLinkName match {
-      case ENames.LinkDefinitionLinkEName   => ENames.CLinkDefinitionLinkEName
-      case ENames.LinkPresentationLinkEName => ENames.CLinkPresentationLinkEName
-      case ENames.LinkCalculationLinkEName  => ENames.CLinkCalculationLinkEName
-      case ENames.LinkLabelLinkEName        => ENames.CLinkLabelLinkEName
-      case ENames.LinkReferenceLinkEName    => ENames.CLinkReferenceLinkEName
-      case ENames.GenLinkEName              => ENames.CGenLinkEName
-      case n                                => n
-    }
-  }
-
-  private def convertArcName(inputArcName: EName): EName = {
-    inputArcName match {
-      case ENames.LinkDefinitionArcEName   => ENames.CLinkDefinitionArcEName
-      case ENames.LinkPresentationArcEName => ENames.CLinkPresentationArcEName
-      case ENames.LinkCalculationArcEName  => ENames.CLinkCalculationArcEName
-      case ENames.LinkLabelArcEName        => ENames.CLinkLabelArcEName
-      case ENames.LinkReferenceArcEName    => ENames.CLinkReferenceArcEName
-      case n                               => n
-    }
-  }
-
-  private def withoutFragment(uri: URI): URI = {
-    new URI(uri.getScheme, uri.getSchemeSpecificPart, null) // scalastyle:off null
   }
 }

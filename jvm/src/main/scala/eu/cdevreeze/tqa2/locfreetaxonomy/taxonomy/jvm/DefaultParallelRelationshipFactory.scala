@@ -14,41 +14,39 @@
  * limitations under the License.
  */
 
-package eu.cdevreeze.tqa2.locfreetaxonomy.relationship
+package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.jvm
 
 import java.net.URI
 
 import eu.cdevreeze.tqa2.common.xpointer.XPointer
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.ExtendedLink
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.NonKeyResource
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElemKey
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkArc
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkResource
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom._
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Relationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.RelationshipFactory
+import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyBase
+
+import scala.collection.parallel.CollectionConverters._
 
 /**
- * Default relationship factory implementation.
+ * Default parallel relationship factory implementation. JVM-only.
  *
  * @author Chris de Vreeze
  */
-object DefaultRelationshipFactory extends RelationshipFactory {
+object DefaultParallelRelationshipFactory extends RelationshipFactory {
 
-  def extractRelationships(
-    taxonomy: Map[URI, TaxonomyElem],
-    arcFilter: XLinkArc => Boolean): Seq[Relationship] = {
-
-    taxonomy.keySet.toSeq.sortBy(_.toString).flatMap { uri =>
-      extractRelationshipsFromDocument(uri, taxonomy, arcFilter)
-    }
+  def extractRelationships(taxonomy: TaxonomyBase, arcFilter: XLinkArc => Boolean): Seq[Relationship] = {
+    taxonomy.rootElemMap.keySet.toSeq
+      .sortBy(_.toString)
+      .par
+      .flatMap { uri =>
+        extractRelationshipsFromDocument(uri, taxonomy, arcFilter)
+      }
+      .seq
   }
 
-  def extractRelationshipsFromDocument(
-    docUri: URI,
-    taxonomy: Map[URI, TaxonomyElem],
-    arcFilter: XLinkArc => Boolean): Seq[Relationship] = {
-
-    val rootElemOption = taxonomy.get(docUri)
+  def extractRelationshipsFromDocument(docUri: URI, taxonomy: TaxonomyBase, arcFilter: XLinkArc => Boolean): Seq[Relationship] = {
+    val rootElemOption = taxonomy.rootElemMap.get(docUri)
 
     rootElemOption.toList.flatMap { rootElem =>
       val extendedLinks =
@@ -59,9 +57,9 @@ object DefaultRelationshipFactory extends RelationshipFactory {
   }
 
   def extractRelationshipsFromExtendedLink(
-    extendedLink: ExtendedLink,
-    taxonomy: Map[URI, TaxonomyElem],
-    arcFilter: XLinkArc => Boolean): Seq[Relationship] = {
+      extendedLink: ExtendedLink,
+      taxonomy: TaxonomyBase,
+      arcFilter: XLinkArc => Boolean): Seq[Relationship] = {
 
     val labeledResourceMap = extendedLink.labeledXlinkResourceMap
     val baseUriOption = extendedLink.baseUriOption
@@ -72,10 +70,10 @@ object DefaultRelationshipFactory extends RelationshipFactory {
   }
 
   def extractRelationshipsFromArc(
-    arc: XLinkArc,
-    labeledResourceMap: Map[String, Seq[XLinkResource]],
-    parentBaseUriOption: Option[URI],
-    taxonomy: Map[URI, TaxonomyElem]): Seq[Relationship] = {
+      arc: XLinkArc,
+      labeledResourceMap: Map[String, Seq[XLinkResource]],
+      parentBaseUriOption: Option[URI],
+      taxonomy: TaxonomyBase): Seq[Relationship] = {
 
     val sourceResources =
       labeledResourceMap.getOrElse(arc.from, sys.error(s"No resource with label ${arc.from} (in ${arc.docUri})"))
@@ -93,7 +91,7 @@ object DefaultRelationshipFactory extends RelationshipFactory {
     }
   }
 
-  private def makeEndpoint(resource: XLinkResource, taxonomy: Map[URI, TaxonomyElem]): Endpoint = {
+  private def makeEndpoint(resource: XLinkResource, taxonomy: TaxonomyBase): Endpoint = {
     // First ignore "locators" to "resources"
 
     val rawResult: Endpoint =
@@ -117,10 +115,7 @@ object DefaultRelationshipFactory extends RelationshipFactory {
 
     (rawResult.taxonomyElemKey, rawResult.targetResourceOption) match {
       case (key: TaxonomyElemKeys.AnyElementKey, None) =>
-        val docUri = withoutFragment(key.key)
-        val docElem = taxonomy.getOrElse(docUri, sys.error(s"Missing document $docUri"))
-        val elem = XPointer.findElem(docElem, XPointer.parseXPointers(key.key.getFragment))
-          .getOrElse(sys.error(s"Missing element in $docUri with relative XPointer(s) ${key.key.getFragment}"))
+        val elem = taxonomy.getElemByUri(key.key)
 
         elem match {
           case res: NonKeyResource =>
@@ -131,9 +126,5 @@ object DefaultRelationshipFactory extends RelationshipFactory {
       case _ =>
         rawResult
     }
-  }
-
-  private def withoutFragment(uri: URI): URI = {
-    new URI(uri.getScheme, uri.getSchemeSpecificPart, null) // scalastyle:off null
   }
 }

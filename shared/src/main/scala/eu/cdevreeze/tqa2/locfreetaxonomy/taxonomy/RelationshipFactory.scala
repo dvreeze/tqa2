@@ -14,57 +14,52 @@
  * limitations under the License.
  */
 
-package eu.cdevreeze.tqa2.locfreetaxonomy.relationship
+package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy
 
 import java.net.URI
 
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.ExtendedLink
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkArc
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkResource
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Relationship
 
 /**
- * Relationship factory, extracting the relationships from a "taxonomy".
+ * Relationship factory, extracting the relationships from a TaxonomyBase.
  *
  * @author Chris de Vreeze
  */
 trait RelationshipFactory {
 
   /**
-   * Returns all relationships in the given "taxonomy" passing the provided arc filter.
+   * Returns all relationships in the given TaxonomyBase passing the provided arc filter.
    */
-  def extractRelationships(
-    taxonomy: Map[URI, TaxonomyElem],
-    arcFilter: XLinkArc => Boolean): Seq[Relationship]
+  def extractRelationships(taxonomy: TaxonomyBase, arcFilter: XLinkArc => Boolean): Seq[Relationship]
 
   /**
-   * Returns all relationships in the given document in the given "taxonomy" passing the provided arc filter.
+   * Returns all relationships in the given document in the given TaxonomyBase passing the provided arc filter.
    */
-  def extractRelationshipsFromDocument(
-    docUri: URI,
-    taxonomy: Map[URI, TaxonomyElem],
-    arcFilter: XLinkArc => Boolean): Seq[Relationship]
+  def extractRelationshipsFromDocument(docUri: URI, taxonomy: TaxonomyBase, arcFilter: XLinkArc => Boolean): Seq[Relationship]
 
   /**
-   * Returns all relationships in the given extended link in the given "taxonomy" passing the provided arc filter.
+   * Returns all relationships in the given extended link in the given TaxonomyBase passing the provided arc filter.
    */
   def extractRelationshipsFromExtendedLink(
-    extendedLink: ExtendedLink,
-    taxonomy: Map[URI, TaxonomyElem],
-    arcFilter: XLinkArc => Boolean): Seq[Relationship]
+      extendedLink: ExtendedLink,
+      taxonomy: TaxonomyBase,
+      arcFilter: XLinkArc => Boolean): Seq[Relationship]
 
   /**
-   * Returns all relationships (typically one) having the given underlying XLink arc in the given "taxonomy".
+   * Returns all relationships (typically one) having the given underlying XLink arc in the given TaxonomyBase.
    * For performance a mapping from XLink labels to XLink locators and resources must be provided, and this mapping
    * should be computed only once per extended link. For performance the optional parent base URI is passed as well.
    *
    * This method must respect the configuration of this RelationshipFactory.
    */
   def extractRelationshipsFromArc(
-    arc: XLinkArc,
-    labeledResourceMap: Map[String, Seq[XLinkResource]],
-    parentBaseUriOption: Option[URI],
-    taxonomy: Map[URI, TaxonomyElem]): Seq[Relationship]
+      arc: XLinkArc,
+      labeledResourceMap: Map[String, Seq[XLinkResource]],
+      parentBaseUriOption: Option[URI],
+      taxonomy: TaxonomyBase): Seq[Relationship]
 }
 
 object RelationshipFactory {

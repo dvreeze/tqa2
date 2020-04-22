@@ -25,16 +25,23 @@ import eu.cdevreeze.tqa2.common.namespaceutils.XbrlDocumentENameExtractor
 import eu.cdevreeze.tqa2.docbuilder.SimpleCatalog
 import eu.cdevreeze.tqa2.docbuilder.jvm.SaxUriResolvers
 import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
-import eu.cdevreeze.tqa2.internal.converttaxonomy.{DefaultXLinkResourceConverter, TaxonomyBaseConverter}
+import eu.cdevreeze.tqa2.internal.converttaxonomy.DefaultXLinkResourceConverter
+import eu.cdevreeze.tqa2.internal.converttaxonomy.TaxonomyBaseConverter
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
-import eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy.builder.{DefaultDtsUriCollector, DefaultTaxonomyBaseBuilder}
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DefaultRelationshipFactory
-import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.{BasicTaxonomy, TaxonomyBase}
+import eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy.builder.DefaultDtsUriCollector
+import eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy.builder.DefaultTaxonomyBaseBuilder
+import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
+import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyBase
+import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.jvm.DefaultParallelRelationshipFactory
 import eu.cdevreeze.tqa2.validate.Taxonomies
-import eu.cdevreeze.yaidom2.core.{NamespacePrefixMapper, Scope}
+import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
+import eu.cdevreeze.yaidom2.core.Scope
 import eu.cdevreeze.yaidom2.jaxp.SaxEventProducers
-import eu.cdevreeze.yaidom2.node.{indexed, saxon, simple}
-import eu.cdevreeze.yaidom2.queryapi.{BackingNodes, ScopedElemApi}
+import eu.cdevreeze.yaidom2.node.indexed
+import eu.cdevreeze.yaidom2.node.saxon
+import eu.cdevreeze.yaidom2.node.simple
+import eu.cdevreeze.yaidom2.queryapi.BackingNodes
+import eu.cdevreeze.yaidom2.queryapi.ScopedElemApi
 import net.sf.saxon.s9api.Processor
 
 /**
@@ -58,18 +65,24 @@ object TaxonomyConverter {
   private val forceSaving: Boolean = System.getProperty("forceSaving", "false").toBoolean
 
   def main(args: Array[String]): Unit = {
-    require(args.length == 3, s"Usage: TaxonomyConverter <input taxo root dir> <entrypoint URI regex> <output taxo root dir>")
+    require(
+      args.length >= 3 && args.length <= 4,
+      s"Usage: TaxonomyConverter <input taxo root dir> <output taxo root dir> <entrypoint URI regex> [ <extra file URI regex> ]"
+    )
 
     val start = System.currentTimeMillis()
 
     val inputTaxoRootDir = new File(args(0))
     require(inputTaxoRootDir.isDirectory, s"Not a directory: '$inputTaxoRootDir'")
 
-    val entrypointUriRegex: Pattern = Pattern.compile(URI.create(args(1)).toString)
-
-    val outputTaxoRootDir = new File(args(2))
+    val outputTaxoRootDir = new File(args(1))
     outputTaxoRootDir.mkdirs()
     require(outputTaxoRootDir.isDirectory, s"Not a directory: '$outputTaxoRootDir'")
+
+    val entrypointUriRegex: Pattern = Pattern.compile(URI.create(args(2)).toString)
+
+    // Regex for extra files not strictly in a DTS, such as parameter files
+    val extraFileUriRegexOption: Option[Pattern] = args.toSeq.drop(3).headOption.map(s => Pattern.compile(URI.create(s).toString))
 
     // Parsing the input taxonomy
 
@@ -84,18 +97,16 @@ object TaxonomyConverter {
 
     val reverseCatalog: SimpleCatalog = inputCatalog.reverse
 
-    def isEntrypoint(uri: URI): Boolean = entrypointUriRegex.matcher(uri.toString).matches
+    val fileUris: Set[URI] = findAllFiles(inputTaxoRootDir).map(f => reverseCatalog.getMappedUri(f.toURI)).toSet
 
-    val combinedEntrypoint: Set[URI] =
-      findAllFiles(inputTaxoRootDir)
-        .map(f => reverseCatalog.getMappedUri(f.toURI))
-        .filter(isEntrypoint)
-        .toSet
-        .ensuring(_.nonEmpty)
+    def isEntrypoint(uri: URI): Boolean = entrypointUriRegex.matcher(uri.toString).matches
+    def isExtraFile(uri: URI): Boolean = extraFileUriRegexOption.exists(_.matcher(uri.toString).matches)
+
+    val combinedEntrypoint: Set[URI] = fileUris.filter(isEntrypoint).ensuring(_.nonEmpty)
 
     val inputTaxoBase: standardtaxonomy.taxonomy.TaxonomyBase = DefaultTaxonomyBaseBuilder
       .withDocumentBuilder(docBuilder)
-      .withDtsUriCollector(DefaultDtsUriCollector.instance)
+      .withDtsUriCollector(DefaultDtsUriCollector.instanceTakingExtraFiles(fileUris.filter(isExtraFile)))
       .build(combinedEntrypoint)
 
     println(s"Successfully parsed the input taxonomy. It contains ${inputTaxoBase.rootElems.size} documents") // scalastyle:off
@@ -109,8 +120,11 @@ object TaxonomyConverter {
 
     // Converting the input taxonomy to the locator-free model
 
-    val scope: Scope = ScopedElemApi.unionScope(inputTaxoBase.rootElems)
-      .withoutDefaultNamespace.filterNamespaces(ns => !extraScope.namespaces.contains(ns)).append(extraScope)
+    val scope: Scope = ScopedElemApi
+      .unionScope(inputTaxoBase.rootElems)
+      .withoutDefaultNamespace
+      .filterNamespaces(ns => !extraScope.namespaces.contains(ns))
+      .append(extraScope)
 
     val namespacePrefixMapper: NamespacePrefixMapper =
       NamespacePrefixMapper.fromPrefixToNamespaceMapWithFallback(scope.prefixNamespaceMap)
@@ -125,10 +139,17 @@ object TaxonomyConverter {
     val outputTaxoBaseWithoutEntrypoints: TaxonomyBase =
       taxoConverter.convertTaxonomyBaseIgnoringEntrypoints(inputTaxoBase, isEntrypoint)
 
-    val outputTaxoBase: TaxonomyBase =
-      taxoConverter.addSingleDocumentEntrypoints(entrypointUriRegex, outputTaxoBaseWithoutEntrypoints, inputTaxoBase)
+    println(
+      s"Successfully converted the input taxonomy without entrypoints to a TaxonomyBase. The result contains ${outputTaxoBaseWithoutEntrypoints.rootElems.size} documents") // scalastyle:off
 
-    val outputTaxo: BasicTaxonomy = BasicTaxonomy.build(outputTaxoBase, DefaultRelationshipFactory)
+    println(s"Adding single document entrypoints for regex '$entrypointUriRegex'") // scalastyle:off
+
+    val outputTaxoBase: TaxonomyBase = taxoConverter
+      .addSingleDocumentEntrypoints(entrypointUriRegex, outputTaxoBaseWithoutEntrypoints, inputTaxoBase)
+
+    println(s"Successfully converted the input taxonomy to a TaxonomyBase. The result contains ${outputTaxoBase.rootElems.size} documents") // scalastyle:off
+
+    val outputTaxo: BasicTaxonomy = BasicTaxonomy.build(outputTaxoBase, DefaultParallelRelationshipFactory)
 
     println(s"Successfully converted the input taxonomy. The result contains ${outputTaxo.rootElems.size} documents") // scalastyle:off
 
@@ -189,7 +210,8 @@ object TaxonomyConverter {
     "ckey" -> Namespaces.CKeyNamespace,
     "cxbrldt" -> Namespaces.CXbrldtNamespace,
     "cgen" -> Namespaces.CGenNamespace,
-    "xs" -> Namespaces.XsNamespace, // Prefix "xs" should be used instead of "xsd"
+    // Prefix "xs" should be used instead of "xsd"
+    "xs" -> Namespaces.XsNamespace,
   )
 
   private def serializeTaxonomy(taxo: BasicTaxonomy, rootDir: File, catalog: SimpleCatalog): Unit = {
@@ -212,7 +234,8 @@ object TaxonomyConverter {
   private def toLocalSaxonDocument(elem: BackingNodes.Elem, catalog: SimpleCatalog): saxon.Document = {
     // Very very inefficient
     val localUri = catalog.getMappedUri(elem.docUri)
-    val doc = indexed.Document.of(simple.Document(Some(localUri), simple.Elem.from(elem)))
+    val doc = indexed.Document
+      .of(simple.Document(Some(localUri), simple.Elem.from(elem)))
       .ensuring(_.docUriOption.nonEmpty)
     val buildingContentHandler = processor.newDocumentBuilder().newBuildingContentHandler()
     SaxEventProducers.produceEventsForDocument(doc, buildingContentHandler)

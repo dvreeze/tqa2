@@ -22,9 +22,9 @@ import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.docbuilder.DocumentBuilder
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkArc
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.DefaultRelationshipFactory
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.RelationshipFactory
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
+import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.DefaultRelationshipFactory
+import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.RelationshipFactory
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyBase
 
 /**
@@ -52,7 +52,9 @@ final class DefaultTaxonomyBuilder(
    * Given an entrypoint as URI set, builds the DTS of that entrypoint, as BasicTaxonomy.
    */
   def build(entrypoint: Set[URI]): BasicTaxonomy = {
-    val dtsDocUris = dtsUriCollector.findAllDtsUris(entrypoint, { uri => TaxonomyElem(documentBuilder.build(uri).documentElement) })
+    val dtsDocUris = dtsUriCollector.findAllDtsUris(entrypoint, { uri =>
+      TaxonomyElem(documentBuilder.build(uri).documentElement)
+    })
 
     val rootElems: Seq[TaxonomyElem] =
       dtsDocUris.toSeq.sortBy(_.toString).map(u => documentBuilder.build(u)).map(d => TaxonomyElem(d.documentElement))

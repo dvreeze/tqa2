@@ -20,7 +20,6 @@ import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.Namespaces
-import eu.cdevreeze.tqa2.common.xpointer.XPointer
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
 import eu.cdevreeze.tqa2.internal.xmlutil.NodeBuilderUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
@@ -120,15 +119,9 @@ final class NonEntrypointSchemaConverter(
     val attributes: ListMap[EName, String] = inputGlobalElemDecl.attributes.map {
       case (ENames.XbrldtTypedDomainRefEName, attrValue) =>
         val ref: URI = inputGlobalElemDecl.baseUri.resolve(attrValue)
-        val docUri: URI = withoutFragment(ref)
-        val fragment: String = Option(ref.getFragment).getOrElse("")
 
-        val docElem: standardtaxonomy.dom.TaxonomyElem = inputTaxonomyBase.rootElemMap
-          .getOrElse(docUri, sys.error(s"Could not resolve URI '$docUri'"))
-
-        val typedDomainElemDecl: standardtaxonomy.dom.GlobalElementDeclaration = XPointer
-          .findElem(docElem, XPointer.parseXPointers(fragment))
-          .getOrElse(sys.error(s"Could not resolve URI '$ref'"))
+        val typedDomainElemDecl: standardtaxonomy.dom.GlobalElementDeclaration = inputTaxonomyBase
+          .getElemByUri(ref)
           .asInstanceOf[standardtaxonomy.dom.GlobalElementDeclaration]
 
         val typedDomainEName: EName = typedDomainElemDecl.targetEName
@@ -175,7 +168,23 @@ final class NonEntrypointSchemaConverter(
       e.name match {
         case ENames.LinkLinkbaseRefEName => Seq.empty
         case ENames.LinkSchemaRefEName   => Seq.empty
-        case _                           => Seq(e)
+        case ENames.LinkUsedOnEName =>
+          val targetName: EName = NameConversions.convertLinkOrResourceName(e.textAsResolvedQName)
+
+          val extraScope: PrefixedScope = targetName.namespaceUriOption
+            .map { ns =>
+              PrefixedScope.from(namespacePrefixMapper.getPrefix(ns) -> ns)
+            }
+            .getOrElse(PrefixedScope.empty)
+
+          val targetQName: QName = extraScope.getQName(targetName)
+
+          val editedElem = textElem(e.name, e.attributes, targetQName.toString, e.prefixedScope).creationApi
+            .usingNonConflictingParentScope(extraScope)
+            .underlying
+
+          Seq(editedElem)
+        case _ => Seq(e)
       }
     }
   }
@@ -207,9 +216,5 @@ final class NonEntrypointSchemaConverter(
       case _ =>
         Some(elem)
     }
-  }
-
-  private def withoutFragment(uri: URI): URI = {
-    new URI(uri.getScheme, uri.getSchemeSpecificPart, null) // scalastyle:off null
   }
 }
