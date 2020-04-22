@@ -20,7 +20,7 @@ This tight coupling among taxonomy documents has several consequences:
 - An in-memory model based on the document DOM trees would have the same tight coupling, again making it hard to reduce memory footprint while retaining closure under DTS discovery rules
 - Adding an extension taxonomy to a base taxonomy would be more complex in memory than just "adding 2 taxonomies"
 - Programmatically creating taxonomies (like test taxonomies for XBRL processing code) is harder than needed due to the complex "tangling" such software must do
-- The same is true for editing (small) taxonomies by hand, which is now close to unthinkable
+- The same is true for editing (small) taxonomies by hand, which is now much too difficult
 - XBRL taxonomy files are too hard to read in isolation, requiring tooling to make sense of them, even to developers of XBRL processing software
 
 This may not all sound too shocking, but it's a matter of scale. For example, more easily creating one test taxonomy
