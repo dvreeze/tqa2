@@ -146,7 +146,7 @@ of base sets between the 2 models is completely trivial, mapping only arc names 
 means mapping the namespace).
 
 Equivalence of relationships works pretty much the same in both models, with rather obvious differences to account
-for the difference between XLink locators and (locator-free) taxonomy element keys. And therefore, computing a
+for the difference between XLink locators and (locator-free) taxonomy element keys. Therefore, computing a
 network of relationships from a base set of relationships (by prohibition/overriding resolution) is quite similar
 in both models. Hence it should not come as a surprise that networks of relationships in both models trivially correspond to each other.
 
