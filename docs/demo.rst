@@ -55,9 +55,10 @@ Locator-free taxonomies are characterized as follows:
 - Instead of XLink locators there are *taxonomy element keys*, which are XLink resources
 - For example, *concept keys* contain the QName (of schema type xs:QName) of the concept they refer to
 - This reminds somewhat of table and formula linkbases in standard taxonomies, which also lean heavily on XLink resources and much less on XLink locators
-- Schema files in the locator-free model contain no xs:include elements, and no schemaLocation attributes on xs:import elements
+- Schema files in the locator-free model never contain any xs:include elements, and therefore they do not support chameleon schemas
+- Schema files in the locator-free model contain no schemaLocation attributes on xs:import elements
 - That is, unless they act as "entrypoints" in the locator-free model, but more about that later
-- Other than "entrypoints", all taxonomy files are "standalone" in that they contribute nothing to the DTS other than themselves
+- Other than "entrypoints", all taxonomy files are "standalone" in that they contribute nothing to a DTS other than themselves
 - After all, locator-free linkbases and "standalone" schemas contain no URI references (not even xbrldt:typedDomainRef attributes)
 
 So locators have been replaced by (mostly) semantic keys, and combining documents into a set of taxonomy documents is
@@ -129,9 +130,9 @@ This holds also for prohibition and overriding of relationships, and networks of
 this intuitively holds.
 
 First of all, arcs in both models are the same, except that the arc name may be in another namespace (but these mappings
-map uniquely to a name in both directions). So, if an arc in the standard taxonomy represents 4 relationships, then so
-does its counterpart in the corresponding locator-free taxonomy, and vice versa. Moreover, attributes like the use
-and prohibit attribute can be used in both models.
+map uniquely to a name in both directions). In particular, if an arc in the standard taxonomy represents 4 relationships, then so
+does its counterpart in the corresponding locator-free taxonomy, and vice versa (because xlink:from, xlink:to and xlink:label
+attributes are the same in both models). Moreover, attributes like the use and prohibit attribute can be used in both models.
 
 *Base sets of arcs* are grouped based on the combination of:
 
@@ -147,9 +148,9 @@ means mapping the namespace).
 Equivalence of relationships works pretty much the same in both models, with rather obvious differences to account
 for the difference between XLink locators and (locator-free) taxonomy element keys. And therefore, computing a
 network of relationships from a base set of relationships (by prohibition/overriding resolution) is quite similar
-in both models. Also, networks of relationships in both models trivially correspond to each other.
+in both models. Hence it should not come as a surprise that networks of relationships in both models trivially correspond to each other.
 
-Given that both taxonomy representations are so closely related, yet the tight coupling in standard taxonomies often
+Given that both taxonomy representations are so closely related, and that the tight coupling in standard taxonomies often
 gets in the way, would it be an idea to use locator-free taxonomies during taxonomy development and only convert to
 standard taxonomies when publishing them?
 
@@ -167,9 +168,9 @@ case, it is like this:
 
 Not so in the case of standard taxonomies, where instead of creating a concept key we need to look up the URI with (XPointer)
 fragment to the concept declaration in some schema file, and then create the XLink locator to point to that. Granted,
-the XPointer is mostly an ID, given that the concept declaration does have an ID attribute.
+the XPointer is mostly an ID, provided that the concept declaration does have an ID attribute.
 
-Yet (for concept keys, for example) choosing a namespace prefix for a namespace when programmatically creating
+Yet choosing a namespace prefix for a namespace (for concept keys, for example) when programmatically creating
 locator-free taxonomies can be cumbersome. This is not XBRL-specific, of course.
 
 So how do we programmatically create arbitrary XML with namespaces without too much effort? That's what yaidom2
@@ -179,10 +180,10 @@ administration under the hood, thus removing much of the pain of creating XML in
 There is much more to say about this, but that can be checked in the code that converts standard taxonomies to
 their locator-free counterparts. For example:
 
-- Yaidom2 DocumentENameExtractor instances are used to know about used namespaces
+- Yaidom2 DocumentENameExtractor instances are used to find out about used namespaces
 - This is used in turn to clean up created XML by removing unused namespaces
-- The element creation API avoids the default namespace, and helps in avoiding prefix-namespace conflicts (that is, the same prefix being used for more than 1 namespace in a document)
-- This makes it easier to reason about correctness of the created XML (with namespace potentially being used in attribute values and element text)
+- The element creation API avoids the default namespace, and helps in avoiding prefix-namespace "conflicts" (that is, the same prefix being used for more than 1 namespace in a document)
+- This makes it easier to reason about correctness of the created XML (with namespaces potentially being used in attribute values and element text)
 
 Entrypoints
 ===========
@@ -194,7 +195,7 @@ they have at least one xs:import element with a schemaLocation attribute or at l
 
 Multiple entrypoints should be able to refer to (much of) the same "standalone" taxonomy documents, just like
 multiple entrypoints in standard taxonomies can (directly or indirectly) refer to pretty much the same sets of documents.
-That is indeed the case.
+That is indeed the case in the locator-free model.
 
 Single-document entrypoints in the locator-free model directly sum up the complete DTS, unlike their standard taxonomy
 entrypoint counterparts. These locator-free entrypoints contain xs:import elements with schemaLocation attribute and/or
@@ -208,10 +209,10 @@ taxonomy documents. What that means for extension taxonomies is discussed in the
 
 With entrypoints summing up entire DTSes (without there being any DTS "discovery"), it is very easy to filter DTSes
 by filtering the imports and linkbaseRefs in the entrypoint. Earlier it was mentioned that labels and references may
-be uninteresting when using a taxonomy for (dimensional) instance validation. That is easy to do in the locator-free
+be uninteresting when using a taxonomy for (dimensional) instance validation. That is easily supported in the locator-free
 model: just remove the corresponding linbaseRefs. It is easy to write software to do that for us.
 
-By the way, an entrypoint may be multiple documents taken together, but the constraint mentioned above must still hold.
+By the way, an entrypoint in the locator-free model may be multiple documents taken together, but the constraint mentioned above must still hold.
 
 Extension taxonomies
 ====================
@@ -223,6 +224,8 @@ which would like to import A.
 The latter import is still possible, but without the use of a schemaLocation attribute, or else we would violate
 the "one level of URI indirection" constraint. Locator-free taxonomy validation software would check that the xs:import
 (without schemaLocation) is honored, so effectively we still have entrypoint file B pulling in entrypoint file A.
+
+TODO Rethink this part, because it seems we are abusing xs:import a bit (for importing A). Maybe a custom XML element should be introduced.
 
 The locator-free model does have its constraints, to make this all work. For example, it is expected that all schemas
 have a targetNamespace, and that xs:include does not occur, and that all schemas have a unique targetNamespace.
