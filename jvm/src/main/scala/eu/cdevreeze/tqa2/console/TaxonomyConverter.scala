@@ -153,6 +153,11 @@ object TaxonomyConverter {
       outputTaxo.findAllItemDeclarations.size == inputTaxoBase.findAllItemDeclarations.size,
       s"Input and output taxonomies not matching on number of item declarations (outside entrypoint)"
     )
+    require(
+      outputTaxo.relationships.map(_.arc).distinct.size ==
+        inputTaxoBase.rootElems.flatMap(_.filterDescendantElemsOrSelf(_.isInstanceOf[standardtaxonomy.dom.XLinkArc])).size,
+      s"Input and output taxonomies not matching on number of (underlying) arcs"
+    )
 
     // Saving the locator-free taxonomy to disk
 
