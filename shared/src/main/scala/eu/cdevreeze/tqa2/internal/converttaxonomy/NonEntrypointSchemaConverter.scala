@@ -205,7 +205,7 @@ final class NonEntrypointSchemaConverter(
         case ENames.LinkLinkbaseRefEName => Seq.empty
         case ENames.LinkSchemaRefEName   => Seq.empty
         case ENames.LinkUsedOnEName =>
-          val targetName: EName = NameConversions.convertLinkOrResourceName(e.textAsResolvedQName)
+          val targetName: EName = NameConversions.convertLinkOrResourceOrArcName(e.textAsResolvedQName)
 
           val extraScope: PrefixedScope = targetName.namespaceUriOption
             .map { ns =>

@@ -57,8 +57,12 @@ object NameConversions {
     }
   }
 
-  def convertLinkOrResourceName(inputLinkOrResourceName: EName): EName = {
-    inputLinkOrResourceName match {
+  /**
+   * Converts names in link:usedOn element text, either for role types (link or resource names) or arcrole types
+   * (arc names).
+   */
+  def convertLinkOrResourceOrArcName(inputLinkOrResourceOrArcName: EName): EName = {
+    inputLinkOrResourceOrArcName match {
       case ENames.LinkDefinitionLinkEName   => ENames.CLinkDefinitionLinkEName
       case ENames.LinkPresentationLinkEName => ENames.CLinkPresentationLinkEName
       case ENames.LinkCalculationLinkEName  => ENames.CLinkCalculationLinkEName
@@ -67,6 +71,11 @@ object NameConversions {
       case ENames.GenLinkEName              => ENames.CGenLinkEName
       case ENames.LinkLabelEName            => ENames.CLinkLabelEName
       case ENames.LinkReferenceEName        => ENames.CLinkReferenceEName
+      case ENames.LinkDefinitionArcEName    => ENames.CLinkDefinitionArcEName
+      case ENames.LinkPresentationArcEName  => ENames.CLinkPresentationArcEName
+      case ENames.LinkCalculationArcEName   => ENames.CLinkCalculationArcEName
+      case ENames.LinkLabelArcEName         => ENames.CLinkLabelArcEName
+      case ENames.LinkReferenceArcEName     => ENames.CLinkReferenceArcEName
       case n                                => n
     }
   }
