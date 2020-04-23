@@ -22,6 +22,7 @@ import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
 import eu.cdevreeze.tqa2.internal.xmlutil.NodeBuilderUtil
+import eu.cdevreeze.tqa2.internal.xmlutil.SimpleElemUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
 import eu.cdevreeze.yaidom2.core.EName
@@ -79,12 +80,29 @@ final class NonEntrypointSchemaConverter(
       namespacePrefixMapper.getPrefix(Namespaces.XbrldtNamespace) -> Namespaces.XbrldtNamespace
     )
 
-    require(
-      inputSchema.findAllDescendantElemsOrSelf.forall(_.scope.defaultNamespaceOption.isEmpty),
-      s"Currently no default namespace is allowed in any input schema (violation: ${inputSchema.docUri})"
+    val editedInputSchema: standardtaxonomy.dom.XsSchema =
+      tryToRemoveDefaultXsNamespace(inputSchema, parentScope.getPrefixForNamespace(Namespaces.XsNamespace))
+
+    convertAdaptedSchema(editedInputSchema, inputTaxonomyBase)
+  }
+
+  private def convertAdaptedSchema(
+      inputSchema: standardtaxonomy.dom.XsSchema,
+      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase): XsSchema = {
+    require(ScopedElemApi.containsNoConflictingScopes(inputSchema), s"Conflicting scopes not allowed (document ${inputSchema.docUri})")
+
+    val parentScope: PrefixedScope = PrefixedScope.from(
+      namespacePrefixMapper.getPrefix(Namespaces.XsNamespace) -> Namespaces.XsNamespace,
+      namespacePrefixMapper.getPrefix(Namespaces.XbrldtNamespace) -> Namespaces.XbrldtNamespace
     )
 
-    val tns = inputSchema.targetNamespaceOption.getOrElse(sys.error(s"Missing targetNamespace in schema '${inputSchema.docUri}''"))
+    require(
+      inputSchema.findAllDescendantElemsOrSelf.forall(_.scope.defaultNamespaceOption.isEmpty),
+      s"Currently no default namespace is allowed in any (adapted) input schema (violation: ${inputSchema.docUri})"
+    )
+
+    val tns =
+      inputSchema.targetNamespaceOption.getOrElse(sys.error(s"Missing targetNamespace in schema '${inputSchema.docUri}''"))
 
     val rawSchemaElem: nodebuilder.Elem = emptyElem(ENames.XsSchemaEName, parentScope).creationApi
       .plusAttribute(ENames.TargetNamespaceEName, tns)
@@ -107,6 +125,24 @@ final class NonEntrypointSchemaConverter(
 
     val sanitizedSchemaElem = nodeBuilderUtil.sanitize(nodebuilder.Elem.from(rawSchemaElem))
     makeSchema(inputSchema.docUriOption, sanitizedSchemaElem)
+  }
+
+  /**
+   * If the given schema consistently uses the default namespace for the XML Schema namespace, it is replaced by a prefixed
+   * namespace throughout the tree, using the given prefix. Otherwise the element is returned unaltered (taking up no costly CPU time).
+   *
+   * QName-valued element text and attribute values are also edited, if the default namespace is used.
+   */
+  private def tryToRemoveDefaultXsNamespace(inputSchema: standardtaxonomy.dom.XsSchema, xsPrefix: String): standardtaxonomy.dom.XsSchema = {
+    if (inputSchema.scope.defaultNamespaceOption.contains(Namespaces.XsNamespace)) {
+      val simpleElemUtil: SimpleElemUtil = new SimpleElemUtil(documentENameExtractor)
+
+      val simpleResultElem = simpleElemUtil.tryToRemoveDefaultXsNamespace(indexed.Elem.from(inputSchema), xsPrefix)
+      makeStandardSchema(inputSchema.docUriOption, simpleResultElem)
+    } else {
+      // Hopefully no default namespace has been used at all, so no editing is needed
+      inputSchema
+    }
   }
 
   private def convertGlobalElementDeclaration(
@@ -200,7 +236,15 @@ final class NonEntrypointSchemaConverter(
   }
 
   private def makeSchema(docUriOption: Option[URI], schemaRootElem: nodebuilder.Elem): XsSchema = {
-    TaxonomyElem(indexed.Elem.ofRoot(docUriOption, simple.Elem.from(schemaRootElem))).asInstanceOf[XsSchema]
+    makeSchema(docUriOption, simple.Elem.from(schemaRootElem))
+  }
+
+  private def makeSchema(docUriOption: Option[URI], schemaRootElem: simple.Elem): XsSchema = {
+    TaxonomyElem(indexed.Elem.ofRoot(docUriOption, schemaRootElem)).asInstanceOf[XsSchema]
+  }
+
+  private def makeStandardSchema(docUriOption: Option[URI], schemaRootElem: simple.Elem): standardtaxonomy.dom.XsSchema = {
+    standardtaxonomy.dom.TaxonomyElem(indexed.Elem.ofRoot(docUriOption, schemaRootElem)).asInstanceOf[standardtaxonomy.dom.XsSchema]
   }
 
   private def removeIfEmptyAnnotation(elem: nodebuilder.Elem): Option[nodebuilder.Elem] = {

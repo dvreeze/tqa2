@@ -150,8 +150,9 @@ object TaxonomyConverter {
     println(s"Successfully converted the input taxonomy. The result contains ${outputTaxo.rootElems.size} documents") // scalastyle:off
 
     require(
-      outputTaxo.findAllItemDeclarations.size == inputTaxoBase.findAllItemDeclarations.size,
-      s"Input and output taxonomies not matching on number of item declarations"
+      outputTaxo.filterItemDeclarations(e => !isEntrypoint(e.globalElementDeclaration.docUri)).size ==
+        inputTaxoBase.filterItemDeclarations(e => !isEntrypoint(e.globalElementDeclaration.docUri)).size,
+      s"Input and output taxonomies not matching on number of item declarations (outside entrypoint)"
     )
 
     // Saving the locator-free taxonomy to disk
