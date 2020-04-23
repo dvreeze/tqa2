@@ -48,6 +48,9 @@ final class EntrypointSchemaConverter(
   import elemCreator._
   import nodebuilder.NodeBuilderCreator._
 
+  private val nonEntrypointSchemaConverter: NonEntrypointSchemaConverter =
+    new NonEntrypointSchemaConverter(namespacePrefixMapper, documentENameExtractor)
+
   /**
    * Converts an entrypoint schema in the given (2nd parameter) TaxonomyBase to its locator-free counterparts, resulting in
    * a locator-free XsSchema returned by this function. Only "non-core" (entrypoint) schemas should be converted by this function.
@@ -122,6 +125,18 @@ final class EntrypointSchemaConverter(
             schemas.getOrElse(schemaUri, sys.error(s"Missing schema '$schemaUri'")).targetNamespaceOption.get)
           .plusAttribute(ENames.SchemaLocationEName, schemaUri.toString)
           .underlying
+      })
+      .plusChildren(inputSchema.findAllChildElems.flatMap {
+        case _: standardtaxonomy.dom.Annotation =>
+          Seq.empty
+        case _: standardtaxonomy.dom.Import =>
+          Seq.empty
+        case elemDecl: standardtaxonomy.dom.GlobalElementDeclaration =>
+          // For EBA taxonomy
+          Seq(nonEntrypointSchemaConverter.convertGlobalElementDeclaration(elemDecl, inputTaxonomyBase, parentScope))
+        case che =>
+          // TODO Make sure no default namespace is used or that it is "converted away"
+          Seq(nodebuilder.Elem.from(che).creationApi.usingNonConflictingParentScope(parentScope).underlyingElem)
       })
       .underlying
       .transformChildElemsToNodeSeq(e => removeIfEmptyAnnotation(e).toSeq)

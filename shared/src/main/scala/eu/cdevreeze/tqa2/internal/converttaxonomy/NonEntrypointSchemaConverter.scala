@@ -145,7 +145,7 @@ final class NonEntrypointSchemaConverter(
     }
   }
 
-  private def convertGlobalElementDeclaration(
+  private[converttaxonomy] def convertGlobalElementDeclaration(
       inputGlobalElemDecl: standardtaxonomy.dom.GlobalElementDeclaration,
       inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
       parentScope: PrefixedScope): nodebuilder.Elem = {
