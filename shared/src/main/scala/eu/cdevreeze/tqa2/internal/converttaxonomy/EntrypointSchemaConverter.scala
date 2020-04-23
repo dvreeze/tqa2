@@ -146,6 +146,7 @@ final class EntrypointSchemaConverter(
   }
 
   private def makeSchema(docUriOption: Option[URI], schemaRootElem: nodebuilder.Elem): XsSchema = {
+    // Indexed elements not efficient, but great for debugging
     TaxonomyElem(indexed.Elem.ofRoot(docUriOption, simple.Elem.from(schemaRootElem))).asInstanceOf[XsSchema]
   }
 

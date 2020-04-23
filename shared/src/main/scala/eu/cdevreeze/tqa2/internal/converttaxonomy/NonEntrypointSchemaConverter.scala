@@ -240,10 +240,12 @@ final class NonEntrypointSchemaConverter(
   }
 
   private def makeSchema(docUriOption: Option[URI], schemaRootElem: simple.Elem): XsSchema = {
+    // Indexed elements not efficient, but great for debugging
     TaxonomyElem(indexed.Elem.ofRoot(docUriOption, schemaRootElem)).asInstanceOf[XsSchema]
   }
 
   private def makeStandardSchema(docUriOption: Option[URI], schemaRootElem: simple.Elem): standardtaxonomy.dom.XsSchema = {
+    // Indexed elements not efficient, but great for debugging
     standardtaxonomy.dom.TaxonomyElem(indexed.Elem.ofRoot(docUriOption, schemaRootElem)).asInstanceOf[standardtaxonomy.dom.XsSchema]
   }
 

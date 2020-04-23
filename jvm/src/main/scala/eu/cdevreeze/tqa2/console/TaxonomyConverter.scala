@@ -17,7 +17,6 @@
 package eu.cdevreeze.tqa2.console
 
 import java.io.File
-import java.io.FileOutputStream
 import java.net.URI
 import java.util.regex.Pattern
 
@@ -31,20 +30,16 @@ import eu.cdevreeze.tqa2.internal.converttaxonomy.TaxonomyBaseConverter
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
 import eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy.builder.DefaultDtsUriCollector
 import eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy.builder.DefaultTaxonomyBaseBuilder
+import eu.cdevreeze.tqa2.internal.xmlutil.jvm.SaxonUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyBase
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.jvm.DefaultParallelRelationshipFactory
 import eu.cdevreeze.tqa2.validate.Taxonomies
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.core.Scope
-import eu.cdevreeze.yaidom2.jaxp.SaxEventProducers
-import eu.cdevreeze.yaidom2.node.indexed
 import eu.cdevreeze.yaidom2.node.saxon
-import eu.cdevreeze.yaidom2.node.simple
-import eu.cdevreeze.yaidom2.queryapi.BackingNodes
 import eu.cdevreeze.yaidom2.queryapi.ScopedElemApi
 import net.sf.saxon.s9api.Processor
-import net.sf.saxon.s9api.Serializer
 
 /**
  * Taxonomy converter, reading a standard taxonomy, converting it to the locator-free model, and saving it to disk.
@@ -224,38 +219,14 @@ object TaxonomyConverter {
 
     // Also the core files
     taxo.rootElems.foreach { rootElem =>
-      val saxonDoc: saxon.Document = toLocalSaxonDocument(rootElem, catalog)
+      val saxonDoc: saxon.Document = SaxonUtil.convertToSaxonDocument(rootElem, processor)
+      val localUri: URI = catalog.getMappedUri(rootElem.docUri)
 
-      val file: File = new File(catalog.getMappedUri(rootElem.docUri))
-      val encoding = "utf-8"
+      val file: File = new File(localUri)
 
       if (!file.exists() || forceSaving) {
-        // Rather weird serialization. No indent, but respecting the "ignorable" whitespace in the DOM tree.
-        // Also, making sure there is a newline after the XML declaration.
-
-        val os = new FileOutputStream(file)
-        os.write(s"""<?xml version="1.0" encoding="$encoding"?>\n""".getBytes(encoding))
-        os.flush()
-        val serializer = saxonDoc.newSerializer(os)
-        serializer.setOutputProperty(Serializer.Property.METHOD, "xml")
-        serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes")
-        serializer.setOutputProperty(Serializer.Property.ENCODING, encoding)
-        serializer.setOutputProperty(Serializer.Property.INDENT, "no")
-        serializer.serializeNode(saxonDoc.xdmNode)
-        serializer.close()
-        os.close()
+        SaxonUtil.serialize(saxonDoc, file)
       }
     }
-  }
-
-  private def toLocalSaxonDocument(elem: BackingNodes.Elem, catalog: SimpleCatalog): saxon.Document = {
-    // Very very inefficient
-    val localUri = catalog.getMappedUri(elem.docUri)
-    val doc = indexed.Document
-      .of(simple.Document(Some(localUri), simple.Elem.from(elem)))
-      .ensuring(_.docUriOption.nonEmpty)
-    val buildingContentHandler = processor.newDocumentBuilder().newBuildingContentHandler()
-    SaxEventProducers.produceEventsForDocument(doc, buildingContentHandler)
-    saxon.Document(buildingContentHandler.getDocumentNode)
   }
 }

@@ -451,6 +451,7 @@ final class LinkbaseConverter(
   }
 
   private def makeLinkbase(docUriOption: Option[URI], linkbaseRootElem: nodebuilder.Elem): Linkbase = {
+    // Indexed elements not efficient, but great for debugging
     TaxonomyElem(indexed.Elem.ofRoot(docUriOption, simple.Elem.from(linkbaseRootElem))).asInstanceOf[Linkbase]
   }
 }
