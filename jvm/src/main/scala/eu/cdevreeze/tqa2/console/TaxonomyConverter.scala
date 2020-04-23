@@ -94,7 +94,7 @@ object TaxonomyConverter {
 
     val reverseCatalog: SimpleCatalog = inputCatalog.reverse
 
-    val fileUris: Set[URI] = findAllFiles(inputTaxoRootDir).map(f => reverseCatalog.getMappedUri(f.toURI)).toSet
+    val fileUris: Set[URI] = findAllXmlFiles(inputTaxoRootDir).map(f => reverseCatalog.getMappedUri(f.toURI)).toSet
 
     def isEntrypoint(uri: URI): Boolean = entrypointUriRegex.matcher(uri.toString).matches
 
@@ -186,19 +186,21 @@ object TaxonomyConverter {
     SimpleCatalog.from(mappings)
   }
 
-  private def findAllFiles(rootDir: File): Seq[File] = {
+  private def findAllXmlFiles(rootDir: File, isXmlFile: File => Boolean = isXmlFile): Seq[File] = {
     assert(rootDir.isDirectory)
 
     rootDir.listFiles().toSeq.flatMap {
       case d if d.isDirectory =>
         // Recursive call
-        findAllFiles(d)
-      case f if f.isFile =>
+        findAllXmlFiles(d, isXmlFile)
+      case f if f.isFile && isXmlFile(f) =>
         Seq(f)
       case _ =>
         Seq.empty
     }
   }
+
+  private def isXmlFile(f: File): Boolean = f.getName.endsWith(".xml") || f.getName.endsWith(".xsd")
 
   private def extraScope: Scope = Scope.from(
     "cxl" -> Namespaces.CxlNamespace,
