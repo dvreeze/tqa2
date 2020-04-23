@@ -17,6 +17,7 @@
 package eu.cdevreeze.tqa2.console
 
 import java.io.File
+import java.io.FileOutputStream
 import java.net.URI
 import java.util.regex.Pattern
 
@@ -43,6 +44,7 @@ import eu.cdevreeze.yaidom2.node.simple
 import eu.cdevreeze.yaidom2.queryapi.BackingNodes
 import eu.cdevreeze.yaidom2.queryapi.ScopedElemApi
 import net.sf.saxon.s9api.Processor
+import net.sf.saxon.s9api.Serializer
 
 /**
  * Taxonomy converter, reading a standard taxonomy, converting it to the locator-free model, and saving it to disk.
@@ -225,11 +227,23 @@ object TaxonomyConverter {
       val saxonDoc: saxon.Document = toLocalSaxonDocument(rootElem, catalog)
 
       val file: File = new File(catalog.getMappedUri(rootElem.docUri))
+      val encoding = "utf-8"
 
       if (!file.exists() || forceSaving) {
-        val serializer = saxonDoc.newSerializer(file)
+        // Rather weird serialization. No indent, but respecting the "ignorable" whitespace in the DOM tree.
+        // Also, making sure there is a newline after the XML declaration.
+
+        val os = new FileOutputStream(file)
+        os.write(s"""<?xml version="1.0" encoding="$encoding"?>\n""".getBytes(encoding))
+        os.flush()
+        val serializer = saxonDoc.newSerializer(os)
+        serializer.setOutputProperty(Serializer.Property.METHOD, "xml")
+        serializer.setOutputProperty(Serializer.Property.OMIT_XML_DECLARATION, "yes")
+        serializer.setOutputProperty(Serializer.Property.ENCODING, encoding)
+        serializer.setOutputProperty(Serializer.Property.INDENT, "no")
         serializer.serializeNode(saxonDoc.xdmNode)
         serializer.close()
+        os.close()
       }
     }
   }

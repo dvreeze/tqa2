@@ -141,7 +141,7 @@ final class EntrypointSchemaConverter(
       .underlying
       .transformChildElemsToNodeSeq(e => removeIfEmptyAnnotation(e).toSeq)
 
-    val sanitizedSchemaElem = nodeBuilderUtil.sanitize(nodebuilder.Elem.from(rawSchemaElem))
+    val sanitizedSchemaElem = nodeBuilderUtil.sanitizeAndPrettify(nodebuilder.Elem.from(rawSchemaElem))
     makeSchema(inputSchema.docUriOption, sanitizedSchemaElem)
   }
 

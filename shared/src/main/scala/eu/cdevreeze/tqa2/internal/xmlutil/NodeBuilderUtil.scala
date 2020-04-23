@@ -72,12 +72,19 @@ final class NodeBuilderUtil(val namespacePrefixMapper: NamespacePrefixMapper, va
   }
 
   /**
-   * Calls stripUnusedNamespaceDeclarations, then pushUpPrefixedNamespaceDeclarations, and then prettify.
+   * Calls stripUnusedNamespaceDeclarations, and then pushUpPrefixedNamespaceDeclarations.
    */
-  def sanitize(elem: nodebuilder.Elem, indent: Int = 2, useTab: Boolean = false, newLine: String = "\n"): nodebuilder.Elem = {
+  def sanitize(elem: nodebuilder.Elem): nodebuilder.Elem = {
     elem
       .pipe(stripUnusedNamespaceDeclarations)
       .pipe(pushUpPrefixedNamespaceDeclarations)
+  }
+
+  /**
+   * Calls sanitize, and then prettify.
+   */
+  def sanitizeAndPrettify(elem: nodebuilder.Elem, indent: Int = 2, useTab: Boolean = false, newLine: String = "\n"): nodebuilder.Elem = {
+    sanitize(elem)
       .pipe(e => prettify(e, indent, useTab, newLine))
   }
 

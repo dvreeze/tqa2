@@ -102,7 +102,7 @@ final class LinkbaseConverter(
         convertAndAddExtendedLink(extLink, inputTaxonomyBase, accLinkbase)
     }
 
-    val sanitizedLinkbaseElem = nodeBuilderUtil.sanitize(nodebuilder.Elem.from(rawLinkbase))
+    val sanitizedLinkbaseElem = nodeBuilderUtil.sanitizeAndPrettify(nodebuilder.Elem.from(rawLinkbase))
     makeLinkbase(startLinkbase.docUriOption, sanitizedLinkbaseElem)
   }
 
