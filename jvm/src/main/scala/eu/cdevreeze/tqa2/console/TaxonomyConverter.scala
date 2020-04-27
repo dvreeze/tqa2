@@ -30,7 +30,6 @@ import eu.cdevreeze.tqa2.internal.converttaxonomy.TaxonomyBaseConverter
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
 import eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy.builder.DefaultDtsUriCollector
 import eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy.builder.DefaultTaxonomyBaseBuilder
-import eu.cdevreeze.tqa2.internal.xmlutil.jvm.SaxonUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyBase
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.jvm.DefaultParallelRelationshipFactory
@@ -38,6 +37,8 @@ import eu.cdevreeze.tqa2.validate.Taxonomies
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.core.Scope
 import eu.cdevreeze.yaidom2.node.saxon
+import eu.cdevreeze.yaidom2.node.saxon.SaxonProducers
+import eu.cdevreeze.yaidom2.node.saxon.SaxonSerializer
 import eu.cdevreeze.yaidom2.queryapi.ScopedElemApi
 import net.sf.saxon.s9api.Processor
 
@@ -219,13 +220,14 @@ object TaxonomyConverter {
 
     // Also the core files
     taxo.rootElems.foreach { rootElem =>
-      val saxonDoc: saxon.Document = SaxonUtil.convertToSaxonDocument(rootElem, processor)
+      val saxonDoc: saxon.Document =
+        SaxonProducers.makeDocument(SaxonProducers.elementProducer(processor).from(rootElem))
       val localUri: URI = catalog.getMappedUri(rootElem.docUri)
 
       val file: File = new File(localUri)
 
       if (!file.exists() || forceSaving) {
-        SaxonUtil.serialize(saxonDoc, file)
+        SaxonSerializer.serialize(saxonDoc, file)
       }
     }
   }
