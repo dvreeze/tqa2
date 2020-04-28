@@ -255,11 +255,12 @@ Which taxonomies can be represented?
 ====================================
 
 As mentioned earlier, not all XBRL-valid taxonomies can be represented in the locator-free model. For example, the use of
-xs:include is not allowed. This should hardly be a restriction in practice. After all, suppose that in a standard taxonomy an XLink
-locator refers to a global element declaration in a chameleon schema, what would that even mean? It could refer to one concept,
-which is only known after "resolving" the xs:include (so that's even less local reasoning than is normally the case when
-interpreting arcs with locators). Even worse, it could point to a collection of concepts (in different namespaces)! No wonder xs:include
-should not be used in taxonomies (neither in standard taxonomies nor in their locator-free counterparts, if there were any).
+xs:include is not allowed, and therefore chameleon schemas are not allowed. This should hardly be a restriction in practice.
+After all, suppose that in a standard taxonomy an XLink locator refers to a global element declaration in a chameleon schema,
+what would that even mean? It could refer to one concept, which is only known after "resolving" the xs:include (so that's even less
+local reasoning than is normally the case when interpreting arcs with locators). Even worse, it could point to a collection of
+concepts (in different namespaces)! No wonder xs:include should not be used in taxonomies (neither in standard taxonomies nor
+in their locator-free counterparts, if there were any).
 
 It is not a far stretch to go from the requirement of not using xs:include to the requirement that all schemas must have a
 target namespace. That would be helpful, because namespaces play an important role in the locator-free model, for example in
