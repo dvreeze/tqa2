@@ -128,7 +128,7 @@ object EntrypointSchemaValidations {
         .filter { docElem =>
           val importedDocUris: Set[URI] = docElem
             .filterDescendantElems(_.name == ENames.XsImportEName)
-            .flatMap(_.attrOption(ENames.XsiSchemaLocationEName))
+            .flatMap(_.attrOption(ENames.SchemaLocationEName))
             .map(URI.create)
             .toSet
 
