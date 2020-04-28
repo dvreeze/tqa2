@@ -17,15 +17,18 @@
 package eu.cdevreeze.tqa2.validate.rules
 
 import eu.cdevreeze.tqa2.ENames
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.GlobalElementDeclaration
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.validate.Rule
 import eu.cdevreeze.tqa2.validate.Taxonomies
 import eu.cdevreeze.tqa2.validate.Validation
 import eu.cdevreeze.tqa2.validate.ValidationResult
+import eu.cdevreeze.yaidom2.core.EName
 
 /**
- * Taxonomy schema validations.
+ * Taxonomy schema validations, checking that xs:include is not used, that all schemas have unique target namespaces,
+ * that xbrldt:typedDomainRef is not used, and that all cxbrldt:typedDomainKey attributes are not "dead" links.
  *
  * @author Chris de Vreeze
  */
@@ -35,9 +38,11 @@ object SchemaValidations {
 
   val tnsRequiredRule: Rule = "Missing targetNamespace attribute"
 
+  val tnsUniqueRule: Rule = "Non-unique targetNamespace attribute across schemas"
+
   val typedDomainRefNotAllowedRule: Rule = "Attribute xbrldt:typedDomainRef not allowed"
 
-  val tnsUniqueRule: Rule = "Non-unique targetNamespace attribute across schemas"
+  val missingTypedDomainRule: Rule = "Missing typed domain"
 
   object IncludeNotAllowed extends Validation {
 
@@ -74,20 +79,6 @@ object SchemaValidations {
     }
   }
 
-  object TypedDomainRefNotAllowed extends Validation {
-
-    def rule: Rule = typedDomainRefNotAllowedRule
-
-    def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
-      val violatingElems = taxo.findAllXsdSchemas
-        .filter(Taxonomies.isProperTaxonomyDocumentContent)
-        .flatMap(_.filterGlobalElementDeclarations(_.attrOption(ENames.XbrldtTypedDomainRefEName).nonEmpty))
-
-      violatingElems.map(_.docUri).distinct
-        .map(uri => ValidationResult(rule, "Concept declarations with xbrdt:typedDomainRef attribute found but not allowed", uri))
-    }
-  }
-
   /**
    * Validation that checks that all schemas (with target namespace) have a unique target namespace, so that no 2 schemas have the
    * same target namespace.
@@ -112,5 +103,43 @@ object SchemaValidations {
     }
   }
 
-  val all: Seq[Validation] = Seq(IncludeNotAllowed, MissingTargetNamespace, TypedDomainRefNotAllowed, NonUniqueTargetNamespace)
+  object TypedDomainRefNotAllowed extends Validation {
+
+    def rule: Rule = typedDomainRefNotAllowedRule
+
+    def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
+      val violatingElems = taxo.findAllXsdSchemas
+        .filter(Taxonomies.isProperTaxonomyDocumentContent)
+        .flatMap(_.filterGlobalElementDeclarations(_.attrOption(ENames.XbrldtTypedDomainRefEName).nonEmpty))
+
+      violatingElems
+        .map(_.docUri)
+        .distinct
+        .map(uri => ValidationResult(rule, "Concept declarations with xbrdt:typedDomainRef attribute found but not allowed", uri))
+    }
+  }
+
+  object MissingTypedDomain extends Validation {
+
+    def rule: Rule = missingTypedDomainRule
+
+    def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
+      val typedDimensions: Seq[GlobalElementDeclaration] = taxo.rootElems
+        .filter(Taxonomies.isProperTaxonomyDocumentContent)
+        .flatMap(_.filterDescendantElemsOrSelf(_.name == ENames.XsElementEName))
+        .filter(_.attrOption(ENames.CXbrldtTypedDomainKeyEName).nonEmpty)
+        .collect { case elemDecl: GlobalElementDeclaration => elemDecl }
+
+      val missingTypedDomains: Seq[EName] =
+        typedDimensions
+          .map(_.attrAsResolvedQName(ENames.CXbrldtTypedDomainKeyEName))
+          .distinct
+          .filter(e => taxo.findGlobalElementDeclaration(e).isEmpty)
+
+      missingTypedDomains.map(e => ValidationResult(rule, "Missing typed domain", e))
+    }
+  }
+
+  val all: Seq[Validation] =
+    Seq(IncludeNotAllowed, MissingTargetNamespace, NonUniqueTargetNamespace, TypedDomainRefNotAllowed, MissingTypedDomain)
 }

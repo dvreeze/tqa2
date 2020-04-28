@@ -97,7 +97,7 @@ object LocatorFreeTaxonomyLoader {
       .appendedAll(TaxoDocumentValidations.all)
       .appendedAll(TaxoElemKeyValidations.all)
       .appendedAll(NamespaceValidations.all)
-      .appendedAll(EntrypointSchemaValidations.all(Set(entrypointUri)))
+      .appendedAll(EntrypointSchemaValidations.all)
 
     val validationResults: Seq[ValidationResult] = Validator.validate(taxo, validations)
 

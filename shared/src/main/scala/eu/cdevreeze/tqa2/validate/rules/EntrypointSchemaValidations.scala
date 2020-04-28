@@ -19,7 +19,7 @@ package eu.cdevreeze.tqa2.validate.rules
 import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.LinkbaseRef
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.validate.Rule
 import eu.cdevreeze.tqa2.validate.Taxonomies
@@ -27,135 +27,131 @@ import eu.cdevreeze.tqa2.validate.Validation
 import eu.cdevreeze.tqa2.validate.ValidationResult
 
 /**
- * Entrypoint schema validations, as well as validations for non-entrypoint schemas.
+ * "Entrypoint schema validations", checking for at most one level of "incompleteness", and checking that xs:import
+ * schemaLocations and clink:linkbaseRefs in incomplete documents are not "dead" links.
  *
- * In the locator-free model, most taxonomy documents (schemas and loc-free linkbases) contain no URI references. That is,
- * they contain no schemaLocation attributes in xs:import elements, no xbrldt:typedDomainRef attributes (but an alternative
- * without any URI reference), and certainly no XLink locators and simple links. Yet "entrypoint schemas" should contain
- * URI references, to all (other) documents in the entire DTS. So they are the exception to the rule that in the locator-free
- * model there are no URI references anywhere.
+ * In the locator-free model, there are 2 kinds of schema documents, namely standalone ones and incomplete ones.
+ * The standalone ones contain no xs:import elements with schemaLocation attribute, and no clink:linkbaseRef elements.
+ * Schem documents that are not standalone are called incomplete. Generalizing to any taxonomy document, a standalone
+ * document is either a standalone schema, or any locator-free linkbase (which is by definition standalone). An incomplete
+ * document is any document that is not standalone (and therefore an incomplete schema).
  *
- * Let's first define the notion of a "proper entrypoint schema". Regardless of whether the document is used as an entrypoint
- * of any DTS or not, a proper entrypoint schema is any (non-core) loc-free taxonomy schema in which there is at least one xs:import element
- * that contains a schemaLocation attribute, or in which there is at least one loc-free linkbaseRef (which is not an XLink
- * simple link, unlike its counterpart in regular taxonomies).
+ * Note that standalone documents have no URL references at all. There are no XLink locators, no XLink simple links,
+ * no xs:include elements, no xbrldt:typedDomainRef attributes, etc.
  *
- * An entrypoint of a DTS may contain any (non-core) taxonomy document (such as a formula linkbase), but only proper entrypoint schemas
- * contribute more to the DTS than themselves. Locator-free linkbases never contribute more to the DTS than themselves.
+ * The locator-free model allows for only "one level of incompleteness". That is, an incomplete schema must refer only
+ * to standalone documents via xs:import schemaLocation attributes or clink:linkbaseRef hrefs, and not to other incomplete
+ * documents.
  *
- * In the locator-free model, it is required that "DTS discovery" is no more involved than combining the entrypoint documents,
- * and, for proper entrypoint schemas, combining their directly referenced schemas and linkbases as well. It is not allowed
- * for (proper) entrypoint schemas to refer to other (proper entrypoint) schemas, that in turn contribute more documents to
- * the DTS. So, in the locator-free model, "DTS discovery" is a trivial non-recursive process which involves no more documents
- * to analyze than just the documents making up the entrypoint. It has to be such a trivial process, or otherwise we quickly
- * get back to the tangled web of documents in a DTS that we tried so hard to avoid in the locator-free model.
+ * Entrypoint documents in the locator-free model are typically incomplete documents, although this is not necessarily the case.
  *
- * But how does this help support extension taxonomies? See below for more on that.
+ * The most common case is to have precisely one entrypoint document making yp an entrypoint. In that case the entrypoint
+ * document would be an incomplete schema, and all other (schema and locator-free linkbase) documents would be standalone.
+ * The incomplete entrypoint document would refer to all other documents in the DTS in that case. Indeed, in the locator-free
+ * model there is no such thing as DTS discovery (other then summing up the entire DTS in incomplete doucments).
  *
- * Let's give some example DTS entrypoint scenarios, as supported by the locator-free model.
+ * Another scenario is to have an entrypoint that consists of a "real entrypoint document", which is an incomplete schema
+ * document, and one or more standalone documents that are formula linkbases, for example. In this case, as in the most
+ * common case, there is just one incomplete document, and the rule mentioned above would trivially hold.
  *
- * The most common scenario is that of one proper entrypoint schema used as the entrypoint of the DTS. It contains xs:import
- * elements with schemaLocations referring to all other schemas in the DTS, as well as (locator-free) linkbaseRefs to all
- * (locator-free) linkbases in the DTS. In this scenario, all other schemas are required to be no proper entrypoint schemas,
- * so they do not contain any URI references.
+ * Another scenario is extension taxonomies. There would be one "stable" entrypoint document, which is an incomplete
+ * document. There would also be an extension entrypoint document, which would also be an incomplete document. We would
+ * like to have the 2nd document refer to the first one, but that would violate the above-mentioned rule if an xs:import
+ * with schemaLocation attribute were used for that. So we would use an xs:import without schemaLocation attribute
+ * to have the 2nd entrypoint document refer to the first one. "The system" would enforce that the namespace in this
+ * xs:import element would be the target namespace of some document, and that would indeed be the case, since the first
+ * document indeed has that target namespace. The entrypoint would then be both incomplete documents taken together,
+ * and together they would indeed sum up the entire DTS (except for these 2 documents themselves).
  *
- * A common scenario during taxonomy development is that of one proper entrypoint schema, along with a formula linkbase (or
- * table linkbase, etc.), both together making up the entrypoint of the DTS. Again, all other schemas must contain no URI
- * references, in particular no xs:import schemaLocation attributes.
- *
- * Another scenario is extension taxonomies. We would like to express that an entrypoint schema not only refers to some
- * extension taxonomy documents, but also to an underlying entrypoint that pulls in most of the DTS. We cannot do that,
- * unfortunately, due to the restriction above that entrypoints cannot refer to other entrypoints via URI references.
- * What we can do, however, is the following: the extension taxonomy proper entrypoint schema contains xs:import elements
- * with schemaLocation (as well as linkbaseRefs) for the extension documents, and one xs:import element without schemaLocation
- * (but with namespace, of course) for the underlying entrypoint. This underlying entrypoint is the second proper entrypoint
- * schema, which refers to the underlying DTS, to be combined with the extension. In other words, the entrypoint is 2 proper
- * entrypoint schemas, "joined" (as in database joins) on the target namespace, and not on any URI reference.
- *
- * This leads to additional validations. If a proper entrypoint schema is part of the entrypoint of a DTS, it must have
- * schemaLocation attributes in all its xs:import elements, except for the "joined" (proper) entrypoint schemas, joined on
- * target namespace.
- *
- * In summary, like for regular taxonomies there are multiple possible schemes for (single or multiple) document entrypoints,
- * but unlike regular taxonomies there are restrictions in place that limit URI references only to (proper) entrypoints.
+ * Note that the "one level of incompletenss" rule also rules out any circular dependencies among documents.
  *
  * @author Chris de Vreeze
  */
 object EntrypointSchemaValidations {
 
-  val importSchemaLocationNotAllowedInNonEntrypointRule: Rule = "Attribute schemaLocation not allowed in xs:import in non-entrypoints"
+  val missingImportTarget = "Missing target of xs:import schemaLocation"
 
-  val linkbaseRefNotAllowedInNonEntrypointRule: Rule = "LinkbaseRef not allowed in non-entrypoints"
+  val missingCLinkbaseRefTarget = "Missing target of clink:LinkbaseRef href"
 
-  val importSchemaLocationToEntrypointSchemaNotAllowedInEntrypointRule: Rule =
-    "Attribute schemaLocation referring to other entrypoint schema not allowed in xs:import in entrypoints"
+  val incompleteDocReferringToAnotherIncompleteDocNotAllowedRule = "Incomplete documents must only refer to standalone documents"
 
   // TODO Entrypoint completeness check, in that entrypoint xs:import elements without schemaLocation "join" with other schemas in the entrypoint
 
-  final case class ImportSchemaLocationNotAllowedInNonEntrypoint(entrypoint: Set[URI]) extends Validation {
+  object MissingImportTarget extends Validation {
 
-    def rule: Rule = importSchemaLocationNotAllowedInNonEntrypointRule
+    def rule: Rule = missingImportTarget
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
-      val violatingImports = taxo.findAllXsdSchemas
+      val importTargets: Seq[URI] = taxo.rootElems
         .filter(Taxonomies.isProperTaxonomyDocumentContent)
-        .filterNot(e => entrypoint.contains(e.docUri))
-        .flatMap(_.findAllImports)
-        .filter(_.attrOption(ENames.SchemaLocationEName).nonEmpty)
+        .flatMap(_.filterDescendantElems(_.name == ENames.XsImportEName))
+        .flatMap(_.attrOption(ENames.SchemaLocationEName))
+        .map(URI.create)
+        .distinct
 
-      violatingImports.map(_.docUri).distinct.map { uri =>
-        ValidationResult(rule, "Attribute schemaLocation found but not allowed in xs:import in non-entrypoint", uri)
-      }
+      val missingImportTargets = importTargets.filter(uri => taxo.taxonomyBase.rootElemMap.get(uri).isEmpty)
+
+      missingImportTargets.sortBy(_.toString).map(uri => ValidationResult(rule, "Missing target of xs:import", uri))
     }
   }
 
-  final case class LinkbaseRefNotAllowedInNonEntrypoint(entrypoint: Set[URI]) extends Validation {
+  object MissingLinkbaseTarget extends Validation {
 
-    def rule: Rule = linkbaseRefNotAllowedInNonEntrypointRule
+    def rule: Rule = missingCLinkbaseRefTarget
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
-      val linkbaseRefs = taxo.findAllXsdSchemas
+      val linkbaseRefTargets: Seq[URI] = taxo.rootElems
         .filter(Taxonomies.isProperTaxonomyDocumentContent)
-        .filterNot(e => entrypoint.contains(e.docUri))
         .flatMap(_.filterDescendantElems(_.name == ENames.CLinkLinkbaseRefEName))
-        .collect { case e: LinkbaseRef => e }
+        .flatMap(_.attrOption(ENames.HrefEName))
+        .map(URI.create)
+        .distinct
 
-      linkbaseRefs.map(_.docUri).distinct.map { uri =>
-        ValidationResult(rule, "LinkbaseRef found but not allowed in non-entrypoint", uri)
-      }
+      val missingLinkbaseRefTargets = linkbaseRefTargets.filter(uri => taxo.taxonomyBase.rootElemMap.get(uri).isEmpty)
+
+      missingLinkbaseRefTargets.sortBy(_.toString).map(uri => ValidationResult(rule, "Missing target of clink:linkbaseRef", uri))
     }
   }
 
-  /**
-   * Validation that checks that entrypoint schemas do not refer (via schemaLocations) to other schemas in the same entrypoint.
-   * Along with the validations that check that schemas outside the entrypoint contain neither linkbaseRefs nor xs:import schemaLocations,
-   * it is made sure that no schemas refer to other schemas that refer to linkbases or other schemas.
-   */
-  final case class ImportSchemaLocationToOtherEntrypointSchemaNotAllowedInEntrypoint(entrypoint: Set[URI]) extends Validation {
+  object IncompleteDocReferringToAnotherIncompleteDocNotAllowed extends Validation {
 
-    def rule: Rule = importSchemaLocationToEntrypointSchemaNotAllowedInEntrypointRule
+    def rule: Rule = incompleteDocReferringToAnotherIncompleteDocNotAllowedRule
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
-      val violatingImports = taxo.findAllXsdSchemas
+      val incompleteDocs: Seq[TaxonomyElem] = taxo.rootElems
         .filter(Taxonomies.isProperTaxonomyDocumentContent)
-        .filter(e => entrypoint.contains(e.docUri))
-        .flatMap(_.findAllImports)
-        .filter(e => e.attrOption(ENames.SchemaLocationEName).exists(u => entrypoint.contains(e.baseUri.resolve(URI.create(u)))))
+        .filter(e => Taxonomies.canBeIncompleteLocFreeDocument(e))
 
-      violatingImports.map(_.docUri).distinct.map { uri =>
-        ValidationResult(
-          rule,
-          "Attribute schemaLocation referring to other entrypoint schema found but not allowed in xs:import in entrypoint",
-          uri)
+      val incompleteDocUris: Set[URI] = incompleteDocs.map(_.docUri).toSet
+
+      val violatingDocs = incompleteDocs
+        .filter { docElem =>
+          val importedDocUris: Set[URI] = docElem
+            .filterDescendantElems(_.name == ENames.XsImportEName)
+            .flatMap(_.attrOption(ENames.XsiSchemaLocationEName))
+            .map(URI.create)
+            .toSet
+
+          val referendedLinkbaseUris: Set[URI] = docElem
+            .filterDescendantElems(_.name == ENames.CLinkLinkbaseRefEName)
+            .flatMap(_.attrOption(ENames.HrefEName))
+            .map(URI.create)
+            .toSet
+
+          val referencedDocUris: Set[URI] = importedDocUris.union(referendedLinkbaseUris)
+
+          val referencedDocs: Seq[TaxonomyElem] = referencedDocUris.toSeq.flatMap(uri => taxo.taxonomyBase.rootElemMap.get(uri))
+
+          referencedDocs.filter(e => incompleteDocUris.contains(e.docUri)).nonEmpty
+        }
+
+      violatingDocs.map(_.docUri).distinct.map { uri =>
+        ValidationResult(rule, "Incomplete document referring to another incomplete document not allowed", uri)
       }
     }
   }
 
-  def all(entrypoint: Set[URI]): Seq[Validation] = {
-    Seq(
-      ImportSchemaLocationNotAllowedInNonEntrypoint(entrypoint),
-      LinkbaseRefNotAllowedInNonEntrypoint(entrypoint),
-      ImportSchemaLocationToOtherEntrypointSchemaNotAllowedInEntrypoint(entrypoint)
-    )
+  val all: Seq[Validation] = {
+    Seq(MissingImportTarget, MissingLinkbaseTarget, IncompleteDocReferringToAnotherIncompleteDocNotAllowed)
   }
 }

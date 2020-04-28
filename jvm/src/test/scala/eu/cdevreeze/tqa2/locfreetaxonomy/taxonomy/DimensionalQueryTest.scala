@@ -20,13 +20,9 @@ import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.locfreetaxonomy.DimensionalConformanceSuiteUtil
+import eu.cdevreeze.tqa2.validate.rules._
 import eu.cdevreeze.tqa2.validate.Validation
 import eu.cdevreeze.tqa2.validate.Validator
-import eu.cdevreeze.tqa2.validate.rules.EntrypointSchemaValidations
-import eu.cdevreeze.tqa2.validate.rules.SchemaValidations
-import eu.cdevreeze.tqa2.validate.rules.TaxoDocumentValidations
-import eu.cdevreeze.tqa2.validate.rules.TaxoElemKeyValidations
-import eu.cdevreeze.tqa2.validate.rules.XLinkValidations
 import eu.cdevreeze.yaidom2.core.EName
 import net.sf.saxon.s9api.Processor
 import org.scalatest.funsuite.AnyFunSuite
@@ -107,6 +103,6 @@ class DimensionalQueryTest extends AnyFunSuite {
       .appendedAll(SchemaValidations.all)
       .appendedAll(TaxoDocumentValidations.all)
       .appendedAll(TaxoElemKeyValidations.all)
-      .appendedAll(
-        EntrypointSchemaValidations.all(DimensionalConformanceSuiteUtil.findAllUrisOfEntrypoint(Seq(URI.create(relativeFilePath)))))
+      .appendedAll(EntrypointSchemaValidations.all)
+      .appendedAll(NamespaceValidations.all)
 }

@@ -28,7 +28,8 @@ import eu.cdevreeze.tqa2.validate.Validation
 import eu.cdevreeze.tqa2.validate.ValidationResult
 
 /**
- * XLink-related validations.
+ * XLink-related validations, checking that neither locators nor simple links are used, and that the arcs point
+ * to existing XLink resources within the same extended link.
  *
  * @author Chris de Vreeze
  */
@@ -38,9 +39,9 @@ object XLinkValidations {
 
   val simpleLinkNotAllowedRule: Rule = "XLink simple link not allowed"
 
-  val missingArcFrom: Rule = "Missing arc 'from'"
+  val missingArcFromRule: Rule = "Missing arc 'from'"
 
-  val missingArcTo: Rule = "Missing arc 'to'"
+  val missingArcToRule: Rule = "Missing arc 'to'"
 
   object LocatorNotAllowed extends Validation {
 
@@ -97,14 +98,14 @@ object XLinkValidations {
 
   object MissingArcFrom extends MissingArcFromOrTo {
 
-    def rule: Rule = missingArcFrom
+    def rule: Rule = missingArcFromRule
 
     protected def isForArcFrom: Boolean = true
   }
 
   object MissingArcTo extends MissingArcFromOrTo {
 
-    def rule: Rule = missingArcTo
+    def rule: Rule = missingArcToRule
 
     protected def isForArcFrom: Boolean = false
   }

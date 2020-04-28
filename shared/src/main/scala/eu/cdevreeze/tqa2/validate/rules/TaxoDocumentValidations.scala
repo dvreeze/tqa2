@@ -24,25 +24,42 @@ import eu.cdevreeze.tqa2.validate.Validation
 import eu.cdevreeze.tqa2.validate.ValidationResult
 
 /**
- * Taxonomy document validations, whether the document is a schema or linkbase.
+ * Taxonomy document validations, checking whether the document is a schema or linkbase, and checking that
+ * xsi:schemaLocation is not used.
  *
  * @author Chris de Vreeze
  */
 object TaxoDocumentValidations {
 
+  val mustBeSchemaOrLinkbaseRule: Rule = "Taxonomy document must be xs:schema or clink:linkbase"
+
   val xsiSchemaLocationNotAllowedRule: Rule = "Attribute xsi:schemaLocation not allowed"
+
+  object OnlySchemaAndLocfreeLinkbasesAllowed extends Validation {
+
+    def rule: Rule = mustBeSchemaOrLinkbaseRule
+
+    def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
+      val violatingElems = taxo.rootElems
+        .filter(Taxonomies.isProperTaxonomyDocumentContent)
+        .filter(e => e.name != ENames.XsSchemaEName && e.name != ENames.CLinkLinkbaseEName)
+
+      violatingElems.map(_.docUri).distinct.map(uri => ValidationResult(rule, "neither an xs:schema nor a clink:linkbase", uri))
+    }
+  }
 
   object XsiSchemaLocationNotAllowed extends Validation {
 
     def rule: Rule = xsiSchemaLocationNotAllowedRule
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
-      val violatingElems = taxo.rootElems.filter(Taxonomies.isProperTaxonomyDocumentContent)
+      val violatingElems = taxo.rootElems
+        .filter(Taxonomies.isProperTaxonomyDocumentContent)
         .flatMap(_.filterDescendantElemsOrSelf(_.attrOption(ENames.XsiSchemaLocationEName).nonEmpty))
 
       violatingElems.map(_.docUri).distinct.map(uri => ValidationResult(rule, "xsi:schemaLocation attributes found but not allowed", uri))
     }
   }
 
-  val all: Seq[Validation] = Seq(XsiSchemaLocationNotAllowed)
+  val all: Seq[Validation] = Seq(OnlySchemaAndLocfreeLinkbasesAllowed, XsiSchemaLocationNotAllowed)
 }

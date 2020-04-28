@@ -18,11 +18,12 @@ package eu.cdevreeze.tqa2.validate
 
 import java.net.URI
 
+import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 
 /**
  * Utility object with functions that offer some "knowledge" about locator-free taxonomies. This utility can also
- * be used for standard taxonomy files.
+ * be used for standard taxonomy files, unless mentioned otherwise.
  *
  * @author Chris de Vreeze
  */
@@ -51,5 +52,37 @@ object Taxonomies {
 
   def isProperTaxonomyDocumentContent(taxoElem: TaxonomyElem): Boolean = {
     isProperTaxonomyDocumentUri(taxoElem.docUri)
+  }
+
+  def canBeLocFreeDocument(taxoElem: TaxonomyElem): Boolean = {
+    taxoElem.name == ENames.XsSchemaEName || taxoElem.name == ENames.CLinkLinkbaseEName
+  }
+
+  /**
+   * Returns true if this document is standalone according to the locator-free model. That is, returns true
+   * if method canBeLocFreeDocument returns true and all xs:import elements have no schemaLocation attribute
+   * and there are no clink:linkbaseRef elements.
+   */
+  def canBeStandaloneLocFreeDocument(taxoElem: TaxonomyElem): Boolean = {
+    canBeLocFreeDocument(taxoElem) && {
+      taxoElem.filterDescendantElems { e =>
+        (e.name == ENames.XsImportEName && e.attrOption(ENames.SchemaLocationEName).nonEmpty) ||
+        (e.name == ENames.CLinkLinkbaseRefEName)
+      }.isEmpty
+    }
+  }
+
+  /**
+   * Returns true if this document is incomplete according to the locator-free model. That is, returns true
+   * if method canBeLocFreeDocument returns true, and either at least one xs:import elements has a schemaLocation attribute
+   * or there is at least one clink:linkbaseRef element.
+   */
+  def canBeIncompleteLocFreeDocument(taxoElem: TaxonomyElem): Boolean = {
+    canBeLocFreeDocument(taxoElem) && {
+      taxoElem.filterDescendantElems { e =>
+        (e.name == ENames.XsImportEName && e.attrOption(ENames.SchemaLocationEName).nonEmpty) ||
+        (e.name == ENames.CLinkLinkbaseRefEName)
+      }.nonEmpty
+    }
   }
 }
