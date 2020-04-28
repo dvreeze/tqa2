@@ -5,14 +5,17 @@ Locator-free taxonomies
 Why do we need a locator-free model?
 ====================================
 
-XBRL taxonomies in their standard XML format are rich metadata representations for XBRL instances
-conforming to them, even more so if these taxonomies contain formula and table linkbases.
+XBRL is a rich set of standards, especially regarding XBRL taxonomies (the metadata describing
+XBRL instance data). This is especially true if taxonomies contain formula and table linkbases.
+The XML representation of XBRL taxonomies is quite verbose, however. Still, that is not the main problem
+with XBRL taxonomies (in XML format).
 
-Yet the documents making up a taxonomy are hard to decouple from each other. The URI references in XLink locators,
+The real issue is that the documents making up a taxonomy are hard to decouple from each other. The URL references in XLink locators,
 XLink simple links and xs:import schemaLocation attributes lead to many (often circular) dependencies across taxonomy
-documents. Part of the reason is that taxonomy documents play 2 different roles: carry semantics, and contribute
-to DTS (discoverable taxonomy set) discovery. To put it differently, standard XBRL taxonomies in XML format do not
-promote local reasoning about their content.
+documents. One of the reasons for this "dependency mess" is that taxonomy documents play 2 different roles: carry semantics, and contribute
+to DTS (discoverable taxonomy set) discovery. Another reason is that in order to interpret even one XLink arc we may have to
+consult multiple XML documents (if XLink locators are used). Hence, to put it differently, standard XBRL taxonomies in XML format
+*do not promote local reasoning* about their content.
 
 This tight coupling among taxonomy documents has several consequences:
 
@@ -39,6 +42,10 @@ It turns out that this is the case. An alternative XML taxonomy representation i
 
 We dubbed this model the locator-free taxonomy model.
 
+Note that in order to convert a locator-free taxonomy back to a standard taxonomy the URL dependencies have to be inserted
+again, but at least that is a local challenge (possibly supported by pluggable heuristics) instead of an issue that plays up
+all of the time.
+
 The locator-free model
 ======================
 
@@ -59,7 +66,7 @@ Locator-free taxonomies are characterized as follows:
 - Schema files in the locator-free model contain no schemaLocation attributes on xs:import elements
 - That is, unless they act as "entrypoints" in the locator-free model, but more about that later
 - Other than "entrypoints", all taxonomy files are "standalone" in that they contribute nothing to a DTS other than themselves
-- After all, locator-free linkbases and "standalone" schemas contain no URI references (not even xbrldt:typedDomainRef attributes)
+- After all, locator-free linkbases and "standalone" schemas contain no URL references (not even xbrldt:typedDomainRef attributes)
 
 So locators have been replaced by (mostly) semantic keys, and combining documents into a set of taxonomy documents is
 a bit like "database joins". The semantic keys do not care about the location of the taxonomy element referred to.
@@ -166,7 +173,7 @@ case, it is like this:
 - The same for the target concept
 - Then create the arc connecting the two
 
-Not so in the case of standard taxonomies, where instead of creating a concept key we need to look up the URI with (XPointer)
+Not so in the case of standard taxonomies, where instead of creating a concept key we need to look up the URL with (XPointer)
 fragment to the concept declaration in some schema file, and then create the XLink locator to point to that. Granted,
 the XPointer is mostly an ID, provided that the concept declaration does have an ID attribute.
 
@@ -190,7 +197,7 @@ Entrypoints
 
 Not much has been said about (locator-free) entrypoints above. Most locator-free taxonomy documents are "standalone",
 in that they do not and cannot contribute anything else to a DTS than themselves. In other words, they contain no
-URI references to any other document. All locator-free linkbases fall into this category. So do all schema files, unless
+URL references to any other document. All locator-free linkbases fall into this category. So do all schema files, unless
 they have at least one xs:import element with a schemaLocation attribute or at least one clink:linkbaseRef element.
 
 Multiple entrypoints should be able to refer to (much of) the same "standalone" taxonomy documents, just like
@@ -203,7 +210,7 @@ clink:linkbaseRef elements (with href attribute).
 
 TODO Add example entrypoint file.
 
-To prevent the tangling of standard taxonomy documents, only 1 level of URI indirection is allowed. That is, a schema
+To prevent the tangling of standard taxonomy documents, only 1 level of URL indirection is allowed. That is, a schema
 document acting as entrypoint may refer to many other documents, but these referred documents must all be standalone
 taxonomy documents. What that means for extension taxonomies is discussed in the next section.
 
@@ -217,18 +224,22 @@ By the way, an entrypoint in the locator-free model may be multiple documents ta
 Extension taxonomies
 ====================
 
-How does this "at most one level of URI indirection" constraint support extension taxonomies? Suppose in the locator-free
+How does this "at most one level of URL indirection" constraint support extension taxonomies? Suppose in the locator-free
 model we have entrypoint file A for a DTS in a published taxonomy, and we have ad-hoc extension taxonomy entrypoint file B,
 which would like to import A.
 
 The latter import is still possible, but without the use of a schemaLocation attribute, or else we would violate
-the "one level of URI indirection" constraint. Locator-free taxonomy validation software would check that the xs:import
-(without schemaLocation) is honored, so effectively we still have entrypoint file B pulling in entrypoint file A.
+the "one level of URL indirection" constraint. Locator-free taxonomy validation software would check that the xs:import
+(without schemaLocation) is honored when reasoning about the combined taxonomy, so effectively we still have entrypoint file
+B "pulling in" entrypoint file A.
 
-TODO Rethink this part, because it seems we are abusing xs:import a bit (for importing A). Maybe a custom XML element should be introduced.
+This makes sense if we think of entrypoint A as the target namespace of that schema document, instead of the URL. It's still
+the same document, but referred to in a different way. Schema document B does not need to refer to the URL of schema A, as
+long as the namespace in the xs:import is the target namespace of "some" schema, and that schema happens to be schema A.
+The entrypoint would then be the set of documents B and A, and the "one level of URL indirection" requirement would be met.
 
 The locator-free model does have its constraints, to make this all work. For example, it is expected that all schemas
-have a targetNamespace, and that xs:include does not occur, and that all schemas have a unique targetNamespace.
+have a targetNamespace, and that xs:include does not occur, and that all schemas have a unique targetNamespace. More on that follows below.
 
 Typical scenarios for entrypoints in the locator-free model are:
 
@@ -240,9 +251,56 @@ Typical scenarios for entrypoints in the locator-free model are:
 So combined with the filtering of entrypoints mentioned earlier, there is much flexibility in how one can organize
 entrypoints using the same set of standalone taxonomy documents.
 
+Which taxonomies can be represented?
+====================================
+
+As mentioned earlier, not all XBRL-valid taxonomies can be represented in the locator-free model. For example, the use of
+xs:include is not allowed. This should hardly be a restriction in practice. After all, suppose that in a standard taxonomy an XLink
+locator refers to a global element declaration in a chameleon schema, what would that even mean? It could refer to one concept,
+which is only known after "resolving" the xs:include (so that's even less local reasoning than is normally the case when
+interpreting arcs with locators). Even worse, it could point to a collection of concepts (in different namespaces)! No wonder xs:include
+should not be used in taxonomies (neither in standard taxonomies nor in their locator-free counterparts, if there were any).
+
+It is not a far stretch to go from the requirement of not using xs:include to the requirement that all schemas must have a
+target namespace. That would be helpful, because namespaces play an important role in the locator-free model, for example in
+concept keys.
+
+This leads to the following namespace-related requirements on locator-free taxonomy schemas and on the corresponding standard
+taxonomy schemas for which a locator-free counterpart exists:
+
+- No use of xs:include
+- All taxonomy schemas have a target namespace
+- All taxonomy schemas have a unique target namespace, so there is a one-to-one correspondence between taxonomy schema documents and target namespaces
+
+Most XBRL taxonomies seem to obey these requirements. In case they don't, a pre-processing step may help to "enforce" these
+requirements. For example, a "pure entrypoint schema" without target namespace can be forced to get a target namespace (in-memory)
+without changing the semantics of the taxonomy. The same holds for schemas defining only role types and arcrole types.
+
+Another requirement has to do with taxonomy element keys that use URLs (that is, an XLink locator rewritten as XLink resource
+containing the same absolute href). Note that there are several "semantic" taxonomy element keys, to point to concept declarations,
+other global element declarations, named type definitions, role type definitions, etc. The "any element keys" (containing a URL) are
+the fallback mechanism for pointing to XML elements for which no more descriptive key exists. The requirement would then be
+that the fragment part in the href URL is just an ID (shorthand XPointer), instead of a more complex XPointer. After all, IDs
+are stable when converting a standard taxonomy to its locator-free counterpart, but that is not the case for other XPointer references.
+
+So this leads to the following extra requirement on standard taxonomies (in order to be convertible to locator-free taxonomies):
+
+- Each XML element referred to by some XLink locator must have an ID attribute, unless it is a global element declaration, named type definition or (arc)role type
+
+If thie requirement is not met by the standard taxonomy, a pre-processing step is needed to generate IDs.
+
+There are also requirements on locator-free taxonomies that are more XML related, and that imply similar requirements on
+standard taxonomies that can be converted to the locator-free model. This could be constraints like not using a default namespace
+and consistent use of namespace prefixes across taxonomy documents. Fortunately, many of these requirements can be met
+after a pre-processing step, in which for example schemas are converted to do away with the default namespace or the "xsd"
+prefix (instead of "xs").
+
+For ease of conversion, it is also required that embedded linkbases are not used, and that the document root elements are xs:schema
+or link:linkbase in the standard taxonomy.
+
 Conclusion
 ==========
 
-The locator-free taxonomy model has the same modelling power and semantics as standard taxonomies, but in a far
-more loosely coupled way. This opens up some interesting possibilities, none of them seeming spectacular, but
-still potentially making quite a difference when used on a large scale.
+The locator-free taxonomy model has the same modelling power and semantics as standard taxonomies (taking a few restrictions
+into account), but in a far more loosely coupled way. This opens up some interesting possibilities, none of them seeming to be
+spectacular, but still potentially making quite a difference when used on a large scale.
