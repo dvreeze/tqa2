@@ -16,8 +16,6 @@
 
 package eu.cdevreeze.tqa2.internal.standardtaxonomy.dom
 
-import scala.collection.immutable.ArraySeq
-
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.tqa2.common.datatypes.XsBooleans
@@ -29,10 +27,14 @@ import eu.cdevreeze.tqa2.common.xmlschema.XmlSchemaDialect
 import eu.cdevreeze.tqa2.locfreetaxonomy.common._
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.dialect.AbstractDialectBackingElem
+import eu.cdevreeze.yaidom2.queryapi.internal.AbstractSubtypeAwareElem
 import eu.cdevreeze.yaidom2.queryapi.BackingNodes
 import eu.cdevreeze.yaidom2.queryapi.ElemStep
 import eu.cdevreeze.yaidom2.queryapi.anyElem
 import eu.cdevreeze.yaidom2.queryapi.named
+
+import scala.collection.immutable.ArraySeq
+import scala.reflect.classTag
 
 /**
  * Node in a standard XBRL taxonomy.
@@ -66,7 +68,7 @@ final case class TaxonomyProcessingInstructionNode(target: String, data: String)
  * Creating taxonomy elements should hardly, if ever, fail. After creation, type-safe query methods can fail if the taxonomy
  * content is not valid against the schema, however.
  */
-sealed trait TaxonomyElem extends AbstractDialectBackingElem with CanBeTaxonomyDocumentChild {
+sealed trait TaxonomyElem extends AbstractDialectBackingElem with AbstractSubtypeAwareElem with CanBeTaxonomyDocumentChild {
 
   type ThisElem = TaxonomyElem
 
@@ -235,15 +237,15 @@ sealed trait SimpleLink extends XLinkLink with xlink.SimpleLink
 sealed trait ExtendedLink extends XLinkLink with xlink.ExtendedLink {
 
   final def xlinkChildren: Seq[ChildXLink] = {
-    findAllChildElems.collect { case e: ChildXLink => e }
+    findAllChildElemsOfType(classTag[ChildXLink])
   }
 
   final def labeledXlinkChildren: Seq[LabeledXLink] = {
-    findAllChildElems.collect { case e: LabeledXLink => e }
+    findAllChildElemsOfType(classTag[LabeledXLink])
   }
 
   final def arcs: Seq[XLinkArc] = {
-    findAllChildElems.collect { case e: XLinkArc => e }
+    findAllChildElemsOfType(classTag[XLinkArc])
   }
 
   /**
@@ -330,11 +332,11 @@ final case class XsSchema(underlyingElem: BackingNodes.Elem) extends ElemInXsNam
   def isLinkbase: Boolean = false
 
   def findAllImports: Seq[Import] = {
-    filterChildElems(named(ENames.XsImportEName)).collect { case e: Import => e }
+    findAllChildElemsOfType(classTag[Import])
   }
 
   def filterGlobalElementDeclarations(p: GlobalElementDeclaration => Boolean): Seq[GlobalElementDeclaration] = {
-    filterChildElems(named(ENames.XsElementEName)).collect { case e: GlobalElementDeclaration if p(e) => e }
+    filterChildElemsOfType(classTag[GlobalElementDeclaration])(p)
   }
 
   def findAllGlobalElementDeclarations: Seq[GlobalElementDeclaration] = {
@@ -342,7 +344,7 @@ final case class XsSchema(underlyingElem: BackingNodes.Elem) extends ElemInXsNam
   }
 
   def filterGlobalAttributeDeclarations(p: GlobalAttributeDeclaration => Boolean): Seq[GlobalAttributeDeclaration] = {
-    filterChildElems(named(ENames.XsAttributeEName)).collect { case e: GlobalAttributeDeclaration if p(e) => e }
+    filterChildElemsOfType(classTag[GlobalAttributeDeclaration])(p)
   }
 
   def findAllGlobalAttributeDeclarations: Seq[GlobalAttributeDeclaration] = {
@@ -350,8 +352,7 @@ final case class XsSchema(underlyingElem: BackingNodes.Elem) extends ElemInXsNam
   }
 
   def filterNamedTypeDefinitions(p: NamedTypeDefinition => Boolean): Seq[NamedTypeDefinition] = {
-    filterChildElems(e => e.name == ENames.XsComplexTypeEName || e.name == ENames.XsSimpleTypeEName)
-      .collect { case e: NamedTypeDefinition if p(e) => e }
+    filterChildElemsOfType(classTag[NamedTypeDefinition])(p)
   }
 
   def findAllNamedTypeDefinitions: Seq[NamedTypeDefinition] = {
@@ -372,15 +373,15 @@ final case class Linkbase(underlyingElem: BackingNodes.Elem) extends ElemInLinkN
    * Finds all ("taxonomy DOM") extended links
    */
   def findAllExtendedLinks: Seq[ExtendedLink] = {
-    findAllChildElems.collect { case e: ExtendedLink => e }
+    findAllChildElemsOfType(classTag[ExtendedLink])
   }
 
   def findAllRoleRefs: Seq[RoleRef] = {
-    filterChildElems(named(ENames.LinkRoleRefEName)).collect { case e: RoleRef => e }
+    findAllChildElemsOfType(classTag[RoleRef])
   }
 
   def findAllArcroleRefs: Seq[ArcroleRef] = {
-    filterChildElems(named(ENames.LinkArcroleRefEName)).collect { case e: ArcroleRef => e }
+    findAllChildElemsOfType(classTag[ArcroleRef])
   }
 }
 
@@ -509,7 +510,7 @@ sealed trait SimpleTypeDefinition extends TypeDefinition with XmlSchemaDialect.S
    */
   final def baseTypeOption: Option[EName] = variety match {
     case Variety.Atomic =>
-      filterChildElems(named(ENames.XsRestrictionEName)).collectFirst { case e: Restriction => e }.flatMap(_.baseTypeOption)
+      findChildElemOfType(classTag[Restriction])(anyElem).flatMap(_.baseTypeOption)
     case _ => None
   }
 }
@@ -525,9 +526,9 @@ sealed trait ComplexTypeDefinition extends TypeDefinition with XmlSchemaDialect.
       case Some(SimpleContent(_)) =>
         ContentType.Simple
       case _ =>
-        if (findAllChildElems.collectFirst { case e: ModelGroup => e }.isDefined) {
+        if (findChildElemOfType(classTag[ModelGroup])(anyElem).isDefined) {
           if (isMixed) ContentType.Mixed else ContentType.ElementOnly
-        } else if (findAllChildElems.collectFirst { case e: ModelGroupReference => e }.isDefined) {
+        } else if (findChildElemOfType(classTag[ModelGroupReference])(anyElem).isDefined) {
           if (isMixed) ContentType.Mixed else ContentType.ElementOnly
         } else {
           ContentType.Empty
@@ -753,11 +754,11 @@ final case class RoleType(underlyingElem: BackingNodes.Elem) extends ElemInLinkN
   requireName(ENames.LinkRoleTypeEName)
 
   def definitionOption: Option[Definition] = {
-    filterChildElems(named(ENames.LinkDefinitionEName)).collectFirst { case e: Definition => e }
+    findChildElemOfType(classTag[Definition])(anyElem)
   }
 
   def usedOn: Seq[UsedOn] = {
-    filterChildElems(named(ENames.LinkUsedOnEName)).collect { case e: UsedOn => e }
+    findAllChildElemsOfType(classTag[UsedOn])
   }
 }
 
@@ -772,11 +773,11 @@ final case class ArcroleType(underlyingElem: BackingNodes.Elem) extends ElemInLi
   }
 
   def definitionOption: Option[Definition] = {
-    filterChildElems(named(ENames.LinkDefinitionEName)).collectFirst { case e: Definition => e }
+    findChildElemOfType(classTag[Definition])(anyElem)
   }
 
   def usedOn: Seq[UsedOn] = {
-    filterChildElems(named(ENames.LinkUsedOnEName)).collect { case e: UsedOn => e }
+    findAllChildElemsOfType(classTag[UsedOn])
   }
 }
 
@@ -938,11 +939,11 @@ object TaxonomyElem {
   private def fallbackElem(underlyingElem: BackingNodes.Elem): TaxonomyElem = {
     underlyingElem.attrOption(ENames.XLinkTypeEName) match {
       case Some("extended") => NonStandardLink(underlyingElem)
-      case Some("arc") => NonStandardArc(underlyingElem)
+      case Some("arc")      => NonStandardArc(underlyingElem)
       case Some("resource") => NonStandardResource(underlyingElem)
-      case Some("locator") => NonStandardLocator(underlyingElem)
-      case Some("simple") => NonStandardSimpleLink(underlyingElem)
-      case _ => OtherNonXLinkElem(underlyingElem)
+      case Some("locator")  => NonStandardLocator(underlyingElem)
+      case Some("simple")   => NonStandardSimpleLink(underlyingElem)
+      case _                => OtherNonXLinkElem(underlyingElem)
     }
   }
 
@@ -995,7 +996,8 @@ object TaxonomyElem {
           ENames.LinkDefinitionEName -> (e => Definition(e)),
           ENames.LinkUsedOnEName -> (e => UsedOn(e))
         ),
-        e => OtherElemInLinkNamespace(e)),
+        e => OtherElemInLinkNamespace(e)
+      ),
       Namespaces.GenNamespace -> new ElemFactoryWithFallback(fallbackElem)
     )
 
