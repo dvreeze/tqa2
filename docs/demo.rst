@@ -244,11 +244,11 @@ have a targetNamespace, and that xs:include does not occur, and that all schemas
 Typical scenarios for entrypoints in the locator-free model are:
 
 - Single document entrypoints, that are themselves not standalone (obviously)
-- Extension taxonomies using 2 entrypoints as described above, both of them not being standalone (obviously)
-- Ad-hoc multi-document entrypoints, with one entrypoint not being standalone, but the other ones being standalone (for example formula linkbase files)
-- Sets of standalone taxonomy documents for one ELR (if taxonomies are modelled around ELRs), where the ad-hoc entrypoint is the entire document set
+- Extension taxonomies using 2 entrypoint documents as described above, both of them not being standalone (obviously)
+- Ad-hoc multi-document entrypoints, with one entrypoint document not being standalone, but the other ones being standalone (for example formula linkbase files)
+- Sets of standalone taxonomy documents (under development) for one ELR (if taxonomies are modelled around ELRs), where the ad-hoc entrypoint is the entire document set
 
-So combined with the filtering of entrypoints mentioned earlier, there is much flexibility in how one can organize
+So combined with the filtering of documents (in a DTS) mentioned earlier, there is much flexibility in how one can organize
 entrypoints using the same set of standalone taxonomy documents.
 
 Which taxonomies can be represented?
