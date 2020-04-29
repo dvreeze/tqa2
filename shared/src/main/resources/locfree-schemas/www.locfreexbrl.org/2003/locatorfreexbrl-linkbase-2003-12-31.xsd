@@ -255,7 +255,7 @@
       </annotation>
       <complexType>
          <complexContent>
-            <restriction base="xl:simpleType">
+            <restriction base="xs:anyType">
                <attribute name="href" type="xs:anyURI" use="required"/>
             </restriction>
          </complexContent>
@@ -269,7 +269,7 @@
       </annotation>
       <complexType>
          <complexContent>
-            <restriction base="xl:simpleType">
+            <restriction base="xs:anyType">
                <attribute name="roleURI" type="xl:nonEmptyURI" use="required"/>
             </restriction>
          </complexContent>
@@ -283,7 +283,7 @@
       </annotation>
       <complexType>
          <complexContent>
-            <restriction base="xl:simpleType">
+            <restriction base="xs:anyType">
                <attribute name="arcroleURI" type="xl:nonEmptyURI" use="required"/>
             </restriction>
          </complexContent>
