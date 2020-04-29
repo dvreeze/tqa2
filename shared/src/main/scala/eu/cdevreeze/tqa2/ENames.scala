@@ -531,8 +531,9 @@ object ENames {
 
   // ENames in the locator-free model.
 
-  // The "clink" namespace. It has no counterparts for the simple links (like schemaRef), nor for roleTypes etc. (which
-  // are re-used from the "link" namespace, like link:part). Foremost of all, it has no counterpart for the link:loc name.
+  // The "clink" namespace. It has no XLink counterparts for simple links (no counterpart for schemaRef, non-XLink counterparts
+  // for linkbaseRef, roleRef and arcroleRef). It has no counterparts for roleType elements, etc., which are reused from the "link" namespace.
+  // Also note that it has no counterpart for the link:loc name.
 
   val CLinkLinkbaseEName = EName(CLinkNamespace, "linkbase")
 

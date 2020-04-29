@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <schema xmlns="http://www.w3.org/2001/XMLSchema"
+        xmlns:xs="http://www.w3.org/2001/XMLSchema"
         xmlns:clink="http://www.locfreexbrl.org/2003/linkbase"
         xmlns:xl="http://www.xbrl.org/2003/XLink"
         xmlns:cxl="http://www.locfreexbrl.org/2019/extendedlink"
@@ -14,8 +15,8 @@
     <!-- Important differences with namespace "http://www.xbrl.org/2003/linkbase": -->
     <!-- Element link:loc has no counterpart, other than xl:resource restricted to "keys" (like conceptKey). -->
     <!-- The extended links like presentationLink are restricted in the sense that they have no locators.  -->
-    <!-- Element linkbase is restricted to not having any XLink simple links (like linkbaseRef).  -->
-    <!-- Simple links like linkbaseRef and schemaRef have no counterpart in this namespace. -->
+    <!-- Element linkbase is restricted to not having any XLink simple links (like link:linkbaseRef).  -->
+    <!-- Simple link linkbaseRef (not schemaRef) has a non-XLink counterpart in this namespace, like roleRef and arcroleRef. -->
     <!-- Element link:part is not mirrored but used as-is. -->
     <!-- Elements link:definition, link:usedOn, link:roleType and link:arcroleType are not mirrored but used as-is.  -->
     <!-- There are no footnoteArcs or footnotes or footnoteLinks defined in this namespace.  -->
@@ -201,6 +202,7 @@
                   <element ref="clink:documentation"/>
                   <element ref="ckey:conceptKey"/>
                   <element ref="clink:labelArc"/>
+                  <element ref="ckey:anyElemKey"/>
                   <element ref="clink:label"/>
                </choice>
                <anyAttribute namespace="http://www.w3.org/XML/1998/namespace" processContents="lax"/>
@@ -222,6 +224,7 @@
                   <element ref="clink:documentation"/>
                   <element ref="ckey:conceptKey"/>
                   <element ref="clink:referenceArc"/>
+                  <element ref="ckey:anyElemKey"/>
                   <element ref="clink:reference"/>
                </choice>
                <anyAttribute namespace="http://www.w3.org/XML/1998/namespace" processContents="lax"/>
@@ -242,6 +245,48 @@
          </choice>
          <attribute name="id" type="ID" use="optional"/>
          <anyAttribute namespace="http://www.w3.org/XML/1998/namespace" processContents="lax"/>
+      </complexType>
+   </element>
+   <element name="linkbaseRef">
+      <annotation>
+         <documentation>
+            linkbase reference (not a simple link in the locator-free model)
+         </documentation>
+      </annotation>
+      <complexType>
+         <complexContent>
+            <restriction base="xl:simpleType">
+               <attribute name="href" type="xs:anyURI" use="required"/>
+            </restriction>
+         </complexContent>
+      </complexType>
+   </element>
+   <element name="roleRef">
+      <annotation>
+         <documentation>
+            role reference (not a simple link in the locator-free model)
+         </documentation>
+      </annotation>
+      <complexType>
+         <complexContent>
+            <restriction base="xl:simpleType">
+               <attribute name="roleURI" type="xl:nonEmptyURI" use="required"/>
+            </restriction>
+         </complexContent>
+      </complexType>
+   </element>
+   <element name="arcroleRef">
+      <annotation>
+         <documentation>
+            arcrole reference (not a simple link in the locator-free model)
+         </documentation>
+      </annotation>
+      <complexType>
+         <complexContent>
+            <restriction base="xl:simpleType">
+               <attribute name="arcroleURI" type="xl:nonEmptyURI" use="required"/>
+            </restriction>
+         </complexContent>
       </complexType>
    </element>
 </schema>
