@@ -123,11 +123,11 @@ object Endpoint {
       import TaxonomyElemKeys._
 
       taxonomyElemKey match {
-        case k: ConceptKey => ConceptKeyEndpoint(k)
-        case k: ElementKey => ElementKeyEndpoint(k)
-        case k: TypeKey => TypeKeyEndpoint(k)
-        case k: RoleKey => RoleKeyEndpoint(k)
-        case k: ArcroleKey => ArcroleKeyEndpoint(k)
+        case k: ConceptKey    => ConceptKeyEndpoint(k)
+        case k: ElementKey    => ElementKeyEndpoint(k)
+        case k: TypeKey       => TypeKeyEndpoint(k)
+        case k: RoleKey       => RoleKeyEndpoint(k)
+        case k: ArcroleKey    => ArcroleKeyEndpoint(k)
         case k: AnyElementKey => AnyElementKeyEndpoint(k)
       }
     }
@@ -155,17 +155,18 @@ object Endpoint {
    * Note that this case class may have poor value equality, due to poor equality on the resource elements.
    */
   final case class LocalResource[+A <: XLinkResource](
-    taxonomyElemKey: TaxonomyElemKeys.TaxonomyElemKey,
-    resource: A
-  ) extends RegularResource[A] with Key
+      taxonomyElemKey: TaxonomyElemKeys.TaxonomyElemKey,
+      resource: A
+  ) extends RegularResource[A]
 
   /**
    * Remote regular resource, corresponding to an XLink locator to an XLink resource in a standard XBRL taxonomy document.
    * Note that this case class may have poor value equality, due to poor equality on the resource elements.
    */
   final case class RemoteResource[+A <: XLinkResource](
-    taxonomyElemKey: TaxonomyElemKeys.TaxonomyElemKey,
-    resource: A
+      taxonomyElemKey: TaxonomyElemKeys.TaxonomyElemKey,
+      resource: A
   ) extends RegularResource[A]
+      with Key
 
 }
