@@ -148,14 +148,16 @@ object TaxonomyConverter {
     println(s"Successfully converted the input taxonomy. The result contains ${outputTaxo.rootElems.size} documents") // scalastyle:off
 
     require(
-      outputTaxo.findAllItemDeclarations.size == inputTaxoBase.findAllItemDeclarations.size,
-      s"Input and output taxonomies not matching on number of item declarations (outside entrypoint)"
+      outputTaxo.findAllItemDeclarations.map(_.targetEName).toSet == inputTaxoBase.findAllItemDeclarations.map(_.targetEName).toSet,
+      s"Input and output taxonomies not matching on target ENames of item declarations"
     )
     require(
       outputTaxo.relationships.map(_.arc).distinct.size ==
         inputTaxoBase.rootElems.flatMap(_.filterDescendantElemsOrSelf(_.isInstanceOf[standardtaxonomy.dom.XLinkArc])).size,
       s"Input and output taxonomies not matching on number of (underlying) arcs"
     )
+
+    println(s"Performed some sanity checks on the result taxonomy compared to the original") // scalastyle:off
 
     // Saving the locator-free taxonomy to disk
 
