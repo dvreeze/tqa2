@@ -510,7 +510,7 @@ sealed trait SimpleTypeDefinition extends TypeDefinition with XmlSchemaDialect.S
    */
   final def baseTypeOption: Option[EName] = variety match {
     case Variety.Atomic =>
-      findChildElemOfType(classTag[Restriction])(anyElem).flatMap(_.baseTypeOption)
+      findFirstChildElemOfType(classTag[Restriction]).flatMap(_.baseTypeOption)
     case _ => None
   }
 }
@@ -526,9 +526,9 @@ sealed trait ComplexTypeDefinition extends TypeDefinition with XmlSchemaDialect.
       case Some(SimpleContent(_)) =>
         ContentType.Simple
       case _ =>
-        if (findChildElemOfType(classTag[ModelGroup])(anyElem).isDefined) {
+        if (findFirstChildElemOfType(classTag[ModelGroup]).isDefined) {
           if (isMixed) ContentType.Mixed else ContentType.ElementOnly
-        } else if (findChildElemOfType(classTag[ModelGroupReference])(anyElem).isDefined) {
+        } else if (findFirstChildElemOfType(classTag[ModelGroupReference]).isDefined) {
           if (isMixed) ContentType.Mixed else ContentType.ElementOnly
         } else {
           ContentType.Empty
@@ -754,7 +754,7 @@ final case class RoleType(underlyingElem: BackingNodes.Elem) extends ElemInLinkN
   requireName(ENames.LinkRoleTypeEName)
 
   def definitionOption: Option[Definition] = {
-    findChildElemOfType(classTag[Definition])(anyElem)
+    findFirstChildElemOfType(classTag[Definition])
   }
 
   def usedOn: Seq[UsedOn] = {
@@ -773,7 +773,7 @@ final case class ArcroleType(underlyingElem: BackingNodes.Elem) extends ElemInLi
   }
 
   def definitionOption: Option[Definition] = {
-    findChildElemOfType(classTag[Definition])(anyElem)
+    findFirstChildElemOfType(classTag[Definition])
   }
 
   def usedOn: Seq[UsedOn] = {
