@@ -151,9 +151,12 @@ final class TaxonomyBaseConverter(
           None
       }
 
+    // Not losing the document URI, but potentially losing top-level comments or processing instructions.
+    val documents: Seq[locfreetaxonomy.dom.TaxonomyDocument] = rootElems.map(e => locfreetaxonomy.dom.TaxonomyDocument(e))
+
     // TODO Add new core schemas for locator-free model
 
-    locfreetaxonomy.taxonomy.TaxonomyBase.build(rootElems, SubstitutionGroupMap.Empty)
+    locfreetaxonomy.taxonomy.TaxonomyBase.build(documents, SubstitutionGroupMap.Empty)
   }
 
   def addSingleDocumentEntrypoint(
@@ -170,7 +173,7 @@ final class TaxonomyBaseConverter(
     val entrypointSchema: locfreetaxonomy.dom.XsSchema = entrypointSchemaConverter.convertSchema(inputEntrypointSchema, inputTaxonomyBase)
 
     locfreetaxonomy.taxonomy.TaxonomyBase.build(
-      taxonomyBase.rootElems.prepended(entrypointSchema),
+      taxonomyBase.documents.prepended(locfreetaxonomy.dom.TaxonomyDocument(entrypointSchema)),
       taxonomyBase.extraProvidedSubstitutionGroupMap
     )
   }
@@ -191,7 +194,7 @@ final class TaxonomyBaseConverter(
     }
 
     locfreetaxonomy.taxonomy.TaxonomyBase.build(
-      taxonomyBase.rootElems.prependedAll(entrypointSchemas),
+      taxonomyBase.documents.prependedAll(entrypointSchemas.map(e => locfreetaxonomy.dom.TaxonomyDocument(e))),
       taxonomyBase.extraProvidedSubstitutionGroupMap
     )
   }

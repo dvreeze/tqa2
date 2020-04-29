@@ -54,7 +54,8 @@ class NonEntrypointSchemaConversionTest extends AnyFunSuite {
         .asInstanceOf[standardtaxonomy.dom.XsSchema]
 
     val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
-      standardtaxonomy.taxonomy.TaxonomyBase.build(Seq(inputSchema1, inputSchema2), SubstitutionGroupMap.Empty)
+      standardtaxonomy.taxonomy.TaxonomyBase
+        .build(Seq(inputSchema1, inputSchema2).map(e => standardtaxonomy.dom.TaxonomyDocument(e)), SubstitutionGroupMap.Empty)
 
     val scope: PrefixedScope = PrefixedScope
       .ignoringDefaultNamespace(ScopedElemApi.unionScope(Seq(inputSchema1, inputSchema2)))

@@ -20,6 +20,7 @@ import java.net.URI
 
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.docbuilder.DocumentBuilder
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyDocument
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkArc
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
@@ -56,10 +57,10 @@ final class DefaultTaxonomyBuilder(
       TaxonomyElem(documentBuilder.build(uri).documentElement)
     })
 
-    val rootElems: Seq[TaxonomyElem] =
-      dtsDocUris.toSeq.sortBy(_.toString).map(u => documentBuilder.build(u)).map(d => TaxonomyElem(d.documentElement))
+    val documents: Seq[TaxonomyDocument] =
+      dtsDocUris.toSeq.sortBy(_.toString).map(u => documentBuilder.build(u)).map(d => TaxonomyDocument.from(d))
 
-    val taxonomyBase = TaxonomyBase.build(rootElems, extraSubstitutionGroupMap)
+    val taxonomyBase = TaxonomyBase.build(documents, extraSubstitutionGroupMap)
 
     BasicTaxonomy.build(taxonomyBase, relationshipFactory, arcFilter)
   }

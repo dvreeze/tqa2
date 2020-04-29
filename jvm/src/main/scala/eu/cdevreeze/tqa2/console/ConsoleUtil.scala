@@ -25,6 +25,7 @@ import eu.cdevreeze.tqa2.docbuilder.jvm.SaxUriResolver
 import eu.cdevreeze.tqa2.docbuilder.jvm.SaxUriResolvers
 import eu.cdevreeze.tqa2.docbuilder.jvm.SimpleCatalogs
 import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyDocument
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyBase
@@ -72,11 +73,11 @@ private[console] object ConsoleUtil {
 
     println(s"Parsing DTS documents ...") // scalastyle:off
 
-    val rootElems: Seq[TaxonomyElem] = dtsDocUris.toSeq.sortBy(_.toString).map(u => TaxonomyElem(docBuilder.build(u).documentElement))
+    val documents: Seq[TaxonomyDocument] = dtsDocUris.toSeq.sortBy(_.toString).map(u => TaxonomyDocument.from(docBuilder.build(u)))
 
     println(s"Building TaxonomyBase ...") // scalastyle:off
 
-    val taxoBase: TaxonomyBase = TaxonomyBase.build(rootElems, SubstitutionGroupMap.Empty)
+    val taxoBase: TaxonomyBase = TaxonomyBase.build(documents, SubstitutionGroupMap.Empty)
 
     println(s"Number of documents in the TaxonomyBase: ${taxoBase.rootElems.size}") // scalastyle:off
     println(s"Building BasicTaxonomy ...") // scalastyle:off

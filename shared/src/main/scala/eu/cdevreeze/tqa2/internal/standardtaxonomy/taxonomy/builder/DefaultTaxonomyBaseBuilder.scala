@@ -20,6 +20,7 @@ import java.net.URI
 
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.docbuilder.DocumentBuilder
+import eu.cdevreeze.tqa2.internal.standardtaxonomy.dom.TaxonomyDocument
 import eu.cdevreeze.tqa2.internal.standardtaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy.TaxonomyBase
 
@@ -46,10 +47,10 @@ final class DefaultTaxonomyBaseBuilder(
       TaxonomyElem(documentBuilder.build(uri).documentElement)
     })
 
-    val rootElems: Seq[TaxonomyElem] =
-      dtsDocUris.toSeq.sortBy(_.toString).map(u => documentBuilder.build(u)).map(d => TaxonomyElem(d.documentElement))
+    val documents: Seq[TaxonomyDocument] =
+      dtsDocUris.toSeq.sortBy(_.toString).map(u => documentBuilder.build(u)).map(d => TaxonomyDocument.from(d))
 
-    TaxonomyBase.build(rootElems, extraSubstitutionGroupMap)
+    TaxonomyBase.build(documents, extraSubstitutionGroupMap)
   }
 }
 

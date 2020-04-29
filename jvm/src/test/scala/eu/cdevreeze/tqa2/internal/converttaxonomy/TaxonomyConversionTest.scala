@@ -60,7 +60,7 @@ class TaxonomyConversionTest extends AnyFunSuite {
       "standard-xbrl-testfiles/www.nltaxonomie.nl/nt12/venj/20170714.a/validation/venj-bw2-uniform-fiscal-valuation-principles-decree-def.xml",
     ).map(URI.create)
 
-    val inputDocs = docUris.toSeq.map(uri => getStandardTaxonomyElement(uri))
+    val inputDocs = docUris.toSeq.map(uri => getStandardTaxonomyDocument(uri))
 
     val sgMap: SubstitutionGroupMap = SubstitutionGroupMap.from(
       Map(
@@ -98,9 +98,9 @@ class TaxonomyConversionTest extends AnyFunSuite {
 
   private val processor = new Processor(false)
 
-  private def getStandardTaxonomyElement(relativeFilePath: URI): standardtaxonomy.dom.TaxonomyElem = {
+  private def getStandardTaxonomyDocument(relativeFilePath: URI): standardtaxonomy.dom.TaxonomyDocument = {
     val doc: saxon.Document = TestResourceUtil.buildSaxonDocumentFromClasspathResource(relativeFilePath, processor)
 
-    standardtaxonomy.dom.TaxonomyElem(doc.documentElement)
+    standardtaxonomy.dom.TaxonomyDocument.from(doc)
   }
 }

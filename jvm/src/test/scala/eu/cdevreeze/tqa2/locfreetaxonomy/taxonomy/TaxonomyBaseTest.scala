@@ -21,6 +21,7 @@ import java.net.URI
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyDocument
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
 import eu.cdevreeze.yaidom2.node.saxon
@@ -39,7 +40,7 @@ class TaxonomyBaseTest extends AnyFunSuite {
     val schema =
       XsSchema(getTaxonomyElement(URI.create("testfiles/www.nltaxonomie.nl/nt12/kvk/20170714.a/dictionary/kvk-data.xsd")).underlyingElem)
 
-    val taxonomyBase: TaxonomyBase = TaxonomyBase.build(Seq(schema), SubstitutionGroupMap.Empty)
+    val taxonomyBase: TaxonomyBase = TaxonomyBase.build(Seq(TaxonomyDocument(schema)), SubstitutionGroupMap.Empty)
 
     val globalElemDecls = taxonomyBase.findAllGlobalElementDeclarations
 

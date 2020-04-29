@@ -36,6 +36,8 @@ import scala.reflect.classTag
  * @author Chris de Vreeze
  */
 final class TaxonomyBase private (
+    val documents: Seq[TaxonomyDocument],
+    val documentMap: Map[URI, TaxonomyDocument],
     val rootElems: Seq[TaxonomyElem],
     val rootElemMap: Map[URI, TaxonomyElem],
     val elemMap: Map[URI, Map[String, TaxonomyElem]],
@@ -51,6 +53,17 @@ final class TaxonomyBase private (
 
   def findAllLinkbases: Seq[Linkbase] = {
     rootElems.flatMap(_.findTopmostElemsOrSelfOfType(classTag[Linkbase])(anyElem))
+  }
+
+  def findDocumentByUri(uri: URI): Option[TaxonomyDocument] = {
+    require(uri.isAbsolute, s"Expected absolute URI but got relative URI '$uri'")
+    require(Option(uri.getFragment).isEmpty, s"Fragment not allowed, but got URI '$uri'")
+
+    documentMap.get(uri)
+  }
+
+  def getDocumentByUri(uri: URI): TaxonomyDocument = {
+    findDocumentByUri(uri).getOrElse(sys.error(s"Could not find document with URI '$uri"))
   }
 
   def findElemByUri(uri: URI): Option[TaxonomyElem] = {
@@ -82,7 +95,11 @@ final class TaxonomyBase private (
 
 object TaxonomyBase {
 
-  def build(rootElems: Seq[TaxonomyElem], extraProvidedSubstitutionGroupMap: SubstitutionGroupMap): TaxonomyBase = {
+  def build(documents: Seq[TaxonomyDocument], extraProvidedSubstitutionGroupMap: SubstitutionGroupMap): TaxonomyBase = {
+    require(documents.forall(_.docUriOption.nonEmpty), s"Missing document URIs not allowed")
+
+    val rootElems: Seq[TaxonomyElem] = documents.map(_.documentElement)
+
     val namedGlobalSchemaComponentMap: Map[EName, Seq[NamedGlobalSchemaComponent]] = computeNamedGlobalSchemaComponentMap(rootElems)
 
     val globalElementDeclarationMap: Map[EName, GlobalElementDeclaration] = namedGlobalSchemaComponentMap.view
@@ -99,13 +116,19 @@ object TaxonomyBase {
 
     val conceptDeclMap: Map[EName, ConceptDeclaration] = conceptDecls.groupBy(_.targetEName).view.mapValues(_.head).toMap
 
+    val documentMap: Map[URI, TaxonomyDocument] = {
+      documents.groupBy(_.docUriOption.ensuring(_.nonEmpty).get).view.mapValues(_.head).toMap
+    }
+
     val rootElemMap: Map[URI, TaxonomyElem] = {
-      rootElems.groupBy(_.docUri).view.mapValues(_.head).toMap
+      documentMap.view.mapValues(_.documentElement).toMap
     }
 
     val elemMap: Map[URI, Map[String, TaxonomyElem]] = computeElemMap(rootElems)
 
     new TaxonomyBase(
+      documents,
+      documentMap,
       rootElems,
       rootElemMap,
       elemMap,
@@ -113,7 +136,8 @@ object TaxonomyBase {
       conceptDeclMap,
       extraProvidedSubstitutionGroupMap,
       netSubstitutionGroupMap,
-      namedGlobalSchemaComponentMap)
+      namedGlobalSchemaComponentMap
+    )
   }
 
   private def computeNamedGlobalSchemaComponentMap(rootElems: Seq[TaxonomyElem]): Map[EName, Seq[NamedGlobalSchemaComponent]] = {

@@ -21,6 +21,7 @@ import java.net.URI
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Linkbase
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyDocument
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ConceptLabelRelationship
 import eu.cdevreeze.yaidom2.core.EName
@@ -42,7 +43,7 @@ class RelationshipTest extends AnyFunSuite {
 
     val relationshipFactory = DefaultRelationshipFactory
 
-    val taxo: TaxonomyBase = TaxonomyBase.build(Seq(linkbase), SubstitutionGroupMap.Empty)
+    val taxo: TaxonomyBase = TaxonomyBase.build(Seq(TaxonomyDocument(linkbase)), SubstitutionGroupMap.Empty)
 
     val relationships = relationshipFactory.extractRelationships(taxo, RelationshipFactory.AnyArc)
 

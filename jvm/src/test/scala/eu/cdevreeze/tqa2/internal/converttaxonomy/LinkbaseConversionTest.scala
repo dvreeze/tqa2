@@ -56,7 +56,8 @@ class LinkbaseConversionTest extends AnyFunSuite {
         .asInstanceOf[standardtaxonomy.dom.XsSchema]
 
     val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
-      standardtaxonomy.taxonomy.TaxonomyBase.build(Seq(inputLinkbase, inputSchema), SubstitutionGroupMap.Empty)
+      standardtaxonomy.taxonomy.TaxonomyBase
+        .build(Seq(inputLinkbase, inputSchema).map(e => standardtaxonomy.dom.TaxonomyDocument(e)), SubstitutionGroupMap.Empty)
 
     val scope: PrefixedScope = PrefixedScope
       .ignoringDefaultNamespace(inputLinkbase.scope)
@@ -153,7 +154,8 @@ class LinkbaseConversionTest extends AnyFunSuite {
         .asInstanceOf[standardtaxonomy.dom.XsSchema]
 
     val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
-      standardtaxonomy.taxonomy.TaxonomyBase.build(Seq(inputLinkbase, inputSchema), SubstitutionGroupMap.Empty)
+      standardtaxonomy.taxonomy.TaxonomyBase
+        .build(Seq(inputLinkbase, inputSchema).map(e => standardtaxonomy.dom.TaxonomyDocument(e)), SubstitutionGroupMap.Empty)
 
     val scope: PrefixedScope = PrefixedScope
       .ignoringDefaultNamespace(inputLinkbase.scope)
@@ -256,7 +258,7 @@ class LinkbaseConversionTest extends AnyFunSuite {
 
     val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
       standardtaxonomy.taxonomy.TaxonomyBase.build(
-        Seq(inputLinkbase, inputSchema1, inputSchema2),
+        Seq(inputLinkbase, inputSchema1, inputSchema2).map(e => standardtaxonomy.dom.TaxonomyDocument(e)),
         SubstitutionGroupMap.from(
           Map(EName.parse("{http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension}presentationItem") -> ENames.XbrliItemEName))
       )
@@ -354,7 +356,7 @@ class LinkbaseConversionTest extends AnyFunSuite {
 
     val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
       standardtaxonomy.taxonomy.TaxonomyBase.build(
-        Seq(inputLinkbase, inputSchema1, inputSchema2),
+        Seq(inputLinkbase, inputSchema1, inputSchema2).map(e => standardtaxonomy.dom.TaxonomyDocument(e)),
         SubstitutionGroupMap.from(
           Map(EName.parse("{http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension}primaryDomainItem") -> ENames.XbrliItemEName))
       )
@@ -453,7 +455,8 @@ class LinkbaseConversionTest extends AnyFunSuite {
         .asInstanceOf[standardtaxonomy.dom.XsSchema]
 
     val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
-      standardtaxonomy.taxonomy.TaxonomyBase.build(Seq(inputLinkbase, inputSchema), SubstitutionGroupMap.Empty)
+      standardtaxonomy.taxonomy.TaxonomyBase
+        .build(Seq(inputLinkbase, inputSchema).map(e => standardtaxonomy.dom.TaxonomyDocument(e)), SubstitutionGroupMap.Empty)
 
     val scope: PrefixedScope = PrefixedScope
       .ignoringDefaultNamespace(inputLinkbase.scope)
@@ -553,7 +556,8 @@ class LinkbaseConversionTest extends AnyFunSuite {
         .asInstanceOf[standardtaxonomy.dom.XsSchema]
 
     val inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase =
-      standardtaxonomy.taxonomy.TaxonomyBase.build(Seq(inputLinkbase, inputSchema), SubstitutionGroupMap.Empty)
+      standardtaxonomy.taxonomy.TaxonomyBase
+        .build(Seq(inputLinkbase, inputSchema).map(e => standardtaxonomy.dom.TaxonomyDocument(e)), SubstitutionGroupMap.Empty)
 
     val scope: PrefixedScope = PrefixedScope
       .ignoringDefaultNamespace(inputLinkbase.scope)
