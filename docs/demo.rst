@@ -288,7 +288,7 @@ So this leads to the following extra requirement on standard taxonomies (in orde
 
 - Each XML element referred to by some XLink locator must have an ID attribute, unless it is a global element declaration, named type definition or (arc)role type
 
-If thie requirement is not met by the standard taxonomy, a pre-processing step is needed to generate IDs.
+If this requirement is not met by the standard taxonomy, a pre-processing step is needed to generate IDs.
 
 There are also requirements on locator-free taxonomies that are more XML related, and that imply similar requirements on
 standard taxonomies that can be converted to the locator-free model. This could be constraints like not using a default namespace
