@@ -18,11 +18,15 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder
 
 import java.net.URI
 
-import scala.util.{Failure, Success, Try}
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Import
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.LinkbaseRef
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
+
+import scala.reflect.classTag
+import scala.util.Failure
+import scala.util.Success
+import scala.util.Try
 
 /**
  * Default DTS URI collector, in the locator-free taxonomy model. All collected URIs are assumed to be absolute URIs.
@@ -50,13 +54,9 @@ object DefaultDtsUriCollector extends DtsUriCollector {
   private def findOwnDtsUris(docElem: TaxonomyElem): Set[URI] = {
     docElem.name match {
       case ENames.XsSchemaEName =>
-        val linkbaseRefs: Seq[LinkbaseRef] = docElem
-          .filterDescendantElems(_.name == ENames.CLinkLinkbaseRefEName)
-          .collect { case e: LinkbaseRef => e }
+        val linkbaseRefs: Seq[LinkbaseRef] = docElem.findAllDescendantElemsOfType(classTag[LinkbaseRef])
 
-        val imports: Seq[Import] = docElem
-          .filterDescendantElems(_.name == ENames.XsImportEName)
-          .collect { case e: Import => e }
+        val imports: Seq[Import] = docElem.findAllDescendantElemsOfType(classTag[Import])
 
         linkbaseRefs
           .map(_.href)

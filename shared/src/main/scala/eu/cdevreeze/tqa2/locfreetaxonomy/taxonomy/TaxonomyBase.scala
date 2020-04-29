@@ -26,6 +26,9 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.dom._
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal.DefaultSchemaQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal.DefaultTaxonomySchemaQueryApi
 import eu.cdevreeze.yaidom2.core.EName
+import eu.cdevreeze.yaidom2.queryapi.anyElem
+
+import scala.reflect.classTag
 
 /**
  * Taxonomy base, which is like a taxonomy without knowledge about relationships. It forms the basis for building BasicTaxonomy
@@ -46,6 +49,10 @@ final class TaxonomyBase private (
     with DefaultSchemaQueryApi {
 
   override def substitutionGroupMap: SubstitutionGroupMap = netSubstitutionGroupMap
+
+  def findAllLinkbases: Seq[Linkbase] = {
+    rootElems.flatMap(_.findTopmostElemsOrSelfOfType(classTag[Linkbase])(anyElem))
+  }
 
   def findElemByUri(uri: URI): Option[TaxonomyElem] = {
     require(uri.isAbsolute, s"Expected absolute URI but got relative URI '$uri'")
@@ -112,8 +119,7 @@ object TaxonomyBase {
 
   private def computeNamedGlobalSchemaComponentMap(rootElems: Seq[TaxonomyElem]): Map[EName, Seq[NamedGlobalSchemaComponent]] = {
     findAllXsdElems(rootElems)
-      .flatMap(_.filterDescendantElems(isNamedGlobalSchemaComponent))
-      .collect { case e: NamedGlobalSchemaComponent => e }
+      .flatMap(_.findAllDescendantElemsOfType(classTag[NamedGlobalSchemaComponent]))
       .groupBy(_.targetEName)
   }
 
@@ -122,7 +128,7 @@ object TaxonomyBase {
       substitutionGroupMap: SubstitutionGroupMap): Seq[ConceptDeclaration] = {
 
     val globalElemDecls: Seq[GlobalElementDeclaration] = findAllXsdElems(rootElems).flatMap { rootElem =>
-      rootElem.findTopmostElems(_.name == ENames.XsElementEName).collect { case e: GlobalElementDeclaration => e }
+      rootElem.findTopmostElemsOfType(classTag[GlobalElementDeclaration])(anyElem)
     }
 
     val conceptDeclarationBuilder = new ConceptDeclaration.Builder(substitutionGroupMap)
@@ -135,11 +141,6 @@ object TaxonomyBase {
       case e: XsSchema => Seq(e)
       case _           => Seq.empty
     }
-  }
-
-  private def isNamedGlobalSchemaComponent(e: TaxonomyElem): Boolean = e match {
-    case _: NamedGlobalSchemaComponent => true
-    case _                             => false
   }
 
   /**

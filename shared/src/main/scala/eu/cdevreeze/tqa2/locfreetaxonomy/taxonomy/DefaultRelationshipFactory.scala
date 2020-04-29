@@ -23,6 +23,9 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom._
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Relationship
+import eu.cdevreeze.yaidom2.queryapi.anyElem
+
+import scala.reflect.classTag
 
 /**
  * Default relationship factory implementation.
@@ -41,8 +44,7 @@ object DefaultRelationshipFactory extends RelationshipFactory {
     val rootElemOption = taxonomy.rootElemMap.get(docUri)
 
     rootElemOption.toList.flatMap { rootElem =>
-      val extendedLinks =
-        rootElem.findTopmostElemsOrSelf(_.isInstanceOf[ExtendedLink]).collect { case link: ExtendedLink => link }
+      val extendedLinks = rootElem.findTopmostElemsOrSelfOfType(classTag[ExtendedLink])(anyElem)
 
       extendedLinks.flatMap(link => extractRelationshipsFromExtendedLink(link, taxonomy, arcFilter))
     }.toIndexedSeq

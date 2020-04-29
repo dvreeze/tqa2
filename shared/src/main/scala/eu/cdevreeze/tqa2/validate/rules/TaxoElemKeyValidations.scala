@@ -18,7 +18,6 @@ package eu.cdevreeze.tqa2.validate.rules
 
 import java.net.URI
 
-import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom._
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.validate.Rule
@@ -26,6 +25,8 @@ import eu.cdevreeze.tqa2.validate.Taxonomies
 import eu.cdevreeze.tqa2.validate.Validation
 import eu.cdevreeze.tqa2.validate.ValidationResult
 import eu.cdevreeze.yaidom2.core.EName
+
+import scala.reflect.classTag
 
 /**
  * Taxonomy element key validations, checking that they are not "dead" references.
@@ -53,8 +54,7 @@ object TaxoElemKeyValidations {
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
       val keys = taxo.rootElems
         .filter(Taxonomies.isProperTaxonomyDocumentContent)
-        .flatMap(_.filterDescendantElemsOrSelf(_.name == ENames.CKeyConceptKeyEName))
-        .collect { case key: ConceptKey => key }
+        .flatMap(_.findAllDescendantElemsOrSelfOfType(classTag[ConceptKey]))
 
       val missingConcepts: Seq[EName] = keys.map(_.key).distinct.filter(c => taxo.findConceptDeclaration(c).isEmpty)
 
@@ -69,8 +69,7 @@ object TaxoElemKeyValidations {
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
       val keys = taxo.rootElems
         .filter(Taxonomies.isProperTaxonomyDocumentContent)
-        .flatMap(_.filterDescendantElemsOrSelf(_.name == ENames.CKeyElementKeyEName))
-        .collect { case key: ElementKey => key }
+        .flatMap(_.findAllDescendantElemsOrSelfOfType(classTag[ElementKey]))
 
       val missingElems: Seq[EName] = keys.map(_.key).distinct.filter(e => taxo.findGlobalElementDeclaration(e).isEmpty)
 
@@ -85,8 +84,7 @@ object TaxoElemKeyValidations {
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
       val keys = taxo.rootElems
         .filter(Taxonomies.isProperTaxonomyDocumentContent)
-        .flatMap(_.filterDescendantElemsOrSelf(_.name == ENames.CKeyTypeKeyEName))
-        .collect { case key: TypeKey => key }
+        .flatMap(_.findAllDescendantElemsOrSelfOfType(classTag[TypeKey]))
 
       val missingTypes: Seq[EName] = keys.map(_.key).distinct.filter(e => taxo.findNamedTypeDefinition(e).isEmpty)
 
@@ -101,13 +99,12 @@ object TaxoElemKeyValidations {
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
       val keys = taxo.rootElems
         .filter(Taxonomies.isProperTaxonomyDocumentContent)
-        .flatMap(_.filterDescendantElemsOrSelf(_.name == ENames.CKeyRoleKeyEName))
-        .collect { case key: RoleKey => key }
+        .flatMap(_.findAllDescendantElemsOrSelfOfType(classTag[RoleKey]))
 
       val allRoleTypeUris: Set[String] = taxo.rootElems
         .filter(Taxonomies.isProperTaxonomyDocumentContent)
-        .flatMap(_.filterDescendantElemsOrSelf(_.name == ENames.LinkRoleTypeEName))
-        .collect { case e: RoleType => e.roleUri }
+        .flatMap(_.findAllDescendantElemsOrSelfOfType(classTag[RoleType]))
+        .map(_.roleUri)
         .toSet
 
       val missingRoles: Seq[String] = keys.map(_.key).distinct.filterNot(allRoleTypeUris)
@@ -123,13 +120,12 @@ object TaxoElemKeyValidations {
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
       val keys = taxo.rootElems
         .filter(Taxonomies.isProperTaxonomyDocumentContent)
-        .flatMap(_.filterDescendantElemsOrSelf(_.name == ENames.CKeyArcroleKeyEName))
-        .collect { case key: ArcroleKey => key }
+        .flatMap(_.findAllDescendantElemsOrSelfOfType(classTag[ArcroleKey]))
 
       val allArcroleTypeUris: Set[String] = taxo.rootElems
         .filter(Taxonomies.isProperTaxonomyDocumentContent)
-        .flatMap(_.filterDescendantElemsOrSelf(_.name == ENames.LinkArcroleTypeEName))
-        .collect { case e: ArcroleType => e.arcroleUri }
+        .flatMap(_.findAllDescendantElemsOrSelfOfType(classTag[ArcroleType]))
+        .map(_.arcroleUri)
         .toSet
 
       val missingArcroles: Seq[String] = keys.map(_.key).distinct.filterNot(allArcroleTypeUris)
@@ -145,8 +141,7 @@ object TaxoElemKeyValidations {
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
       val keys = taxo.rootElems
         .filter(Taxonomies.isProperTaxonomyDocumentContent)
-        .flatMap(_.filterDescendantElemsOrSelf(_.name == ENames.CKeyAnyElemKeyEName))
-        .collect { case key: AnyElementKey => key }
+        .flatMap(_.findAllDescendantElemsOrSelfOfType(classTag[AnyElementKey]))
 
       val missingAnyElemKeys: Seq[URI] = keys.map(_.key).distinct.filter(k => findElem(k, taxo).isEmpty)
 

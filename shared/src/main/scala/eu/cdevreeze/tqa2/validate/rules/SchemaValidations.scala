@@ -124,11 +124,10 @@ object SchemaValidations {
     def rule: Rule = missingTypedDomainRule
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
-      val typedDimensions: Seq[GlobalElementDeclaration] = taxo.rootElems
+      val typedDimensions: Seq[GlobalElementDeclaration] = taxo.findAllXsdSchemas
         .filter(Taxonomies.isProperTaxonomyDocumentContent)
-        .flatMap(_.filterDescendantElemsOrSelf(_.name == ENames.XsElementEName))
+        .flatMap(_.findAllGlobalElementDeclarations)
         .filter(_.attrOption(ENames.CXbrldtTypedDomainKeyEName).nonEmpty)
-        .collect { case elemDecl: GlobalElementDeclaration => elemDecl }
 
       val missingTypedDomains: Seq[EName] =
         typedDimensions

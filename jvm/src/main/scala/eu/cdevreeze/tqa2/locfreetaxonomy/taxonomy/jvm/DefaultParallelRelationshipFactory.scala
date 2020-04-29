@@ -25,8 +25,10 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Relationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.RelationshipFactory
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyBase
+import eu.cdevreeze.yaidom2.queryapi.anyElem
 
 import scala.collection.parallel.CollectionConverters._
+import scala.reflect.classTag
 
 /**
  * Default parallel relationship factory implementation. JVM-only.
@@ -49,8 +51,7 @@ object DefaultParallelRelationshipFactory extends RelationshipFactory {
     val rootElemOption = taxonomy.rootElemMap.get(docUri)
 
     rootElemOption.toList.flatMap { rootElem =>
-      val extendedLinks =
-        rootElem.findTopmostElemsOrSelf(_.isInstanceOf[ExtendedLink]).collect { case link: ExtendedLink => link }
+      val extendedLinks = rootElem.findTopmostElemsOrSelfOfType(classTag[ExtendedLink])(anyElem)
 
       extendedLinks.flatMap(link => extractRelationshipsFromExtendedLink(link, taxonomy, arcFilter))
     }.toIndexedSeq

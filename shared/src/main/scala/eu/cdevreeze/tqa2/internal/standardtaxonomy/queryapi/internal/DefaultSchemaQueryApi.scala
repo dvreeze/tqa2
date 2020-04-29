@@ -47,7 +47,7 @@ trait DefaultSchemaQueryApi extends SchemaQueryApi {
   def findAllXsdSchemas: Seq[XsSchema] = {
     rootElems.flatMap(_.findTopmostElemsOrSelf(_.isRootElement)).flatMap {
       case e: XsSchema => Seq(e)
-      case _ => Seq.empty
+      case _           => Seq.empty
     }
   }
 

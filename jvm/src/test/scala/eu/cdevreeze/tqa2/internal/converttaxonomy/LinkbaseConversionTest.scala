@@ -38,6 +38,8 @@ import net.sf.saxon.s9api.Processor
 import org.scalatest.funsuite.AnyFunSuite
 import org.scalatest.matchers.should.Matchers._
 
+import scala.reflect.classTag
+
 /**
  * Test of converting linkbases to the locator-free model.
  *
@@ -75,8 +77,7 @@ class LinkbaseConversionTest extends AnyFunSuite {
 
     val conceptKeyData: Seq[(EName, String, String)] =
       locFreeLinkbase
-        .filterDescendantElems(_.name == ENames.CKeyConceptKeyEName)
-        .collect { case e: ConceptKey => e }
+        .findAllDescendantElemsOfType(classTag[ConceptKey])
         .map(e => (e.key, e.xlinkLabel, e.xlinkType))
 
     conceptKeyData should contain(
@@ -173,8 +174,7 @@ class LinkbaseConversionTest extends AnyFunSuite {
 
     val conceptKeyData: Seq[(EName, String, String)] =
       locFreeLinkbase
-        .filterDescendantElems(_.name == ENames.CKeyConceptKeyEName)
-        .collect { case e: ConceptKey => e }
+        .findAllDescendantElemsOfType(classTag[ConceptKey])
         .map(e => (e.key, e.xlinkLabel, e.xlinkType))
 
     conceptKeyData should contain(
@@ -281,8 +281,7 @@ class LinkbaseConversionTest extends AnyFunSuite {
 
     val conceptKeyENames: Seq[EName] =
       locFreeLinkbase
-        .filterDescendantElems(_.name == ENames.CKeyConceptKeyEName)
-        .collect { case e: ConceptKey => e }
+        .findAllDescendantElemsOfType(classTag[ConceptKey])
         .map(e => e.key)
 
     conceptKeyENames should contain(
@@ -380,8 +379,7 @@ class LinkbaseConversionTest extends AnyFunSuite {
 
     val conceptKeyENames: Seq[EName] =
       locFreeLinkbase
-        .filterDescendantElems(_.name == ENames.CKeyConceptKeyEName)
-        .collect { case e: ConceptKey => e }
+        .findAllDescendantElemsOfType(classTag[ConceptKey])
         .map(e => e.key)
 
     conceptKeyENames should contain(
@@ -476,8 +474,7 @@ class LinkbaseConversionTest extends AnyFunSuite {
 
     val roleKeyData: Seq[(String, String, String)] =
       locFreeLinkbase
-        .filterDescendantElems(_.name == ENames.CKeyRoleKeyEName)
-        .collect { case e: RoleKey => e }
+        .findAllDescendantElemsOfType(classTag[RoleKey])
         .map(e => (e.key, e.xlinkLabel, e.xlinkType))
 
     roleKeyData should contain(
@@ -577,8 +574,7 @@ class LinkbaseConversionTest extends AnyFunSuite {
 
     val roleKeyData: Seq[(String, String, String)] =
       locFreeLinkbase
-        .filterDescendantElems(_.name == ENames.CKeyRoleKeyEName)
-        .collect { case e: RoleKey => e }
+        .findAllDescendantElemsOfType(classTag[RoleKey])
         .map(e => (e.key, e.xlinkLabel, e.xlinkType))
 
     roleKeyData should contain(

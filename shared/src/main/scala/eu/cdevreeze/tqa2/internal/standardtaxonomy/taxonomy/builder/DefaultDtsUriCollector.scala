@@ -20,8 +20,10 @@ import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.internal.standardtaxonomy.dom._
+import eu.cdevreeze.yaidom2.queryapi.anyElem
 
 import scala.annotation.tailrec
+import scala.reflect.classTag
 
 /**
  * Default DTS URI collector, for 'standard' taxonomies.
@@ -49,8 +51,7 @@ trait DefaultDtsUriCollector extends DtsUriCollector {
    */
   def findAllUsedDocUris(docElem: TaxonomyElem): Set[URI] = {
     val taxoRootElems = docElem
-      .findTopmostElemsOrSelf(_.isInstanceOf[TaxonomyRootElem])
-      .collect { case e: TaxonomyRootElem => e }
+      .findTopmostElemsOrSelfOfType(classTag[TaxonomyRootElem with TaxonomyElem])(anyElem)
 
     taxoRootElems.flatMap(e => findAllUsedDocUrisInTaxonomyRoot(e)).toSet
   }
@@ -101,8 +102,7 @@ trait DefaultDtsUriCollector extends DtsUriCollector {
 
         findAllUsedDocUrisInXsSchema(xsSchema).union {
           xsSchema
-            .filterDescendantElems(_.isInstanceOf[Linkbase])
-            .collect { case e: Linkbase => e }
+            .findAllDescendantElemsOfType(classTag[Linkbase])
             .flatMap(lb => findAllUsedDocUrisInLinkbase(lb))
             .toSet
         }
@@ -116,7 +116,7 @@ trait DefaultDtsUriCollector extends DtsUriCollector {
 
     val imports = rootElem.findAllImports
     val includes = rootElem.filterDescendantElems(_.name == ENames.XsIncludeEName)
-    val linkbaseRefs = rootElem.filterDescendantElems(_.name == ENames.LinkLinkbaseRefEName).collect { case e: LinkbaseRef => e }
+    val linkbaseRefs = rootElem.findAllDescendantElemsOfType(classTag[LinkbaseRef])
 
     val importUris =
       imports.flatMap(e => e.attrOption(ENames.SchemaLocationEName).map(u => makeAbsoluteWithoutFragment(URI.create(u), e)))
@@ -131,9 +131,9 @@ trait DefaultDtsUriCollector extends DtsUriCollector {
   private def findAllUsedDocUrisInLinkbase(rootElem: Linkbase): Set[URI] = {
     // Only link:loc locators are used in DTS discovery.
 
-    val locs = rootElem.filterDescendantElems(_.name == ENames.LinkLocEName).collect { case e: StandardLoc              => e }
-    val roleRefs = rootElem.filterDescendantElems(_.name == ENames.LinkRoleRefEName).collect { case e: RoleRef          => e }
-    val arcroleRefs = rootElem.filterDescendantElems(_.name == ENames.LinkArcroleRefEName).collect { case e: ArcroleRef => e }
+    val locs = rootElem.findAllDescendantElemsOfType(classTag[StandardLoc])
+    val roleRefs = rootElem.findAllDescendantElemsOfType(classTag[RoleRef])
+    val arcroleRefs = rootElem.findAllDescendantElemsOfType(classTag[ArcroleRef])
 
     val locUris =
       locs.filter(e => e.rawHref != EmptyUri).map(e => makeAbsoluteWithoutFragment(e.rawHref, e))
