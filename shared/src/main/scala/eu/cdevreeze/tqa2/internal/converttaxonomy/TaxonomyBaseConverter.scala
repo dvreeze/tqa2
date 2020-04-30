@@ -19,11 +19,11 @@ package eu.cdevreeze.tqa2.internal.converttaxonomy
 import java.net.URI
 import java.util.regex.Pattern
 
+import eu.cdevreeze.tqa2.common.taxoutils.Taxonomies
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.locfreetaxonomy
-import eu.cdevreeze.tqa2.validate.Taxonomies
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.utils.namespaces.DocumentENameExtractor
 

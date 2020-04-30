@@ -18,10 +18,10 @@ package eu.cdevreeze.tqa2.validate.rules
 
 import java.net.URI
 
+import eu.cdevreeze.tqa2.common.taxoutils.Taxonomies
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom._
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.validate.Rule
-import eu.cdevreeze.tqa2.validate.Taxonomies
 import eu.cdevreeze.tqa2.validate.Validation
 import eu.cdevreeze.tqa2.validate.ValidationResult
 import eu.cdevreeze.yaidom2.core.EName

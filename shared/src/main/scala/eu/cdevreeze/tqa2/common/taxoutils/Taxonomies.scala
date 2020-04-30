@@ -14,12 +14,12 @@
  * limitations under the License.
  */
 
-package eu.cdevreeze.tqa2.validate
+package eu.cdevreeze.tqa2.common.taxoutils
 
 import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
+import eu.cdevreeze.yaidom2.queryapi.BackingNodes
 
 import scala.util.Try
 
@@ -52,15 +52,15 @@ object Taxonomies {
 
   def isProperTaxonomySchemaNamespace(ns: String): Boolean = !isCoreNamespace(ns)
 
-  def isCoreDocumentContent(taxoElem: TaxonomyElem): Boolean = {
+  def isCoreDocumentContent(taxoElem: BackingNodes.Elem): Boolean = {
     isCoreDocumentUri(taxoElem.docUri)
   }
 
-  def isProperTaxonomyDocumentContent(taxoElem: TaxonomyElem): Boolean = {
+  def isProperTaxonomyDocumentContent(taxoElem: BackingNodes.Elem): Boolean = {
     isProperTaxonomyDocumentUri(taxoElem.docUri)
   }
 
-  def canBeLocFreeDocument(taxoElem: TaxonomyElem): Boolean = {
+  def canBeLocFreeDocument(taxoElem: BackingNodes.Elem): Boolean = {
     taxoElem.name == ENames.XsSchemaEName || taxoElem.name == ENames.CLinkLinkbaseEName
   }
 
@@ -69,7 +69,7 @@ object Taxonomies {
    * if method canBeLocFreeDocument returns true and all xs:import elements have no schemaLocation attribute
    * and there are no clink:linkbaseRef elements.
    */
-  def canBeStandaloneLocFreeDocument(taxoElem: TaxonomyElem): Boolean = {
+  def canBeStandaloneLocFreeDocument(taxoElem: BackingNodes.Elem): Boolean = {
     canBeLocFreeDocument(taxoElem) && {
       taxoElem.filterDescendantElems { e =>
         (e.name == ENames.XsImportEName && e.attrOption(ENames.SchemaLocationEName).nonEmpty) ||
@@ -83,7 +83,7 @@ object Taxonomies {
    * if method canBeLocFreeDocument returns true, and either at least one xs:import elements has a schemaLocation attribute
    * or there is at least one clink:linkbaseRef element.
    */
-  def canBeConnectedLocFreeDocument(taxoElem: TaxonomyElem): Boolean = {
+  def canBeConnectedLocFreeDocument(taxoElem: BackingNodes.Elem): Boolean = {
     canBeLocFreeDocument(taxoElem) && {
       taxoElem.filterDescendantElems { e =>
         (e.name == ENames.XsImportEName && e.attrOption(ENames.SchemaLocationEName).nonEmpty) ||
