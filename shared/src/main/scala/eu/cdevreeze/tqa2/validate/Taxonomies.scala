@@ -79,11 +79,11 @@ object Taxonomies {
   }
 
   /**
-   * Returns true if this document is incomplete according to the locator-free model. That is, returns true
+   * Returns true if this document is connected according to the locator-free model. That is, returns true
    * if method canBeLocFreeDocument returns true, and either at least one xs:import elements has a schemaLocation attribute
    * or there is at least one clink:linkbaseRef element.
    */
-  def canBeIncompleteLocFreeDocument(taxoElem: TaxonomyElem): Boolean = {
+  def canBeConnectedLocFreeDocument(taxoElem: TaxonomyElem): Boolean = {
     canBeLocFreeDocument(taxoElem) && {
       taxoElem.filterDescendantElems { e =>
         (e.name == ENames.XsImportEName && e.attrOption(ENames.SchemaLocationEName).nonEmpty) ||
