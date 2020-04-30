@@ -19,11 +19,11 @@ package eu.cdevreeze.tqa2.locfreetaxonomy
 import java.io.File
 import java.net.URI
 
-import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
-import eu.cdevreeze.tqa2.docbuilder.jvm.SaxInputSource
-import eu.cdevreeze.tqa2.docbuilder.jvm.SaxUriResolvers
 import eu.cdevreeze.tqa2.docbuilder.DocumentBuilder
 import eu.cdevreeze.tqa2.docbuilder.UriConverters
+import eu.cdevreeze.tqa2.docbuilder.jvm.SaxInputSource
+import eu.cdevreeze.tqa2.docbuilder.jvm.SaxUriResolvers
+import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder.DefaultDtsUriCollector
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder.DefaultTaxonomyBuilder
@@ -59,6 +59,13 @@ object TestResourceUtil {
   }
 
   def buildTaxonomyFromClasspath(entrypointUri: URI, localRootUriRelativeToClasspathRoot: URI, processor: Processor): BasicTaxonomy = {
+    buildTaxonomyFromClasspath(Set(entrypointUri), localRootUriRelativeToClasspathRoot, processor)
+  }
+
+  def buildTaxonomyFromClasspath(
+      urisOfEntrypoint: Set[URI],
+      localRootUriRelativeToClasspathRoot: URI,
+      processor: Processor): BasicTaxonomy = {
     require(!localRootUriRelativeToClasspathRoot.isAbsolute)
     require(localRootUriRelativeToClasspathRoot.toString.endsWith("/"))
 
@@ -72,6 +79,6 @@ object TestResourceUtil {
       .withDocumentBuilder(docBuilder)
       .withDtsUriCollector(DefaultDtsUriCollector)
       .withDefaultRelationshipFactory
-      .build(Set(entrypointUri))
+      .build(urisOfEntrypoint)
   }
 }

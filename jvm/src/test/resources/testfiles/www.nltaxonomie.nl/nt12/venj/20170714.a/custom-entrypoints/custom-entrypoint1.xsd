@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:clink="http://www.locfreexbrl.org/2003/linkbase" targetNamespace="http://www.nltaxonomie.nl/nt13/jenv/20181212/entrypoints/jenv-rpt-bw2-besluit-actuele-waarde" id="jenv-rpt-bw2-baw" attributeFormDefault="unqualified" elementFormDefault="qualified">
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:clink="http://www.locfreexbrl.org/2003/linkbase" targetNamespace="http://www.nltaxonomie.nl/nt13/jenv/20181212/custom-entrypoints/custom-entrypoint1" id="jenv-rpt-bw2-baw" attributeFormDefault="unqualified" elementFormDefault="qualified">
     <xs:annotation>
         <xs:appinfo>
             <clink:linkbaseRef href="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes-lab-fr.xml"/>

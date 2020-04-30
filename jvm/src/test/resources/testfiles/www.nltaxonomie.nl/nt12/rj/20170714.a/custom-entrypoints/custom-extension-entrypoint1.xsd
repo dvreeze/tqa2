@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:clink="http://www.locfreexbrl.org/2003/linkbase" targetNamespace="http://www.nltaxonomie.nl/nt13/jenv/20181212/entrypoints/jenv-rpt-bw2-besluit-actuele-waarde" id="jenv-rpt-bw2-baw" attributeFormDefault="unqualified" elementFormDefault="qualified">
+    <xs:annotation>
+        <xs:appinfo>
+            <clink:linkbaseRef href="http://www.nltaxonomie.nl/nt12/rj/20170714.a/presentation/rj-annual-reporting-guidelines-140_m_g-pre.xml"/>
+        </xs:appinfo>
+    </xs:annotation>
+    <xs:import namespace="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-arcroles" schemaLocation="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-arcroles.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension" schemaLocation="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/2013/xbrl/sbr-dimensional-concepts" schemaLocation="http://www.nltaxonomie.nl/2013/xbrl/sbr-dimensional-concepts.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/nt12/rj/20170714.a/dictionary/rj-codes" schemaLocation="http://www.nltaxonomie.nl/nt12/rj/20170714.a/dictionary/rj-codes.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/nt12/rj/20170714.a/dictionary/rj-data" schemaLocation="http://www.nltaxonomie.nl/nt12/rj/20170714.a/dictionary/rj-data.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/nt12/rj/20170714.a/presentation/rj-abstracts" schemaLocation="http://www.nltaxonomie.nl/nt12/rj/20170714.a/presentation/rj-abstracts.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-codes" schemaLocation="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-codes.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-types" schemaLocation="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-types.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/iso4217-currencycodes-2016-02-24" schemaLocation="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/iso4217-currencycodes-2016-02-24.xsd"/>
+    <!-- Importing other entrypoint, without schemaLocation! -->
+    <xs:import namespace="http://www.nltaxonomie.nl/nt13/jenv/20181212/custom-entrypoints/custom-entrypoint1"/>
+</xs:schema>

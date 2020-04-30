@@ -20,10 +20,8 @@ import java.net.URI
 
 import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.BaseSetKey
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ConceptLabelRelationship
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ElementLabelRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.InterConceptRelationship
-import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyFilteringTest.InterConceptRelKey
+import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyExtensionTest.InterConceptRelKey
 import eu.cdevreeze.tqa2.validate.Validation
 import eu.cdevreeze.tqa2.validate.ValidationResult
 import eu.cdevreeze.tqa2.validate.Validator
@@ -33,13 +31,16 @@ import net.sf.saxon.s9api.Processor
 import org.scalatest.funsuite.AnyFunSuite
 
 /**
- * Test of filtering taxonomies by filtering entrypoints.
+ * Test of extending taxonomies by "joining" entrypoints. Note that the same mechanism can be used for layering
+ * taxonomies, because layering and extending are technically the same.
  *
  * @author Chris de Vreeze
  */
-class TaxonomyFilteringTest extends AnyFunSuite {
+class TaxonomyExtensionTest extends AnyFunSuite {
 
-  test("TQA should be able to successfully filter an entrypoint") {
+  // TODO Efficiently (and safely) extend a BasicTaxonomy
+
+  test("TQA should be able to successfully extend an entrypoint") {
     val entrypointUri1 = URI.create("http://www.nltaxonomie.nl/nt12/venj/20170714.a/custom-entrypoints/custom-entrypoint1.xsd")
 
     val taxo1: BasicTaxonomy = TestResourceUtil.buildTaxonomyFromClasspath(entrypointUri1, URI.create("testfiles/"), processor)
@@ -52,43 +53,38 @@ class TaxonomyFilteringTest extends AnyFunSuite {
       validate(taxo1)
     }
 
-    // Take another entrypoint, which is like the one before, but discarding (standard and generic) label linkbases.
+    // Extending the entrypoint above by "joining" it with an extension taxonomy entrypoint.
 
-    val entrypointUri2 = URI.create("http://www.nltaxonomie.nl/nt12/venj/20170714.a/custom-entrypoints/custom-entrypoint1-no-labels.xsd")
+    val entrypointUri2 = URI.create("http://www.nltaxonomie.nl/nt12/rj/20170714.a/custom-entrypoints/custom-extension-entrypoint1.xsd")
 
-    val taxo2: BasicTaxonomy = TestResourceUtil.buildTaxonomyFromClasspath(entrypointUri2, URI.create("testfiles/"), processor)
+    val entrypoint: Set[URI] = Set(entrypointUri1, entrypointUri2)
+
+    // TODO Check that the import in one entrypoint matches the target namespace in the other, thus "joining" them
+
+    val taxo2: BasicTaxonomy = TestResourceUtil.buildTaxonomyFromClasspath(entrypoint, URI.create("testfiles/"), processor)
 
     assertResult(true) {
-      taxo2.relationships.sizeIs >= 50 && taxo2.relationships.size < 100
+      taxo2.relationships.size > taxo1.relationships.size
+    }
+
+    def isRjPresentationLinkbaseUri(uri: URI): Boolean = {
+      uri.toString.contains("rj-annual-reporting-guidelines")
+    }
+
+    assertResult(taxo1.relationships.size) {
+      taxo2.relationships.filterNot(rel => isRjPresentationLinkbaseUri(rel.docUri)).size
     }
 
     assertResult(Nil) {
       validate(taxo2)
     }
 
-    assertResult(
-      taxo1.relationships.filterNot(_.isInstanceOf[ConceptLabelRelationship]).filterNot(_.isInstanceOf[ElementLabelRelationship]).size) {
-      taxo2.relationships.size
-    }
-
-    assertResult(true) {
-      taxo2.findAllDimensionalRelationships.sizeIs >= 5 && taxo2.findAllDimensionalRelationships.size < 10
-    }
-
     assertResult(taxo1.findAllDimensionalRelationships.map(InterConceptRelKey.from).toSet) {
       taxo2.findAllDimensionalRelationships.map(InterConceptRelKey.from).toSet
     }
 
-    assertResult(true) {
-      taxo2.findAllParentChildRelationships.sizeIs >= 20 && taxo2.findAllParentChildRelationships.size < 40
-    }
-
     assertResult(taxo1.findAllParentChildRelationships.map(InterConceptRelKey.from).toSet) {
-      taxo2.findAllParentChildRelationships.map(InterConceptRelKey.from).toSet
-    }
-
-    assertResult(taxo1.findAllItemDeclarations.map(_.targetEName).toSet) {
-      taxo2.findAllItemDeclarations.map(_.targetEName).toSet
+      taxo2.filterParentChildRelationships(rel => !isRjPresentationLinkbaseUri(rel.docUri)).map(InterConceptRelKey.from).toSet
     }
   }
 
@@ -107,7 +103,7 @@ class TaxonomyFilteringTest extends AnyFunSuite {
   private val processor = new Processor(false)
 }
 
-object TaxonomyFilteringTest {
+object TaxonomyExtensionTest {
 
   private final case class InterConceptRelKey(source: EName, target: EName, baseSet: BaseSetKey)
 
