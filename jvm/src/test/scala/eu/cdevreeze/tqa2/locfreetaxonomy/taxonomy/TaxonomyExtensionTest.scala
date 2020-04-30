@@ -18,8 +18,10 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy
 
 import java.net.URI
 
+import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.BaseSetKey
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.InterConceptRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyExtensionTest.InterConceptRelKey
 import eu.cdevreeze.tqa2.validate.Validation
@@ -31,7 +33,7 @@ import net.sf.saxon.s9api.Processor
 import org.scalatest.funsuite.AnyFunSuite
 
 /**
- * Test of extending taxonomies by "joining" entrypoints. Note that the same mechanism can be used for layering
+ * Test of extending taxonomies by "extending" entrypoints. Note that the same mechanism can be used for layering
  * taxonomies, because layering and extending are technically the same.
  *
  * @author Chris de Vreeze
@@ -53,15 +55,17 @@ class TaxonomyExtensionTest extends AnyFunSuite {
       validate(taxo1)
     }
 
-    // Extending the entrypoint above by "joining" it with an extension taxonomy entrypoint.
+    // Extending the entrypoint above by "extending" it with an extension taxonomy entrypoint.
 
     val entrypointUri2 = URI.create("http://www.nltaxonomie.nl/nt12/rj/20170714.a/custom-entrypoints/custom-extension-entrypoint1.xsd")
 
     val entrypoint: Set[URI] = Set(entrypointUri1, entrypointUri2)
 
-    // TODO Check that the import in one entrypoint matches the target namespace in the other, thus "joining" them
-
     val taxo2: BasicTaxonomy = TestResourceUtil.buildTaxonomyFromClasspath(entrypoint, URI.create("testfiles/"), processor)
+
+    assertResult(true) {
+      checkEntrypoint(entrypoint, taxo2)
+    }
 
     assertResult(true) {
       taxo2.relationships.size > taxo1.relationships.size
@@ -98,6 +102,23 @@ class TaxonomyExtensionTest extends AnyFunSuite {
 
     val validationResults: Seq[ValidationResult] = Validator.validate(taxo, validations)
     validationResults
+  }
+
+  /**
+   * Checks that in a multi-document entrypoint an xs:import without schemaLocation has a namespace that is the
+   * target namespace of another schema document in that entrypoint.
+   */
+  private def checkEntrypoint(entrypoint: Set[URI], taxo: BasicTaxonomy): Boolean = {
+    val entrypointSchemas: Seq[XsSchema] =
+      taxo.taxonomyBase.rootElemMap.view.filterKeys(entrypoint).values.toSeq.collect { case e: XsSchema => e }
+
+    val unconnectedImportedNamespaces: Set[String] = entrypointSchemas.flatMap { e =>
+      e.findAllImports.filter(_.attrOption(ENames.SchemaLocationEName).isEmpty).map(_.attr(ENames.NamespaceEName))
+    }.toSet
+
+    val targetNamespaces: Set[String] = entrypointSchemas.flatMap(_.targetNamespaceOption).toSet
+
+    unconnectedImportedNamespaces.diff(targetNamespaces).isEmpty
   }
 
   private val processor = new Processor(false)
