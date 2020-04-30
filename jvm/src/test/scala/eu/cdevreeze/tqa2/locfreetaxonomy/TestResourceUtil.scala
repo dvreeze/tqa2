@@ -16,16 +16,23 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy
 
+import java.io.File
 import java.net.URI
 
-import eu.cdevreeze.tqa2.docbuilder.UriConverters
-import eu.cdevreeze.tqa2.docbuilder.jvm.SaxUriResolvers
 import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
+import eu.cdevreeze.tqa2.docbuilder.jvm.SaxInputSource
+import eu.cdevreeze.tqa2.docbuilder.jvm.SaxUriResolvers
+import eu.cdevreeze.tqa2.docbuilder.DocumentBuilder
+import eu.cdevreeze.tqa2.docbuilder.UriConverters
+import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
+import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder.DefaultDtsUriCollector
+import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder.DefaultTaxonomyBuilder
 import eu.cdevreeze.yaidom2.node.saxon.SaxonDocument
 import net.sf.saxon.s9api.Processor
 
 /**
- * Support for converting classpath URIs (on the JVM) for testing, and for building documents from such relative URIs.
+ * Support for converting classpath URIs (on the JVM) for testing, and for building documents from such relative URIs,
+ * and for bootstrapping BasicTaxonomy instances from classpath resources.
  *
  * @author Chris de Vreeze
  */
@@ -49,5 +56,22 @@ object TestResourceUtil {
     val uri: URI = TestResourceUtil.convertClasspathUriToAbsoluteUri(relativeFilePath)
     val docBuilder = SaxonDocumentBuilder(processor, SaxUriResolvers.fromUriConverter(UriConverters.identity))
     docBuilder.build(uri)
+  }
+
+  def buildTaxonomyFromClasspath(entrypointUri: URI, localRootUriRelativeToClasspathRoot: URI, processor: Processor): BasicTaxonomy = {
+    require(!localRootUriRelativeToClasspathRoot.isAbsolute)
+    require(localRootUriRelativeToClasspathRoot.toString.endsWith("/"))
+
+    val localRootDir: File = new File(convertClasspathUriToAbsoluteUri(localRootUriRelativeToClasspathRoot))
+
+    val uriResolver: URI => SaxInputSource = SaxUriResolvers.fromLocalMirrorRootDirectory(localRootDir)
+
+    val docBuilder: DocumentBuilder = SaxonDocumentBuilder(processor, uriResolver)
+
+    DefaultTaxonomyBuilder
+      .withDocumentBuilder(docBuilder)
+      .withDtsUriCollector(DefaultDtsUriCollector)
+      .withDefaultRelationshipFactory
+      .build(Set(entrypointUri))
   }
 }

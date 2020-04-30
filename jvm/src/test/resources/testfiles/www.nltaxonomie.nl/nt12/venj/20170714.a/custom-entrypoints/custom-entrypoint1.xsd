@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:clink="http://www.locfreexbrl.org/2003/linkbase" targetNamespace="http://www.nltaxonomie.nl/nt13/jenv/20181212/entrypoints/jenv-rpt-bw2-besluit-actuele-waarde" id="jenv-rpt-bw2-baw" attributeFormDefault="unqualified" elementFormDefault="qualified">
+    <xs:annotation>
+        <xs:appinfo>
+            <clink:linkbaseRef href="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes-lab-fr.xml"/>
+            <clink:linkbaseRef href="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes-ref.xml"/>
+            <clink:linkbaseRef href="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-linkroles-generic-lab-en.xml"/>
+            <!--
+            <clink:linkbaseRef href="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-codes-generic-lab-de.xml"/>
+            -->
+            <clink:linkbaseRef href="http://www.nltaxonomie.nl/nt12/venj/20170714.a/presentation/venj-bw2-decree-on-additional-regulations-for-the-management-report-pre.xml"/>
+            <clink:linkbaseRef href="http://www.nltaxonomie.nl/nt12/venj/20170714.a/presentation/venj-bw2-generic-linkrole-order.xml"/>
+            <clink:linkbaseRef href="http://www.nltaxonomie.nl/nt12/venj/20170714.a/validation/venj-bw2-uniform-fiscal-valuation-principles-decree-def.xml"/>
+        </xs:appinfo>
+    </xs:annotation>
+    <xs:import namespace="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-arcroles" schemaLocation="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-arcroles.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension" schemaLocation="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/2013/xbrl/sbr-dimensional-concepts" schemaLocation="http://www.nltaxonomie.nl/2013/xbrl/sbr-dimensional-concepts.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes" schemaLocation="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-data" schemaLocation="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-data.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-domains" schemaLocation="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-domains.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-linkroles" schemaLocation="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-linkroles.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/presentation/venj-bw2-abstracts" schemaLocation="http://www.nltaxonomie.nl/nt12/venj/20170714.a/presentation/venj-bw2-abstracts.xsd"/>
+</xs:schema>

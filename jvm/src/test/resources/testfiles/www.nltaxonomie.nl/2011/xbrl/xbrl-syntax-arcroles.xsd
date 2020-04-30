@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:gen="http://xbrl.org/2008/generic" xmlns:link="http://www.xbrl.org/2003/linkbase" targetNamespace="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-arcroles" attributeFormDefault="unqualified" elementFormDefault="qualified">
+  <xs:import namespace="http://www.xbrl.org/2003/instance"/>
+  <xs:import namespace="http://www.xbrl.org/2003/linkbase"/>
+  <xs:import namespace="http://xbrl.org/2008/generic"/>
+  <xs:annotation>
+    <xs:appinfo>
+      <link:arcroleType id="sbr_linkrole-order" cyclesAllowed="none" arcroleURI="http://www.nltaxonomie.nl/2011/arcrole/linkrole-order">
+        <link:definition>Arcrole for attaching order to Extended LinkRoles inside a DTS</link:definition>
+        <link:usedOn>gen:arc</link:usedOn>
+      </link:arcroleType>
+    </xs:appinfo>
+  </xs:annotation>
+</xs:schema>

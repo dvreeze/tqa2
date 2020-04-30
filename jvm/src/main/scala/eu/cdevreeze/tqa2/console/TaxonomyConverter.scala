@@ -227,6 +227,7 @@ object TaxonomyConverter {
       val localUri: URI = catalog.getMappedUri(rootElem.docUri)
 
       val file: File = new File(localUri)
+      file.getParentFile().mkdirs()
 
       if (!file.exists() || forceSaving) {
         SaxonSerializer.serialize(saxonDoc, file)
