@@ -1,12 +1,5 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<!--
-  This file is part of the Dutch Taxonomy (Nederlandse Taxonomie; NT)
-  Intellectual Property of the State of the Netherlands
-  Architecture: NT12
-  Version: 20170714.a
-  Release date: Friday July 14 09:00:00 2017
--->
-<xs:schema xmlns:nl-codes="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-codes" xmlns:nl-types="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-types" xmlns:num="http://www.xbrl.org/dtr/type/numeric" xmlns:venj-bw2-i="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-data" xmlns:venj-codes="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-codes" xmlns:venj-types="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-types" xmlns:xbrli="http://www.xbrl.org/2003/instance" xmlns:xs="http://www.w3.org/2001/XMLSchema" attributeFormDefault="unqualified" elementFormDefault="qualified" targetNamespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-data">
+<?xml version="1.0" encoding="UTF-8"?>
+<xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xbrli="http://www.xbrl.org/2003/instance" xmlns:num="http://www.xbrl.org/dtr/type/numeric" xmlns:nl-codes="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-codes" xmlns:venj-types="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-types" xmlns:venj-codes="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-codes" xmlns:nl-types="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-types" targetNamespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-data" attributeFormDefault="unqualified" elementFormDefault="qualified">
   <xs:import namespace="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-codes"/>
   <xs:import namespace="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-types"/>
   <xs:import namespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-codes"/>

@@ -1,19 +1,12 @@
-<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
-<!--
-  This file is part of the Dutch Taxonomy (Nederlandse Taxonomie; NT)
-  Intellectual Property of the State of the Netherlands
-  Architecture: NT12
-  Version: 20170714.a
-  Release date: Friday July 14 09:00:00 2017
--->
-<clink:linkbase xmlns:clink="http://www.locfreexbrl.org/2003/linkbase" xmlns:ckey="http://www.locfreexbrl.org/2019/key" xmlns:venj-bw2-dim="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes" xmlns:ref="http://www.xbrl.org/2006/ref" xmlns:xlink="http://www.w3.org/1999/xlink">
+<?xml version="1.0" encoding="UTF-8"?>
+<clink:linkbase xmlns:clink="http://www.locfreexbrl.org/2003/linkbase" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:ref="http://www.xbrl.org/2006/ref" xmlns:venj-bw2-dim="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes" xmlns:ckey="http://www.locfreexbrl.org/2019/key">
   <clink:referenceLink xlink:role="http://www.xbrl.org/2003/role/link" xlink:type="extended">
+    <clink:referenceArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-reference" xlink:from="venj-bw2-dim_LoansAdvancesGuaranteesAxis_loc" xlink:to="venj-bw2-dim_BW2_2016-01-01_383e_ref" xlink:type="arc"/>
     <ckey:conceptKey key="venj-bw2-dim:LoansAdvancesGuaranteesAxis" xlink:label="venj-bw2-dim_LoansAdvancesGuaranteesAxis_loc" xlink:type="resource"/>
     <clink:reference id="venj-bw2-dim_BW2_2016-01-01_383e_ref" xlink:label="venj-bw2-dim_BW2_2016-01-01_383e_ref" xlink:role="http://www.xbrl.org/2003/role/reference" xlink:type="resource">
       <ref:Article>383e</ref:Article>
       <ref:IssueDate>2017-01-01</ref:IssueDate>
       <ref:Name>Burgerlijk wetboek boek 2</ref:Name>
     </clink:reference>
-    <clink:referenceArc xlink:arcrole="http://www.xbrl.org/2003/arcrole/concept-reference" xlink:from="venj-bw2-dim_LoansAdvancesGuaranteesAxis_loc" xlink:to="venj-bw2-dim_BW2_2016-01-01_383e_ref" xlink:type="arc"/>
   </clink:referenceLink>
 </clink:linkbase>

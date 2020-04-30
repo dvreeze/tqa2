@@ -12,6 +12,7 @@
     <xs:import namespace="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension" schemaLocation="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension.xsd"/>
     <xs:import namespace="http://www.nltaxonomie.nl/2013/xbrl/sbr-dimensional-concepts" schemaLocation="http://www.nltaxonomie.nl/2013/xbrl/sbr-dimensional-concepts.xsd"/>
     <xs:import namespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes" schemaLocation="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes.xsd"/>
+    <xs:import namespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-codes" schemaLocation="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-codes.xsd"/>
     <xs:import namespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-data" schemaLocation="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-data.xsd"/>
     <xs:import namespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-domains" schemaLocation="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-domains.xsd"/>
     <xs:import namespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-linkroles" schemaLocation="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-linkroles.xsd"/>
