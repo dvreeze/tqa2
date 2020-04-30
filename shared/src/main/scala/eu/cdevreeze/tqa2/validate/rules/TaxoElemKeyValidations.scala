@@ -35,21 +35,21 @@ import scala.reflect.classTag
  */
 object TaxoElemKeyValidations {
 
-  val missingConceptRule: Rule = "Missing concept"
+  val missingConceptNotAllowedRule: Rule = "Missing concept not allowed"
 
-  val missingElementRule: Rule = "Missing element declaration"
+  val missingElementNotAllowedRule: Rule = "Missing element declaration not allowed"
 
-  val missingTypeRule: Rule = "Missing type"
+  val missingTypeNotAllowedRule: Rule = "Missing type not allowed"
 
-  val missingRoleTypeRule: Rule = "Missing role type"
+  val missingRoleTypeNotAllowedRule: Rule = "Missing role type not allowed"
 
-  val missingArcroleTypeRule: Rule = "Missing arcrole type"
+  val missingArcroleTypeNotAllowedRule: Rule = "Missing arcrole type not allowed"
 
-  val missingAnyElementRule: Rule = "Missing XML element"
+  val missingAnyElementNotAllowedRule: Rule = "Missing XML element not allowed"
 
   object MissingConcept extends Validation {
 
-    def rule: Rule = missingConceptRule
+    def rule: Rule = missingConceptNotAllowedRule
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
       val keys = taxo.rootElems
@@ -64,7 +64,7 @@ object TaxoElemKeyValidations {
 
   object MissingElement extends Validation {
 
-    def rule: Rule = missingElementRule
+    def rule: Rule = missingElementNotAllowedRule
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
       val keys = taxo.rootElems
@@ -79,7 +79,7 @@ object TaxoElemKeyValidations {
 
   object MissingType extends Validation {
 
-    def rule: Rule = missingTypeRule
+    def rule: Rule = missingTypeNotAllowedRule
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
       val keys = taxo.rootElems
@@ -94,7 +94,7 @@ object TaxoElemKeyValidations {
 
   object MissingRoleType extends Validation {
 
-    def rule: Rule = missingRoleTypeRule
+    def rule: Rule = missingRoleTypeNotAllowedRule
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
       val keys = taxo.rootElems
@@ -115,7 +115,7 @@ object TaxoElemKeyValidations {
 
   object MissingArcroleType extends Validation {
 
-    def rule: Rule = missingArcroleTypeRule
+    def rule: Rule = missingArcroleTypeNotAllowedRule
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
       val keys = taxo.rootElems
@@ -136,7 +136,7 @@ object TaxoElemKeyValidations {
 
   object MissingAnyElem extends Validation {
 
-    def rule: Rule = missingAnyElementRule
+    def rule: Rule = missingAnyElementNotAllowedRule
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
       val keys = taxo.rootElems

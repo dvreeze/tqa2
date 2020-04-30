@@ -36,13 +36,13 @@ object SchemaValidations {
 
   val includeNotAllowedRule: Rule = "Element xs:include not allowed"
 
-  val tnsRequiredRule: Rule = "Missing targetNamespace attribute"
+  val tnsRequiredRule: Rule = "Missing targetNamespace attribute not allowed"
 
-  val tnsUniqueRule: Rule = "Non-unique targetNamespace attribute across schemas"
+  val tnsUniqueRule: Rule = "Non-unique targetNamespace attribute across schemas not allowed"
 
   val typedDomainRefNotAllowedRule: Rule = "Attribute xbrldt:typedDomainRef not allowed"
 
-  val missingTypedDomainRule: Rule = "Missing typed domain"
+  val missingTypedDomainNotAllowedRule: Rule = "Missing typed domain not allowed"
 
   object IncludeNotAllowed extends Validation {
 
@@ -121,7 +121,7 @@ object SchemaValidations {
 
   object MissingTypedDomain extends Validation {
 
-    def rule: Rule = missingTypedDomainRule
+    def rule: Rule = missingTypedDomainNotAllowedRule
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
       val typedDimensions: Seq[GlobalElementDeclaration] = taxo.findAllXsdSchemas

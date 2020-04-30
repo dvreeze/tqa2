@@ -39,9 +39,9 @@ object XLinkValidations {
 
   val simpleLinkNotAllowedRule: Rule = "XLink simple link not allowed"
 
-  val missingArcFromRule: Rule = "Missing arc 'from'"
+  val missingArcFromNotAllowedRule: Rule = "Missing arc 'from' not allowed"
 
-  val missingArcToRule: Rule = "Missing arc 'to'"
+  val missingArcToNotAllowedRule: Rule = "Missing arc 'to' not allowed"
 
   object LocatorNotAllowed extends Validation {
 
@@ -98,14 +98,14 @@ object XLinkValidations {
 
   object MissingArcFrom extends MissingArcFromOrTo {
 
-    def rule: Rule = missingArcFromRule
+    def rule: Rule = missingArcFromNotAllowedRule
 
     protected def isForArcFrom: Boolean = true
   }
 
   object MissingArcTo extends MissingArcFromOrTo {
 
-    def rule: Rule = missingArcToRule
+    def rule: Rule = missingArcToNotAllowedRule
 
     protected def isForArcFrom: Boolean = false
   }

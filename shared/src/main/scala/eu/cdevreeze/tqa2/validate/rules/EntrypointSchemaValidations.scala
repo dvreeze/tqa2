@@ -69,9 +69,9 @@ import eu.cdevreeze.tqa2.validate.ValidationResult
  */
 object EntrypointSchemaValidations {
 
-  val missingImportTarget = "Missing target of xs:import schemaLocation"
+  val missingImportTargetNotAllowedRule = "Missing target of xs:import schemaLocation not allowed"
 
-  val missingCLinkbaseRefTarget = "Missing target of clink:LinkbaseRef href"
+  val missingCLinkbaseRefTargetNotAllowedRule = "Missing target of clink:LinkbaseRef href not allowed"
 
   val incompleteDocReferringToAnotherIncompleteDocNotAllowedRule = "Incomplete documents must only refer to standalone documents"
 
@@ -79,7 +79,7 @@ object EntrypointSchemaValidations {
 
   object MissingImportTarget extends Validation {
 
-    def rule: Rule = missingImportTarget
+    def rule: Rule = missingImportTargetNotAllowedRule
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
       val importTargets: Seq[URI] = taxo.rootElems
@@ -97,7 +97,7 @@ object EntrypointSchemaValidations {
 
   object MissingLinkbaseTarget extends Validation {
 
-    def rule: Rule = missingCLinkbaseRefTarget
+    def rule: Rule = missingCLinkbaseRefTargetNotAllowedRule
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
       val linkbaseRefTargets: Seq[URI] = taxo.rootElems
