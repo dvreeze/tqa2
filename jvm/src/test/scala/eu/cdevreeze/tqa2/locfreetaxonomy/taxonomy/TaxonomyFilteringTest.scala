@@ -52,12 +52,18 @@ class TaxonomyFilteringTest extends AnyFunSuite {
       validate(taxo1)
     }
 
+    // Take another entrypoint, which is like the one before, but discarding (standard and generic) label linkbases.
+
     val entrypointUri2 = URI.create("http://www.nltaxonomie.nl/nt12/venj/20170714.a/custom-entrypoints/custom-entrypoint1-no-labels.xsd")
 
     val taxo2: BasicTaxonomy = TestResourceUtil.buildTaxonomyFromClasspath(entrypointUri2, URI.create("testfiles/"), processor)
 
     assertResult(true) {
       taxo2.relationships.sizeIs >= 50 && taxo2.relationships.size < 100
+    }
+
+    assertResult(Nil) {
+      validate(taxo2)
     }
 
     assertResult(
