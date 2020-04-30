@@ -20,6 +20,7 @@ import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.validate.Rule
 import eu.cdevreeze.tqa2.validate.Taxonomies
@@ -74,6 +75,9 @@ object EntrypointSchemaValidations {
   val missingCLinkbaseRefTargetNotAllowedRule = "Missing target of clink:LinkbaseRef href not allowed"
 
   val incompleteDocReferringToAnotherIncompleteDocNotAllowedRule = "Incomplete documents must only refer to standalone documents"
+
+  val closedSchemaSetRule =
+    "The schema set imported with location from an incomplete schema must be closed under imported/target namespaces"
 
   // TODO Entrypoint completeness check, in that entrypoint xs:import elements without schemaLocation "join" with other schemas in the entrypoint
 
@@ -151,7 +155,49 @@ object EntrypointSchemaValidations {
     }
   }
 
+  object NotAClosedSchemaSet extends Validation {
+
+    def rule: Rule = closedSchemaSetRule
+
+    def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
+      val incompleteSchemas: Seq[XsSchema] = taxo.findAllXsdSchemas
+        .filter(Taxonomies.isProperTaxonomyDocumentContent)
+        .filter(Taxonomies.canBeIncompleteLocFreeDocument)
+
+      incompleteSchemas.sortBy(_.toString).flatMap(e => validateIncompleteSchema(e, taxo))
+    }
+
+    def validateIncompleteSchema(incompleteSchema: XsSchema, taxo: BasicTaxonomy): Seq[ValidationResult] = {
+      val importedSchemasViaLocation: Seq[XsSchema] = findAllImportedSchemasViaSchemaLocation(incompleteSchema, taxo)
+
+      val targetNamespaces: Set[String] = importedSchemasViaLocation.flatMap(_.targetNamespaceOption).toSet
+
+      val importedNamespaces: Set[String] = importedSchemasViaLocation
+        .flatMap(_.findAllImports)
+        .map(_.attr(ENames.NamespaceEName))
+        .filter(Taxonomies.isProperTaxonomySchemaNamespace)
+        .toSet
+
+      val missingTargetNamespaces: Set[String] = importedNamespaces.diff(targetNamespaces)
+
+      missingTargetNamespaces.toSeq.sorted.map { ns =>
+        ValidationResult(rule, "Not a closed schema set due to missing TNS", Result(incompleteSchema.docUri, ns))
+      }
+    }
+
+    private def findAllImportedSchemasViaSchemaLocation(incompleteSchema: XsSchema, taxo: BasicTaxonomy): Seq[XsSchema] = {
+      val uris: Seq[URI] = incompleteSchema.findAllImports
+        .flatMap(_.attrOption(ENames.SchemaLocationEName))
+        .map(URI.create)
+        .filter(u => Taxonomies.isProperTaxonomyDocumentUri(u))
+
+      uris.flatMap(uri => taxo.taxonomyBase.findElemByUri(uri)).collect { case e: XsSchema => e }
+    }
+
+    final case class Result(incompleteSchemaUri: URI, missingTargetNamespace: String)
+  }
+
   val all: Seq[Validation] = {
-    Seq(MissingImportTarget, MissingLinkbaseTarget, IncompleteDocReferringToAnotherIncompleteDocNotAllowed)
+    Seq(MissingImportTarget, MissingLinkbaseTarget, IncompleteDocReferringToAnotherIncompleteDocNotAllowed, NotAClosedSchemaSet)
   }
 }

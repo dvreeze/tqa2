@@ -113,7 +113,8 @@ object LocatorFreeTaxonomyLoader {
     if (!validationOk) {
       println()
       println(s"Number of validation results: ${validationResults.size}")
-      println(s"Validation results: $validationResults")
+      println(s"Validation results (${validationResults.size}):")
+      validationResults.foreach(r => println(s"\t$r"))
     }
   }
 }

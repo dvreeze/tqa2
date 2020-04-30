@@ -21,6 +21,8 @@ import java.net.URI
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 
+import scala.util.Try
+
 /**
  * Utility object with functions that offer some "knowledge" about locator-free taxonomies. This utility can also
  * be used for standard taxonomy files, unless mentioned otherwise.
@@ -36,7 +38,7 @@ object Taxonomies {
   def isCoreDocumentUri(uri: URI): Boolean = {
     val host = Option(uri.getHost).getOrElse("")
 
-    Set("www.w3.org", "www.xbrl.org", "www.locfreexbrl.org").contains(host)
+    Set("www.w3.org", "xbrl.org", "www.xbrl.org", "www.locfreexbrl.org").contains(host)
   }
 
   /**
@@ -45,6 +47,10 @@ object Taxonomies {
   def isProperTaxonomyDocumentUri(uri: URI): Boolean = {
     !isCoreDocumentUri(uri)
   }
+
+  def isCoreNamespace(ns: String): Boolean = Try(isCoreDocumentUri(URI.create(ns))).getOrElse(false)
+
+  def isProperTaxonomySchemaNamespace(ns: String): Boolean = !isCoreNamespace(ns)
 
   def isCoreDocumentContent(taxoElem: TaxonomyElem): Boolean = {
     isCoreDocumentUri(taxoElem.docUri)
