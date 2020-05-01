@@ -28,7 +28,6 @@ import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.core.PrefixedScope
 import eu.cdevreeze.yaidom2.node.indexed
 import eu.cdevreeze.yaidom2.node.nodebuilder
-import eu.cdevreeze.yaidom2.node.resolved
 import eu.cdevreeze.yaidom2.node.simple
 import eu.cdevreeze.yaidom2.queryapi.ScopedElemApi
 import eu.cdevreeze.yaidom2.utils.namespaces.DocumentENameExtractor
@@ -58,8 +57,6 @@ final class LinkbaseConverter(
   import NameConversions._
   import elemCreator._
   import nodebuilder.NodeBuilderCreator._
-
-  // TODO Reorder arcs, keys and non-key resources
 
   /**
    * Converts a linkbase in the given (2nd parameter) TaxonomyBase to its locator-free counterparts, resulting in
@@ -113,11 +110,11 @@ final class LinkbaseConverter(
   ): Linkbase = {
     inputExtendedLink match {
       case e: standardtaxonomy.dom.DefinitionLink =>
-        convertAndAddDefinitionLink(e, inputTaxonomyBase, currentLinkbase)
+        convertAndAddInterConceptLink(e, inputTaxonomyBase, currentLinkbase)
       case e: standardtaxonomy.dom.PresentationLink =>
-        convertAndAddPresentationLink(e, inputTaxonomyBase, currentLinkbase)
+        convertAndAddInterConceptLink(e, inputTaxonomyBase, currentLinkbase)
       case e: standardtaxonomy.dom.CalculationLink =>
-        convertAndAddCalculationLink(e, inputTaxonomyBase, currentLinkbase)
+        convertAndAddInterConceptLink(e, inputTaxonomyBase, currentLinkbase)
       case e: standardtaxonomy.dom.LabelLink =>
         convertAndAddConceptResourceLink(e, inputTaxonomyBase, currentLinkbase)
       case e: standardtaxonomy.dom.ReferenceLink =>
@@ -129,96 +126,33 @@ final class LinkbaseConverter(
     }
   }
 
-  def convertAndAddDefinitionLink(
-      inputExtendedLink: standardtaxonomy.dom.DefinitionLink,
-      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
-      currentLinkbase: Linkbase
-  ): Linkbase = {
-    convertAndAddInterConceptLink(inputExtendedLink, inputTaxonomyBase, currentLinkbase)
-  }
-
-  def convertAndAddPresentationLink(
-      inputExtendedLink: standardtaxonomy.dom.PresentationLink,
-      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
-      currentLinkbase: Linkbase
-  ): Linkbase = {
-    convertAndAddInterConceptLink(inputExtendedLink, inputTaxonomyBase, currentLinkbase)
-  }
-
-  def convertAndAddCalculationLink(
-      inputExtendedLink: standardtaxonomy.dom.CalculationLink,
-      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
-      currentLinkbase: Linkbase
-  ): Linkbase = {
-    convertAndAddInterConceptLink(inputExtendedLink, inputTaxonomyBase, currentLinkbase)
-  }
-
-  def convertAndAddLabelLink(
-      inputExtendedLink: standardtaxonomy.dom.LabelLink,
-      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
-      currentLinkbase: Linkbase
-  ): Linkbase = {
-    convertAndAddConceptResourceLink(inputExtendedLink, inputTaxonomyBase, currentLinkbase)
-  }
-
-  def convertAndAddReferenceLink(
-      inputExtendedLink: standardtaxonomy.dom.ReferenceLink,
-      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
-      currentLinkbase: Linkbase
-  ): Linkbase = {
-    convertAndAddConceptResourceLink(inputExtendedLink, inputTaxonomyBase, currentLinkbase)
-  }
-
   def convertAndAddNonStandardLink(
       inputExtendedLink: standardtaxonomy.dom.NonStandardLink,
       inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
       currentLinkbase: Linkbase
   ): Linkbase = {
+    val parentPrefixedScope: PrefixedScope = PrefixedScope.ignoringDefaultNamespace(currentLinkbase.scope)
+
     val inputExtLinkBaseUri: URI = inputExtendedLink.baseUri
 
-    val locatorHrefs: Set[URI] = inputExtendedLink.labeledXlinkChildren
-      .collect { case e: standardtaxonomy.dom.XLinkLocator => e }
-      .map(e => getLocatorHref(e, inputExtLinkBaseUri))
-      .toSet
+    val xlinkChildren: Seq[nodebuilder.Elem] = inputExtendedLink.xlinkChildren.map {
+      case arc: standardtaxonomy.dom.NonStandardArc =>
+        val targetArcName: EName = convertArcName(arc.name)
 
-    val locatorHrefResolutions: Map[URI, standardtaxonomy.dom.TaxonomyElem] =
-      locatorHrefs.toSeq.map(uri => uri -> resolveLocatorHref(uri, inputTaxonomyBase)).toMap
-
-    val labeledXLinkMap: Map[String, Seq[standardtaxonomy.dom.LabeledXLink]] = inputExtendedLink.labeledXlinkMap
-
-    val parentPrefixedScope: PrefixedScope = PrefixedScope.ignoringDefaultNamespace(currentLinkbase.scope)
-    val parentBaseUri: URI = currentLinkbase.baseUri
-
-    val inputArcs = inputExtendedLink.arcs
-
-    val xlinkChildren: Seq[nodebuilder.Elem] = if (inputArcs.isEmpty) {
-      // Possibly a parameter file, which has XLink resources but no arcs (and no locators)
-      inputExtendedLink.xlinkChildren
-        .collect { case e: standardtaxonomy.dom.XLinkResource => e }
-        .map(e => xlinkResourceConverter.convertResource(e, inputTaxonomyBase, parentPrefixedScope))
-    } else {
-      inputArcs
-        .collect { case e: standardtaxonomy.dom.NonStandardArc => e }
-        .flatMap { inputArc =>
-          convertNonStandardArcToArcsAndTaxoKeys(
-            inputArc,
-            labeledXLinkMap,
-            locatorHrefResolutions,
-            inputTaxonomyBase,
-            parentPrefixedScope,
-            parentBaseUri)
-        }
-        .distinctBy(e => resolved.Elem.from(e))
+        emptyElem(targetArcName, arc.attributes, parentPrefixedScope) // All attributes? Without filtering?
+          .ensuring(_.attr(ENames.XLinkFromEName) == arc.from)
+          .ensuring(_.attr(ENames.XLinkToEName) == arc.to)
+      case loc: standardtaxonomy.dom.XLinkLocator =>
+        val href: URI = getLocatorHref(loc, inputExtLinkBaseUri)
+        val taxoElem: standardtaxonomy.dom.TaxonomyElem = resolveLocatorHref(href, inputTaxonomyBase)
+        xlinkLocatorConverter.convertLocToTaxonomyElemKey(loc, taxoElem, inputTaxonomyBase, parentPrefixedScope)
+      case res: standardtaxonomy.dom.XLinkResource =>
+        xlinkResourceConverter.convertResource(res, inputTaxonomyBase, parentPrefixedScope)
+      case e =>
+        sys.error(s"Element ${e.name} not allowed in inter-concept extended link (in ${e.docUri})")
     }
 
-    val targetLinkName: EName = convertLinkName(inputExtendedLink.name)
-
-    val extLink: nodebuilder.Elem = emptyElem(targetLinkName, inputExtendedLink.attributes, parentPrefixedScope).creationApi
-      .plusChildren(xlinkChildren)
-      .underlying
-
-    val resultElem: nodebuilder.Elem = nodebuilder.Elem.from(currentLinkbase).creationApi.plusChild(extLink).underlying
-    makeLinkbase(currentLinkbase.docUriOption, resultElem)
+    addExtendedLink(inputExtendedLink, xlinkChildren, parentPrefixedScope, currentLinkbase)
   }
 
   private def convertAndAddInterConceptLink(
@@ -232,36 +166,33 @@ final class LinkbaseConverter(
       s"Not an inter-concept extended link (in ${inputExtendedLink.docUri})"
     )
 
+    val parentPrefixedScope: PrefixedScope = PrefixedScope.ignoringDefaultNamespace(currentLinkbase.scope)
+
     val inputExtLinkBaseUri: URI = inputExtendedLink.baseUri
 
-    val locatorHrefs: Set[URI] = inputExtendedLink.labeledXlinkChildren
-      .collect { case e: standardtaxonomy.dom.XLinkLocator => e }
-      .map(e => getLocatorHref(e, inputExtLinkBaseUri))
-      .toSet
+    val xlinkChildren: Seq[nodebuilder.Elem] = inputExtendedLink.xlinkChildren.map {
+      case arc: standardtaxonomy.dom.InterConceptArc =>
+        convertStandardArc(arc, parentPrefixedScope)
+          .ensuring(_.attr(ENames.XLinkFromEName) == arc.from)
+          .ensuring(_.attr(ENames.XLinkToEName) == arc.to)
+      case loc: standardtaxonomy.dom.StandardLoc =>
+        val href: URI = getLocatorHref(loc, inputExtLinkBaseUri)
+        val taxoElem: standardtaxonomy.dom.TaxonomyElem = resolveLocatorHref(href, inputTaxonomyBase)
+        require(
+          taxoElem.isInstanceOf[standardtaxonomy.dom.GlobalElementDeclaration],
+          s"Not a global element declaration: ${taxoElem.name} (in ${taxoElem.docUri})")
+        val conceptDecl = taxoElem.asInstanceOf[standardtaxonomy.dom.GlobalElementDeclaration]
 
-    val locatorHrefResolutions: Map[URI, standardtaxonomy.dom.TaxonomyElem] =
-      locatorHrefs.toSeq.map(uri => uri -> resolveLocatorHref(uri, inputTaxonomyBase)).toMap
+        xlinkLocatorConverter
+          .convertLocToConceptKey(loc, conceptDecl, parentPrefixedScope)
+          .ensuring(_.attr(ENames.XLinkLabelEName) == loc.xlinkLabel)
+      case res: standardtaxonomy.dom.StandardResource =>
+        sys.error(s"XLink resource not allowed in inter-concept extended link (in ${res.docUri})")
+      case e =>
+        sys.error(s"Element ${e.name} not allowed in inter-concept extended link (in ${e.docUri})")
+    }
 
-    val labeledXLinkMap: Map[String, Seq[standardtaxonomy.dom.LabeledXLink]] = inputExtendedLink.labeledXlinkMap
-
-    val parentPrefixedScope: PrefixedScope = PrefixedScope.ignoringDefaultNamespace(currentLinkbase.scope)
-    val parentBaseUri: URI = currentLinkbase.baseUri
-
-    val xlinkChildren: Seq[nodebuilder.Elem] = inputExtendedLink.arcs
-      .collect { case e: standardtaxonomy.dom.InterConceptArc => e }
-      .flatMap { inputArc =>
-        convertInterConceptArcToArcsAndTaxoKeys(inputArc, labeledXLinkMap, locatorHrefResolutions, parentPrefixedScope, parentBaseUri)
-      }
-      .distinctBy(e => resolved.Elem.from(e))
-
-    val targetLinkName: EName = convertLinkName(inputExtendedLink.name)
-
-    val extLink: nodebuilder.Elem = emptyElem(targetLinkName, inputExtendedLink.attributes, parentPrefixedScope).creationApi
-      .plusChildren(xlinkChildren)
-      .underlying
-
-    val resultElem: nodebuilder.Elem = nodebuilder.Elem.from(currentLinkbase).creationApi.plusChild(extLink).underlying
-    TaxonomyElem(indexed.Elem.ofRoot(currentLinkbase.docUriOption, simple.Elem.from(resultElem))).asInstanceOf[Linkbase]
+    addExtendedLink(inputExtendedLink, xlinkChildren, parentPrefixedScope, currentLinkbase)
   }
 
   private def convertAndAddConceptResourceLink(
@@ -275,34 +206,46 @@ final class LinkbaseConverter(
       s"Not a concept-resource extended link (in ${inputExtendedLink.docUri})"
     )
 
+    val parentPrefixedScope: PrefixedScope = PrefixedScope.ignoringDefaultNamespace(currentLinkbase.scope)
+
     val inputExtLinkBaseUri: URI = inputExtendedLink.baseUri
 
-    val locatorHrefs: Set[URI] = inputExtendedLink.labeledXlinkChildren
-      .collect { case e: standardtaxonomy.dom.XLinkLocator => e }
-      .map(e => getLocatorHref(e, inputExtLinkBaseUri))
-      .toSet
+    val xlinkChildren: Seq[nodebuilder.Elem] = inputExtendedLink.xlinkChildren.map {
+      case arc: standardtaxonomy.dom.ConceptResourceArc =>
+        convertStandardArc(arc, parentPrefixedScope)
+          .ensuring(_.attr(ENames.XLinkFromEName) == arc.from)
+          .ensuring(_.attr(ENames.XLinkToEName) == arc.to)
+      case loc: standardtaxonomy.dom.StandardLoc =>
+        val href: URI = getLocatorHref(loc, inputExtLinkBaseUri)
+        val taxoElem: standardtaxonomy.dom.TaxonomyElem = resolveLocatorHref(href, inputTaxonomyBase)
 
-    val locatorHrefResolutions: Map[URI, standardtaxonomy.dom.TaxonomyElem] =
-      locatorHrefs.toSeq.map(uri => uri -> resolveLocatorHref(uri, inputTaxonomyBase)).toMap
+        taxoElem match {
+          case e: standardtaxonomy.dom.GlobalElementDeclaration =>
+            xlinkLocatorConverter
+              .convertLocToConceptKey(loc, e, parentPrefixedScope)
+              .ensuring(_.attr(ENames.XLinkLabelEName) == loc.xlinkLabel)
+          case e: standardtaxonomy.dom.StandardResource =>
+            xlinkLocatorConverter
+              .convertLocToTaxonomyElemKey(loc, e, inputTaxonomyBase, parentPrefixedScope)
+              .ensuring(_.attr(ENames.XLinkLabelEName) == loc.xlinkLabel)
+          case e =>
+            sys.error(s"lement ${e.name} not allowed as locator target in inter-concept extended link (in ${e.docUri})")
+        }
+      case res: standardtaxonomy.dom.StandardResource =>
+        xlinkResourceConverter.convertResource(res, inputTaxonomyBase, parentPrefixedScope)
+      case e =>
+        sys.error(s"Element ${e.name} not allowed in inter-concept extended link (in ${e.docUri})")
+    }
 
-    val labeledXLinkMap: Map[String, Seq[standardtaxonomy.dom.LabeledXLink]] = inputExtendedLink.labeledXlinkMap
+    addExtendedLink(inputExtendedLink, xlinkChildren, parentPrefixedScope, currentLinkbase)
+  }
 
-    val parentPrefixedScope: PrefixedScope = PrefixedScope.ignoringDefaultNamespace(currentLinkbase.scope)
-    val parentBaseUri: URI = currentLinkbase.baseUri
-
-    val xlinkChildren: Seq[nodebuilder.Elem] = inputExtendedLink.arcs
-      .collect { case e: standardtaxonomy.dom.ConceptResourceArc => e }
-      .flatMap { inputArc =>
-        convertConceptResourceArcToArcsAndTaxoKeys(
-          inputArc,
-          labeledXLinkMap,
-          locatorHrefResolutions,
-          inputTaxonomyBase,
-          parentPrefixedScope,
-          parentBaseUri)
-      }
-      .distinctBy(e => resolved.Elem.from(e))
-
+  private def addExtendedLink(
+      inputExtendedLink: standardtaxonomy.dom.ExtendedLink,
+      xlinkChildren: Seq[nodebuilder.Elem],
+      parentPrefixedScope: PrefixedScope,
+      currentLinkbase: Linkbase
+  ): Linkbase = {
     val targetLinkName: EName = convertLinkName(inputExtendedLink.name)
 
     val extLink: nodebuilder.Elem = emptyElem(targetLinkName, inputExtendedLink.attributes, parentPrefixedScope).creationApi
@@ -329,125 +272,13 @@ final class LinkbaseConverter(
     elem
   }
 
-  private def convertInterConceptArcToArcsAndTaxoKeys(
-      inputArc: standardtaxonomy.dom.InterConceptArc,
-      labeledXLinkMap: Map[String, Seq[standardtaxonomy.dom.LabeledXLink]],
-      locatorHrefResolutions: Map[URI, standardtaxonomy.dom.TaxonomyElem],
-      parentScope: PrefixedScope,
-      parentBaseUri: URI
-  ): Seq[nodebuilder.Elem] = {
+  private def convertStandardArc(
+      inputArc: standardtaxonomy.dom.StandardArc,
+      parentScope: PrefixedScope
+  ): nodebuilder.Elem = {
     val targetArcName: EName = convertArcName(inputArc.name)
-
-    val arcGroups: Seq[Seq[nodebuilder.Elem]] =
-      for {
-        fromLocOrRes <- labeledXLinkMap.getOrElse(inputArc.from, sys.error(s"Missing XLink 'from' (${inputArc.docUri})"))
-        fromLoc = fromLocOrRes.asInstanceOf[standardtaxonomy.dom.XLinkLocator]
-        fromUri = getLocatorHref(fromLoc, parentBaseUri)
-        fromTaxoElem = locatorHrefResolutions.getOrElse(fromUri, sys.error(s"Missing XML element at '$fromUri'"))
-        toLocOrRes <- labeledXLinkMap.getOrElse(inputArc.to, sys.error(s"Missing XLink 'to' (${inputArc.docUri})"))
-        toLoc = toLocOrRes.asInstanceOf[standardtaxonomy.dom.XLinkLocator]
-        toUri = getLocatorHref(toLoc, parentBaseUri)
-        toTaxoElem = locatorHrefResolutions.getOrElse(toUri, sys.error(s"Missing XML element at '$toUri'"))
-      } yield {
-        require(fromTaxoElem.isInstanceOf[standardtaxonomy.dom.GlobalElementDeclaration], s"Not a concept declaration: '$fromUri'")
-        require(toTaxoElem.isInstanceOf[standardtaxonomy.dom.GlobalElementDeclaration], s"Not a concept declaration: '$toUri'")
-
-        val fromConceptDecl: standardtaxonomy.dom.GlobalElementDeclaration =
-          fromTaxoElem.asInstanceOf[standardtaxonomy.dom.GlobalElementDeclaration]
-        val toConceptDecl: standardtaxonomy.dom.GlobalElementDeclaration =
-          toTaxoElem.asInstanceOf[standardtaxonomy.dom.GlobalElementDeclaration]
-
-        val arc: nodebuilder.Elem = emptyElem(targetArcName, inputArc.attributes, parentScope) // All attributes? Without filtering?
-        val from: nodebuilder.Elem = xlinkLocatorConverter.convertLocToConceptKey(fromLoc, fromConceptDecl, parentScope)
-        val to: nodebuilder.Elem = xlinkLocatorConverter.convertLocToConceptKey(toLoc, toConceptDecl, parentScope)
-
-        Seq(arc, from, to)
-      }
-
-    arcGroups.flatten.distinctBy(e => resolved.Elem.from(e))
-  }
-
-  private def convertConceptResourceArcToArcsAndTaxoKeys(
-      inputArc: standardtaxonomy.dom.ConceptResourceArc,
-      labeledXLinkMap: Map[String, Seq[standardtaxonomy.dom.LabeledXLink]],
-      locatorHrefResolutions: Map[URI, standardtaxonomy.dom.TaxonomyElem],
-      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
-      parentScope: PrefixedScope,
-      parentBaseUri: URI
-  ): Seq[nodebuilder.Elem] = {
-    val targetArcName: EName = convertArcName(inputArc.name)
-
-    val arcGroups: Seq[Seq[nodebuilder.Elem]] =
-      for {
-        fromLocOrRes <- labeledXLinkMap.getOrElse(inputArc.from, sys.error(s"Missing XLink 'from' (${inputArc.docUri})"))
-        fromLoc = fromLocOrRes.asInstanceOf[standardtaxonomy.dom.XLinkLocator]
-        fromUri = getLocatorHref(fromLoc, parentBaseUri)
-        fromTaxoElem = locatorHrefResolutions.getOrElse(fromUri, sys.error(s"Missing XML element at '$fromUri'"))
-        toLocOrRes <- labeledXLinkMap.getOrElse(inputArc.to, sys.error(s"Missing XLink 'to' (${inputArc.docUri})"))
-      } yield {
-        require(fromTaxoElem.isInstanceOf[standardtaxonomy.dom.GlobalElementDeclaration], s"Not a concept declaration: '$fromUri'")
-
-        val fromConceptDecl: standardtaxonomy.dom.GlobalElementDeclaration =
-          fromTaxoElem.asInstanceOf[standardtaxonomy.dom.GlobalElementDeclaration]
-
-        val arc: nodebuilder.Elem = emptyElem(targetArcName, inputArc.attributes, parentScope) // All attributes? Without filtering?
-        val from: nodebuilder.Elem = xlinkLocatorConverter.convertLocToConceptKey(fromLoc, fromConceptDecl, parentScope)
-
-        val to: nodebuilder.Elem = toLocOrRes match {
-          case res: standardtaxonomy.dom.XLinkResource =>
-            xlinkResourceConverter.convertResource(res, inputTaxonomyBase, parentScope)
-          case loc: standardtaxonomy.dom.XLinkLocator =>
-            val locUri = getLocatorHref(loc, parentBaseUri)
-            val locatedElem = locatorHrefResolutions.getOrElse(locUri, sys.error(s"Missing XML element at '$locUri'"))
-            val res = locatedElem.asInstanceOf[standardtaxonomy.dom.XLinkResource]
-            xlinkLocatorConverter.convertLocToTaxonomyElemKey(loc, res, inputTaxonomyBase, parentScope)
-        }
-
-        Seq(arc, from, to)
-      }
-
-    arcGroups.flatten.distinctBy(e => resolved.Elem.from(e))
-  }
-
-  private def convertNonStandardArcToArcsAndTaxoKeys(
-      inputArc: standardtaxonomy.dom.NonStandardArc,
-      labeledXLinkMap: Map[String, Seq[standardtaxonomy.dom.LabeledXLink]],
-      locatorHrefResolutions: Map[URI, standardtaxonomy.dom.TaxonomyElem],
-      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
-      parentScope: PrefixedScope,
-      parentBaseUri: URI
-  ): Seq[nodebuilder.Elem] = {
-    val targetArcName: EName = convertArcName(inputArc.name)
-
-    val arcGroups: Seq[Seq[nodebuilder.Elem]] =
-      for {
-        fromLocOrRes <- labeledXLinkMap.getOrElse(inputArc.from, sys.error(s"Missing XLink 'from' (${inputArc.docUri})"))
-        toLocOrRes <- labeledXLinkMap.getOrElse(inputArc.to, sys.error(s"Missing XLink 'to' (${inputArc.docUri})"))
-      } yield {
-        val arc: nodebuilder.Elem = emptyElem(targetArcName, inputArc.attributes, parentScope) // All attributes? Without filtering?
-
-        val from: nodebuilder.Elem = fromLocOrRes match {
-          case res: standardtaxonomy.dom.XLinkResource =>
-            xlinkResourceConverter.convertResource(res, inputTaxonomyBase, parentScope)
-          case loc: standardtaxonomy.dom.XLinkLocator =>
-            val locUri = getLocatorHref(loc, parentBaseUri)
-            val locatedElem = locatorHrefResolutions.getOrElse(locUri, sys.error(s"Missing XML element at '$locUri'"))
-            xlinkLocatorConverter.convertLocToTaxonomyElemKey(loc, locatedElem, inputTaxonomyBase, parentScope)
-        }
-
-        val to: nodebuilder.Elem = toLocOrRes match {
-          case res: standardtaxonomy.dom.XLinkResource =>
-            xlinkResourceConverter.convertResource(res, inputTaxonomyBase, parentScope)
-          case loc: standardtaxonomy.dom.XLinkLocator =>
-            val locUri = getLocatorHref(loc, parentBaseUri)
-            val locatedElem = locatorHrefResolutions.getOrElse(locUri, sys.error(s"Missing XML element at '$locUri'"))
-            xlinkLocatorConverter.convertLocToTaxonomyElemKey(loc, locatedElem, inputTaxonomyBase, parentScope)
-        }
-
-        Seq(arc, from, to)
-      }
-
-    arcGroups.flatten.distinctBy(e => resolved.Elem.from(e))
+    val arc: nodebuilder.Elem = emptyElem(targetArcName, inputArc.attributes, parentScope) // All attributes? Without filtering?
+    arc
   }
 
   private def makeLinkbase(docUriOption: Option[URI], linkbaseRootElem: nodebuilder.Elem): Linkbase = {
