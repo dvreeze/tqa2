@@ -112,13 +112,13 @@ class TaxonomyExtensionTest extends AnyFunSuite {
     val entrypointSchemas: Seq[XsSchema] =
       taxo.taxonomyBase.rootElemMap.view.filterKeys(entrypoint).values.toSeq.collect { case e: XsSchema => e }
 
-    val unconnectedImportedNamespaces: Set[String] = entrypointSchemas.flatMap { e =>
+    val importedNamespacesWithoutSchemaLocation: Set[String] = entrypointSchemas.flatMap { e =>
       e.findAllImports.filter(_.attrOption(ENames.SchemaLocationEName).isEmpty).map(_.attr(ENames.NamespaceEName))
     }.toSet
 
     val targetNamespaces: Set[String] = entrypointSchemas.flatMap(_.targetNamespaceOption).toSet
 
-    unconnectedImportedNamespaces.diff(targetNamespaces).isEmpty
+    importedNamespacesWithoutSchemaLocation.diff(targetNamespaces).isEmpty
   }
 
   private val processor = new Processor(false)

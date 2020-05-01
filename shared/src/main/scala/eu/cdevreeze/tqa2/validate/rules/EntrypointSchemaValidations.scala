@@ -29,39 +29,39 @@ import eu.cdevreeze.tqa2.validate.ValidationResult
 
 /**
  * "Entrypoint schema validations", checking for at most one level of "connectivity", and checking that xs:import
- * schemaLocations and clink:linkbaseRefs in connected documents are not "dead" links.
+ * schemaLocations and clink:linkbaseRefs in root documents are not "dead" links.
  *
- * In the locator-free model, there are 2 kinds of schema documents, namely standalone ones and connected ones.
+ * In the locator-free model, there are 2 kinds of schema documents, namely standalone ones and root ones.
  * The standalone ones contain no xs:import elements with schemaLocation attribute, and no clink:linkbaseRef elements.
- * Schem documents that are not standalone are called connected. Generalizing to any taxonomy document, a standalone
- * document is either a standalone schema, or any locator-free linkbase (which is by definition standalone). A connected
- * document is any document that is not standalone (and therefore a connected schema).
+ * Schem documents that are not standalone are called root documents. Generalizing to any taxonomy document, a standalone
+ * document is either a standalone schema, or any locator-free linkbase (which is by definition standalone). A root
+ * document is any document that is not standalone (and therefore a root schema).
  *
  * Note that standalone documents have no URL references at all. There are no XLink locators, no XLink simple links,
  * no xs:include elements, no xbrldt:typedDomainRef attributes, etc.
  *
- * The locator-free model allows for only "one level of connectivity". That is, a connected schema must refer only
- * to standalone documents via xs:import schemaLocation attributes or clink:linkbaseRef hrefs, and not to other connected
+ * The locator-free model allows for only "one level of connectivity". That is, a root schema must refer only
+ * to standalone documents via xs:import schemaLocation attributes or clink:linkbaseRef hrefs, and not to other root
  * documents.
  *
- * Entrypoint documents in the locator-free model are typically connected documents, although this is not necessarily the case.
+ * Entrypoint documents in the locator-free model are typically root documents, although this is not necessarily the case.
  *
  * The most common case is to have precisely one entrypoint document making yp an entrypoint. In that case the entrypoint
- * document would be a connected schema, and all other (schema and locator-free linkbase) documents would be standalone.
- * The connected entrypoint document would refer to all other documents in the DTS in that case. Indeed, in the locator-free
- * model there is no such thing as DTS discovery (other then summing up the entire DTS in connected doucments).
+ * document would be a root schema, and all other (schema and locator-free linkbase) documents would be standalone.
+ * The root entrypoint document would refer to all other documents in the DTS in that case. Indeed, in the locator-free
+ * model there is no such thing as DTS discovery (other then summing up the entire DTS in root documents).
  *
- * Another scenario is to have an entrypoint that consists of a "real entrypoint document", which is a connected schema
+ * Another scenario is to have an entrypoint that consists of a "real entrypoint document", which is a root schema
  * document, and one or more standalone documents that are formula linkbases, for example. In this case, as in the most
- * common case, there is just one connected document, and the rule mentioned above would trivially hold.
+ * common case, there is just one root document, and the rule mentioned above would trivially hold.
  *
- * Another scenario is extension taxonomies. There would be one "stable" entrypoint document, which is a connected
- * document. There would also be an extension entrypoint document, which would also be a connected document. We would
+ * Another scenario is extension taxonomies. There would be one "stable" entrypoint document, which is a root
+ * document. There would also be an extension entrypoint document, which would also be a root document. We would
  * like to have the 2nd document refer to the first one, but that would violate the above-mentioned rule if an xs:import
  * with schemaLocation attribute were used for that. So we would use an xs:import without schemaLocation attribute
  * to have the 2nd entrypoint document refer to the first one. "The system" would enforce that the namespace in this
  * xs:import element would be the target namespace of some document, and that would indeed be the case, since the first
- * document indeed has that target namespace. The entrypoint would then be both connected documents taken together,
+ * document indeed has that target namespace. The entrypoint would then be both root documents taken together,
  * and together they would indeed sum up the entire DTS (except for these 2 documents themselves).
  *
  * Note that the "one level of connectivity" rule also rules out any circular dependencies among documents.
@@ -74,10 +74,10 @@ object EntrypointSchemaValidations {
 
   val missingCLinkbaseRefTargetNotAllowedRule = "Missing target of clink:LinkbaseRef href not allowed"
 
-  val connectedDocReferringToAnotherConnectedDocNotAllowedRule = "Connected documents must only refer to standalone documents"
+  val rootDocReferringToAnotherRootDocNotAllowedRule = "Root documents must only refer to standalone documents"
 
   val closedSchemaSetRule =
-    "The schema set imported with location from a connected schema must be closed under imported/target namespaces"
+    "The schema set imported with location from a root schema must be closed under imported/target namespaces"
 
   // TODO Entrypoint completeness check, in that entrypoint xs:import elements without schemaLocation "join" with other schemas in the entrypoint
 
@@ -117,18 +117,18 @@ object EntrypointSchemaValidations {
     }
   }
 
-  object ConnectedDocReferringToAnotherConnectedDocNotAllowed extends Validation {
+  object RootDocReferringToAnotherRootDocNotAllowed extends Validation {
 
-    def rule: Rule = connectedDocReferringToAnotherConnectedDocNotAllowedRule
+    def rule: Rule = rootDocReferringToAnotherRootDocNotAllowedRule
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
-      val connectedDocs: Seq[TaxonomyElem] = taxo.rootElems
+      val rootDocs: Seq[TaxonomyElem] = taxo.rootElems
         .filter(Taxonomies.isProperTaxonomyDocumentContent)
-        .filter(e => Taxonomies.canBeConnectedLocFreeDocument(e))
+        .filter(e => Taxonomies.canBeLocFreeRootDocument(e))
 
-      val connectedDocUris: Set[URI] = connectedDocs.map(_.docUri).toSet
+      val rootDocUris: Set[URI] = rootDocs.map(_.docUri).toSet
 
-      val violatingDocs = connectedDocs
+      val violatingDocs = rootDocs
         .filter { docElem =>
           val importedDocUris: Set[URI] = docElem
             .filterDescendantElems(_.name == ENames.XsImportEName)
@@ -146,11 +146,11 @@ object EntrypointSchemaValidations {
 
           val referencedDocs: Seq[TaxonomyElem] = referencedDocUris.toSeq.flatMap(uri => taxo.taxonomyBase.rootElemMap.get(uri))
 
-          referencedDocs.filter(e => connectedDocUris.contains(e.docUri)).nonEmpty
+          referencedDocs.filter(e => rootDocUris.contains(e.docUri)).nonEmpty
         }
 
       violatingDocs.map(_.docUri).distinct.map { uri =>
-        ValidationResult(rule, "Connected document referring to another connected document not allowed", uri)
+        ValidationResult(rule, "Root document referring to another root document not allowed", uri)
       }
     }
   }
@@ -160,15 +160,15 @@ object EntrypointSchemaValidations {
     def rule: Rule = closedSchemaSetRule
 
     def validationFunction: BasicTaxonomy => Seq[ValidationResult] = { taxo =>
-      val connectedSchemas: Seq[XsSchema] = taxo.findAllXsdSchemas
+      val rootSchemas: Seq[XsSchema] = taxo.findAllXsdSchemas
         .filter(Taxonomies.isProperTaxonomyDocumentContent)
-        .filter(Taxonomies.canBeConnectedLocFreeDocument)
+        .filter(Taxonomies.canBeLocFreeRootDocument)
 
-      connectedSchemas.sortBy(_.toString).flatMap(e => validateConnectedSchema(e, taxo))
+      rootSchemas.sortBy(_.toString).flatMap(e => validateRootSchema(e, taxo))
     }
 
-    def validateConnectedSchema(connectedSchema: XsSchema, taxo: BasicTaxonomy): Seq[ValidationResult] = {
-      val importedSchemasViaLocation: Seq[XsSchema] = findAllImportedSchemasViaSchemaLocation(connectedSchema, taxo)
+    def validateRootSchema(rootSchema: XsSchema, taxo: BasicTaxonomy): Seq[ValidationResult] = {
+      val importedSchemasViaLocation: Seq[XsSchema] = findAllImportedSchemasViaSchemaLocation(rootSchema, taxo)
 
       val targetNamespaces: Set[String] = importedSchemasViaLocation.flatMap(_.targetNamespaceOption).toSet
 
@@ -181,12 +181,12 @@ object EntrypointSchemaValidations {
       val missingTargetNamespaces: Set[String] = importedNamespaces.diff(targetNamespaces)
 
       missingTargetNamespaces.toSeq.sorted.map { ns =>
-        ValidationResult(rule, "Not a closed schema set due to missing TNS", Result(connectedSchema.docUri, ns))
+        ValidationResult(rule, "Not a closed schema set due to missing TNS", Result(rootSchema.docUri, ns))
       }
     }
 
-    private def findAllImportedSchemasViaSchemaLocation(connectedSchema: XsSchema, taxo: BasicTaxonomy): Seq[XsSchema] = {
-      val uris: Seq[URI] = connectedSchema.findAllImports
+    private def findAllImportedSchemasViaSchemaLocation(rootSchema: XsSchema, taxo: BasicTaxonomy): Seq[XsSchema] = {
+      val uris: Seq[URI] = rootSchema.findAllImports
         .flatMap(_.attrOption(ENames.SchemaLocationEName))
         .map(URI.create)
         .filter(u => Taxonomies.isProperTaxonomyDocumentUri(u))
@@ -194,10 +194,10 @@ object EntrypointSchemaValidations {
       uris.flatMap(uri => taxo.taxonomyBase.findElemByUri(uri)).collect { case e: XsSchema => e }
     }
 
-    final case class Result(connectedSchemaUri: URI, missingTargetNamespace: String)
+    final case class Result(rootSchemaUri: URI, missingTargetNamespace: String)
   }
 
   val all: Seq[Validation] = {
-    Seq(MissingImportTarget, MissingLinkbaseTarget, ConnectedDocReferringToAnotherConnectedDocNotAllowed, NotAClosedSchemaSet)
+    Seq(MissingImportTarget, MissingLinkbaseTarget, RootDocReferringToAnotherRootDocNotAllowed, NotAClosedSchemaSet)
   }
 }

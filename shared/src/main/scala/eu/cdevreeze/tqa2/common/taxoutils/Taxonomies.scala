@@ -79,11 +79,11 @@ object Taxonomies {
   }
 
   /**
-   * Returns true if this document is connected according to the locator-free model. That is, returns true
+   * Returns true if this document is a root document according to the locator-free model. That is, returns true
    * if method canBeLocFreeDocument returns true, and either at least one xs:import elements has a schemaLocation attribute
    * or there is at least one clink:linkbaseRef element.
    */
-  def canBeConnectedLocFreeDocument(taxoElem: BackingNodes.Elem): Boolean = {
+  def canBeLocFreeRootDocument(taxoElem: BackingNodes.Elem): Boolean = {
     canBeLocFreeDocument(taxoElem) && {
       taxoElem.filterDescendantElems { e =>
         (e.name == ENames.XsImportEName && e.attrOption(ENames.SchemaLocationEName).nonEmpty) ||
