@@ -174,7 +174,7 @@ object EntrypointSchemaValidations {
 
       val importedNamespaces: Set[String] = importedSchemasViaLocation
         .flatMap(_.findAllImports)
-        .map(_.attr(ENames.NamespaceEName))
+        .map(_.namespace)
         .filter(Taxonomies.isProperTaxonomySchemaNamespace)
         .toSet
 

@@ -18,7 +18,6 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy
 
 import java.net.URI
 
-import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.BaseSetKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
@@ -113,7 +112,7 @@ class TaxonomyExtensionTest extends AnyFunSuite {
       taxo.taxonomyBase.rootElemMap.view.filterKeys(entrypoint).values.toSeq.collect { case e: XsSchema => e }
 
     val importedNamespacesWithoutSchemaLocation: Set[String] = entrypointSchemas.flatMap { e =>
-      e.findAllImports.filter(_.attrOption(ENames.SchemaLocationEName).isEmpty).map(_.attr(ENames.NamespaceEName))
+      e.findAllImports.filter(_.schemaLocationOption.isEmpty).map(_.namespace)
     }.toSet
 
     val targetNamespaces: Set[String] = entrypointSchemas.flatMap(_.targetNamespaceOption).toSet

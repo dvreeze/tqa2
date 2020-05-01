@@ -16,11 +16,13 @@
 
 package eu.cdevreeze.tqa2.common.xmlschema
 
+import java.net.URI
+
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.datatypes.XsBooleans
 import eu.cdevreeze.yaidom2.core.EName
-import eu.cdevreeze.yaidom2.queryapi.named
 import eu.cdevreeze.yaidom2.queryapi.BackingElemApi
+import eu.cdevreeze.yaidom2.queryapi.named
 
 /**
  * XML Schema dialect. All elements in this dialect are in the "xs" namespace.
@@ -131,8 +133,8 @@ object XmlSchemaDialect {
     final def maxOccursOption: Option[Int] = {
       attrOption(ENames.MaxOccursEName) match {
         case Some("unbounded") => None
-        case Some(i) => Some(i.toInt)
-        case None => Some(1)
+        case Some(i)           => Some(i.toInt)
+        case None              => Some(1)
       }
     }
   }
@@ -259,7 +261,7 @@ object XmlSchemaDialect {
 
     final def contentElemOption: Option[Content] = {
       val complexContentOption = filterChildElems(named(ENames.XsComplexContentEName)).collectFirst { case e: ComplexContent => e }
-      val simpleContentOption = filterChildElems(named(ENames.XsSimpleContentEName)).collectFirst { case e: SimpleContent => e }
+      val simpleContentOption = filterChildElems(named(ENames.XsSimpleContentEName)).collectFirst { case e: SimpleContent    => e }
 
       complexContentOption.orElse(simpleContentOption)
     }
@@ -305,7 +307,7 @@ object XmlSchemaDialect {
     /**
      * Returns the optional base type.
      */
-    def baseTypeOption: Option[EName] = {
+    final def baseTypeOption: Option[EName] = {
       attrAsResolvedQNameOption(ENames.BaseEName)
     }
   }
@@ -321,11 +323,11 @@ object XmlSchemaDialect {
      */
     final def derivation: RestrictionOrExtension = {
       val restrictionOption = filterChildElems(named(ENames.XsRestrictionEName)).collectFirst { case e: Restriction => e }
-      val extensionOption = filterChildElems(named(ENames.XsExtensionEName)).collectFirst { case e: Extension => e }
+      val extensionOption = filterChildElems(named(ENames.XsExtensionEName)).collectFirst { case e: Extension       => e }
 
-      restrictionOption.
-        orElse(extensionOption).
-        getOrElse(sys.error(s"Expected xs:restriction or xs:extension child element. Document: $docUri. Element: $name"))
+      restrictionOption
+        .orElse(extensionOption)
+        .getOrElse(sys.error(s"Expected xs:restriction or xs:extension child element. Document: $docUri. Element: $name"))
     }
 
     /**
@@ -342,7 +344,20 @@ object XmlSchemaDialect {
 
   trait Appinfo extends Elem
 
-  trait Import extends Elem
+  trait Import extends Elem {
+
+    /**
+     * Returns the namespace attribute.
+     */
+    final def namespace: String = attr(ENames.NamespaceEName)
+
+    /**
+     * Returns the optional schema location.
+     */
+    final def schemaLocationOption: Option[URI] = {
+      attrOption(ENames.SchemaLocationEName).map(URI.create)
+    }
+  }
 
   // No redefines (and if possible no include either)
 }
