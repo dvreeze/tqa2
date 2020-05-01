@@ -208,7 +208,7 @@ Single-document entrypoints in the locator-free model directly sum up the comple
 entrypoint counterparts. These locator-free entrypoints contain xs:import elements with schemaLocation attribute and/or
 clink:linkbaseRef elements (with href attribute).
 
-TODO Add example entrypoint file.
+See for example `custom-entrypoint1.xsd`_ for an example single-document entrypoint.
 
 To prevent the tangling of standard taxonomy documents, only 1 level of URL indirection is allowed. That is, a schema
 document acting as entrypoint may refer to many other documents, but these referred documents must all be standalone
@@ -220,6 +220,8 @@ be uninteresting when using a taxonomy for (dimensional) instance validation. Th
 model: just remove the corresponding linbaseRefs. It is easy to write software to do that for us.
 
 By the way, an entrypoint in the locator-free model may be multiple documents taken together, but the constraint mentioned above must still hold.
+
+.. _`custom-entrypoint1.xsd`: https://github.com/dvreeze/tqa2/blob/master/jvm/src/test/resources/testfiles/www.nltaxonomie.nl/nt12/venj/20170714.a/custom-entrypoints/custom-entrypoint1.xsd
 
 Extension taxonomies
 ====================
