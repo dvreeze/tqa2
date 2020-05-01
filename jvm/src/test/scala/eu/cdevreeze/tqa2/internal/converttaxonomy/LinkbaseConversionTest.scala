@@ -141,7 +141,6 @@ class LinkbaseConversionTest extends AnyFunSuite {
       case e                                         => Seq(e)
     }
 
-    // TODO Is resolved.Elem.removeAllInterElementWhitespace broken?
     envelope.removeAllInterElementWhitespace should be(expectedEnvelope.removeAllInterElementWhitespace)
   }
 
@@ -240,7 +239,6 @@ class LinkbaseConversionTest extends AnyFunSuite {
       case e                                             => Seq(e)
     }
 
-    // TODO Is resolved.Elem.removeAllInterElementWhitespace broken?
     envelope.removeAllInterElementWhitespace should be(expectedEnvelope.removeAllInterElementWhitespace)
   }
 
@@ -339,7 +337,6 @@ class LinkbaseConversionTest extends AnyFunSuite {
       case e                                                => Seq(e)
     }
 
-    // TODO Is resolved.Elem.removeAllInterElementWhitespace broken?
     envelope.removeAllInterElementWhitespace should be(expectedEnvelope.removeAllInterElementWhitespace)
   }
 
@@ -441,7 +438,6 @@ class LinkbaseConversionTest extends AnyFunSuite {
       case e                                              => Seq(e)
     }
 
-    // TODO Is resolved.Elem.removeAllInterElementWhitespace broken?
     envelope.removeAllInterElementWhitespace should be(expectedEnvelope.removeAllInterElementWhitespace)
   }
 
@@ -542,7 +538,6 @@ class LinkbaseConversionTest extends AnyFunSuite {
       case e                                   => Seq(e)
     }
 
-    // TODO Is resolved.Elem.removeAllInterElementWhitespace broken?
     envelope.removeAllInterElementWhitespace should be(expectedEnvelope.removeAllInterElementWhitespace)
   }
 
@@ -646,7 +641,6 @@ class LinkbaseConversionTest extends AnyFunSuite {
       case e                                   => Seq(e)
     }
 
-    // TODO Is resolved.Elem.removeAllInterElementWhitespace broken?
     envelope.removeAllInterElementWhitespace should be(expectedEnvelope.removeAllInterElementWhitespace)
   }
 

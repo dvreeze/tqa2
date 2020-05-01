@@ -100,7 +100,7 @@ object DefaultParallelRelationshipFactory extends RelationshipFactory {
         case key: TaxonomyElemKey =>
           Endpoint.KeyEndpoint(key.taxoElemKey)
         case nonKey: NonKeyResource =>
-          // TODO Improve. What if the element is a root element, for example? So we need a URI fragment then?
+          // TODO Improve. What if the element is a root element, for example? Do we need a URI fragment then?
           val docUri: URI = nonKey.docUri
           val xpointer: XPointer = XPointer.toXPointer(nonKey.underlyingElem)
           val ownUri: URI = new URI(docUri.getScheme, docUri.getSchemeSpecificPart, xpointer.toString)
