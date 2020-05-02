@@ -58,7 +58,11 @@ final class SchemaImportGenerator(
     val alreadyImportedNamespaces: Set[String] =
       schema.filterChildElems(_.name == ENames.XsImportEName).map(_.attr(ENames.NamespaceEName)).toSet
 
-    val namespacesToImport: Seq[String] = namespacesUsedInSchemaContent.filterNot(alreadyImportedNamespaces)
+    val tnsSet: Set[String] = schema.attrOption(ENames.TargetNamespaceEName).toSet
+
+    val namespacesToImport: Seq[String] = namespacesUsedInSchemaContent
+      .filterNot(alreadyImportedNamespaces)
+      .filterNot(tnsSet)
 
     val schemaBuilder: nodebuilder.Elem = nodebuilder.Elem.from(schema)
 

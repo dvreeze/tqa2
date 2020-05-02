@@ -27,6 +27,8 @@ import eu.cdevreeze.yaidom2.utils.namespaces.TextENameExtractor
  *
  * Attribute value text EName extractors are a nested Map where the outer Map key is the element name and the inner Map
  * key is the attribute name.
+ *
+ * Be careful not to generate an xs:import for the target namespace of the schema itself, when using this class.
  */
 final class SchemaContentENameExtractor(
     val elementTextENameExtractors: Map[EName, TextENameExtractor],
