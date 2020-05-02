@@ -18,8 +18,9 @@ package eu.cdevreeze.tqa2.internal.converttaxonomy
 
 import java.net.URI
 
-import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.namespaceutils.SchemaContentENameExtractor
+import eu.cdevreeze.tqa2.ENames
+import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.node.nodebuilder
 import eu.cdevreeze.yaidom2.queryapi.BackingNodes
@@ -63,6 +64,7 @@ final class SchemaImportGenerator(
     val namespacesToImport: Seq[String] = namespacesUsedInSchemaContent
       .filterNot(alreadyImportedNamespaces)
       .filterNot(tnsSet)
+      .filterNot(Set(Namespaces.XsNamespace))
 
     val schemaBuilder: nodebuilder.Elem = nodebuilder.Elem.from(schema)
 
