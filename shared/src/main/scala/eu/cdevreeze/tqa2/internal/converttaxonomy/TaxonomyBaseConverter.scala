@@ -126,9 +126,7 @@ final class TaxonomyBaseConverter(
 
     checkInputTaxonomyBaseIgnoringEntrypoints(inputTaxonomyBase, excludedEntrypointFilter)
 
-    require(
-      inputTaxonomyBase.documentMap.keySet.exists(uri => uri.getHost == "www.locfreexbrl.org"),
-      s"Expected at least one schema under http://www.locfreexbrl.org")
+    // TODO Make sure that www.locfreexbrl.org files are there, without complicating unit testing
 
     val nonEntrypointSchemaConverter: NonEntrypointSchemaConverter =
       new NonEntrypointSchemaConverter(namespacePrefixMapper, documentENameExtractor)

@@ -53,7 +53,7 @@ class TaxonomyElemTest extends AnyFunSuite {
 
     val imports = schema.findAllImports
 
-    (imports should have).size(6)
+    (imports should have).size(5)
 
     imports.map(e => resolved.Elem.from(e)) should equal {
       schema.filterChildElems(named(ENames.XsImportEName)).map(e => resolved.Elem.from(e))
