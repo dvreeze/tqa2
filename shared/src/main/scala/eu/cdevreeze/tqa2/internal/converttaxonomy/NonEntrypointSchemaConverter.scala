@@ -62,6 +62,8 @@ final class NonEntrypointSchemaConverter(
   import elemCreator._
   import nodebuilder.NodeBuilderCreator._
 
+  private val schemaImportGenerator: SchemaImportGenerator = SchemaImportGenerator(namespacePrefixMapper, documentENameExtractor)
+
   // TODO Add xs:import for every namespace used in an XML Schema sense (using another DocumentENameExtractor)
 
   // TODO Convert values of link:usedOn elements in link:roleType and link:arcroleType
@@ -109,21 +111,24 @@ final class NonEntrypointSchemaConverter(
       .plusAttributeOption(ENames.IdEName, inputSchema.attrOption(ENames.IdEName))
       .plusAttributeOption(ENames.AttributeFormDefaultEName, inputSchema.attrOption(ENames.AttributeFormDefaultEName))
       .plusAttributeOption(ENames.ElementFormDefaultEName, inputSchema.attrOption(ENames.ElementFormDefaultEName))
-      .plusChildren(inputSchema.findAllChildElems.map {
+      .plusChildren(inputSchema.findAllChildElems.flatMap {
         case annotation: standardtaxonomy.dom.Annotation =>
-          convertAnnotation(annotation, inputTaxonomyBase, parentScope)
+          Some(convertAnnotation(annotation, inputTaxonomyBase, parentScope))
         case xsImport: standardtaxonomy.dom.Import =>
-          convertImport(xsImport, inputTaxonomyBase, parentScope)
+          None
         case elemDecl: standardtaxonomy.dom.GlobalElementDeclaration =>
-          convertGlobalElementDeclaration(elemDecl, inputTaxonomyBase, parentScope)
+          Some(convertGlobalElementDeclaration(elemDecl, inputTaxonomyBase, parentScope))
         case che =>
           // TODO Make sure no default namespace is used or that it is "converted away"
-          nodebuilder.Elem.from(che).creationApi.usingNonConflictingParentScope(parentScope).underlyingElem
+          Some(nodebuilder.Elem.from(che).creationApi.usingNonConflictingParentScope(parentScope).underlyingElem)
       })
       .underlying
       .transformChildElemsToNodeSeq(e => removeIfEmptyAnnotation(e).toSeq)
 
-    val sanitizedSchemaElem = nodeBuilderUtil.sanitizeAndPrettify(nodebuilder.Elem.from(rawSchemaElem))
+    val rawSchemaElemWithImports: nodebuilder.Elem =
+      schemaImportGenerator.generateAndAddXsImports(makeSchema(inputSchema.docUriOption, rawSchemaElem))
+
+    val sanitizedSchemaElem = nodeBuilderUtil.sanitizeAndPrettify(nodebuilder.Elem.from(rawSchemaElemWithImports))
     makeSchema(inputSchema.docUriOption, sanitizedSchemaElem)
   }
 
@@ -223,16 +228,6 @@ final class NonEntrypointSchemaConverter(
         case _ => Seq(e)
       }
     }
-  }
-
-  private def convertImport(
-      inputImport: standardtaxonomy.dom.Import,
-      inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase,
-      parentScope: PrefixedScope): nodebuilder.Elem = {
-
-    emptyElem(ENames.XsImportEName, parentScope).creationApi
-      .plusAttributes(inputImport.attributes.filterNot(_._1 == ENames.SchemaLocationEName))
-      .underlying
   }
 
   private def makeSchema(docUriOption: Option[URI], schemaRootElem: nodebuilder.Elem): XsSchema = {
