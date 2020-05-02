@@ -41,6 +41,9 @@ final class EntrypointSchemaConverter(
     val namespacePrefixMapper: NamespacePrefixMapper,
     val documentENameExtractor: DocumentENameExtractor) {
 
+  // TODO Improve the xs:import generation! Not only must it hold the "DTS", but also a complete schema set so
+  // that all xs:import elements in DTS schemas are repeated here with schemaLocation!
+
   private val nodeBuilderUtil: NodeBuilderUtil = new NodeBuilderUtil(namespacePrefixMapper, documentENameExtractor)
 
   implicit private val elemCreator: nodebuilder.NodeBuilderCreator = nodebuilder.NodeBuilderCreator(namespacePrefixMapper)
@@ -60,7 +63,7 @@ final class EntrypointSchemaConverter(
    * The result entrypoint schema must explicitly sum up the entire DTS.
    */
   def convertSchema(inputSchema: standardtaxonomy.dom.XsSchema, inputTaxonomyBase: standardtaxonomy.taxonomy.TaxonomyBase): XsSchema = {
-    val dtsUriCollector = standardtaxonomy.taxonomy.builder.DefaultDtsUriCollector.instance
+    val dtsUriCollector = standardtaxonomy.taxonomy.builder.DefaultDtsUriCollector.instanceAddingLocfreeSchemas
 
     val inputDtsUris: Set[URI] = dtsUriCollector.findAllDtsUris(
       Set(inputSchema.docUri), { uri =>

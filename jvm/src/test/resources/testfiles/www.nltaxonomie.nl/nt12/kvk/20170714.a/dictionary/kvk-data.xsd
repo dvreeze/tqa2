@@ -5,7 +5,6 @@
   <xs:import namespace="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-types"/>
   <xs:import namespace="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/sbi-businesscodes-2017"/>
   <xs:import namespace="http://www.xbrl.org/2003/instance"/>
-  <xs:import namespace="http://www.xbrl.org/2003/linkbase"/>
   <xs:element abstract="false" id="kvk-i_CashFlowStatementMethodType" name="CashFlowStatementMethodType" nillable="false" substitutionGroup="xbrli:item" type="kvk-codes:cashFlowStatementMethodItemType" xbrli:periodType="duration"/>
   <xs:element abstract="false" id="kvk-i_DocumentResubmissionDueToUnsurmountableInaccuracies" name="DocumentResubmissionDueToUnsurmountableInaccuracies" nillable="false" substitutionGroup="xbrli:item" type="nl-codes:yesNoItemType" xbrli:periodType="duration"/>
   <xs:element abstract="false" id="kvk-i_IncomeStatementClassificationType" name="IncomeStatementClassificationType" nillable="false" substitutionGroup="xbrli:item" type="kvk-codes:incomeStatementClassificationItemType" xbrli:periodType="duration"/>

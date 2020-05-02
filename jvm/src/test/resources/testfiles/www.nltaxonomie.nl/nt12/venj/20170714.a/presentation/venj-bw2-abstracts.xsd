@@ -2,7 +2,6 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:sbr="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension" xmlns:xbrli="http://www.xbrl.org/2003/instance" targetNamespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/presentation/venj-bw2-abstracts" attributeFormDefault="unqualified" elementFormDefault="qualified">
   <xs:import namespace="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension"/>
   <xs:import namespace="http://www.xbrl.org/2003/instance"/>
-  <xs:import namespace="http://www.xbrl.org/2003/linkbase"/>
   <xs:element abstract="true" id="venj-bw2-abstr_AccruedIncomeTitle" name="AccruedIncomeTitle" nillable="false" substitutionGroup="sbr:presentationItem" type="xbrli:stringItemType" xbrli:periodType="duration"/>
   <xs:element abstract="true" id="venj-bw2-abstr_Article1Title" name="Article1Title" nillable="false" substitutionGroup="sbr:presentationItem" type="xbrli:stringItemType" xbrli:periodType="duration"/>
   <xs:element abstract="true" id="venj-bw2-abstr_Article2Title" name="Article2Title" nillable="false" substitutionGroup="sbr:presentationItem" type="xbrli:stringItemType" xbrli:periodType="duration"/>

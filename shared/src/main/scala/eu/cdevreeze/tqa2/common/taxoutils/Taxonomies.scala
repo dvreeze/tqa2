@@ -91,4 +91,12 @@ object Taxonomies {
       }.nonEmpty
     }
   }
+
+  val locfreeSchemaUris: Set[URI] = Set(
+    URI.create("http://www.locfreexbrl.org/2003/locatorfreexbrl-linkbase-2003-12-31.xsd"),
+    URI.create("http://www.locfreexbrl.org/2005/locatorfreexbrl-xbrldt-2005.xsd"),
+    URI.create("http://www.locfreexbrl.org/2008/locatorfreexbrl-generic-link.xsd"),
+    URI.create("http://www.locfreexbrl.org/2019/locatorfreexbrl-elementkey-2019.xsd"),
+    URI.create("http://www.locfreexbrl.org/2019/locatorfreexbrl-extended-link.xsd"),
+  )
 }

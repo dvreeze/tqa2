@@ -1,6 +1,6 @@
 
 // Run amm in scripts folder
-// In amm session, use command "import $exec.eu.cdevreeze.tqa2.scripts.LoadDts"
+// In amm session, use command "import $exec.eu.cdevreeze.tqa2.scripts.LoadStandardDts"
 
 // Taking TQA2 version 0.2.0-SNAPSHOT
 

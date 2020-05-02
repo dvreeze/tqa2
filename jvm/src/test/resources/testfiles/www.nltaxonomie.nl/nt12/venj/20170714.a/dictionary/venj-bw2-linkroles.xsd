@@ -129,5 +129,6 @@
       </link:roleType>
     </xs:appinfo>
   </xs:annotation>
+  <xs:import namespace="http://www.locfreexbrl.org/2003/linkbase"/>
   <xs:import namespace="http://www.xbrl.org/2003/linkbase"/>
 </xs:schema>

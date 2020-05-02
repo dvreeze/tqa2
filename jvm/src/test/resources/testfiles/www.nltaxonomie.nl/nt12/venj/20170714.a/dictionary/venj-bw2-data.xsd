@@ -5,7 +5,6 @@
   <xs:import namespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-codes"/>
   <xs:import namespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-types"/>
   <xs:import namespace="http://www.xbrl.org/2003/instance"/>
-  <xs:import namespace="http://www.xbrl.org/2003/linkbase"/>
   <xs:import namespace="http://www.xbrl.org/dtr/type/numeric"/>
   <xs:element abstract="false" id="venj-bw2-i_AccommodationCostsAllocatedToInvestmentsInLandAndBuildingsForOwnUse" name="AccommodationCostsAllocatedToInvestmentsInLandAndBuildingsForOwnUse" nillable="false" substitutionGroup="xbrli:item" type="nl-types:monetaryNoDecimalsItemType" xbrli:balance="debit" xbrli:periodType="duration"/>
   <xs:element abstract="false" id="venj-bw2-i_AccountingPrinciplesForDeterminingTheResult" name="AccountingPrinciplesForDeterminingTheResult" nillable="false" substitutionGroup="xbrli:item" type="nl-types:string100000ItemType" xbrli:periodType="duration"/>

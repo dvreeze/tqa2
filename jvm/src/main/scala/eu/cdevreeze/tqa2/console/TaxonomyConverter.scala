@@ -100,7 +100,7 @@ object TaxonomyConverter {
 
     val inputTaxoBase: standardtaxonomy.taxonomy.TaxonomyBase = DefaultTaxonomyBaseBuilder
       .withDocumentBuilder(docBuilder)
-      .withDtsUriCollector(DefaultDtsUriCollector.instance)
+      .withDtsUriCollector(DefaultDtsUriCollector.instanceAddingLocfreeSchemas)
       .build(combinedEntrypoint)
 
     println(s"Successfully parsed the input taxonomy. It contains ${inputTaxoBase.rootElems.size} documents") // scalastyle:off

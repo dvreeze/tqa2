@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<clink:linkbase xmlns:clink="http://www.locfreexbrl.org/2003/linkbase" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:rj-i="http://www.nltaxonomie.nl/nt12/rj/20170714.a/dictionary/rj-data" xmlns:ckey="http://www.locfreexbrl.org/2019/key" xmlns:venj-bw2-i="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-data" xmlns:rj-abstr="http://www.nltaxonomie.nl/nt12/rj/20170714.a/presentation/rj-abstracts">
+<clink:linkbase xmlns:clink="http://www.locfreexbrl.org/2003/linkbase" xmlns:xlink="http://www.w3.org/1999/xlink" xmlns:venj-bw2-i="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-data" xmlns:ckey="http://www.locfreexbrl.org/2019/key" xmlns:rj-i="http://www.nltaxonomie.nl/nt12/rj/20170714.a/dictionary/rj-data" xmlns:rj-abstr="http://www.nltaxonomie.nl/nt12/rj/20170714.a/presentation/rj-abstracts">
   <clink:roleRef roleURI="urn:rj:linkrole:annual-reporting-guidelines-140"/>
   <clink:presentationLink xlink:role="urn:rj:linkrole:annual-reporting-guidelines-140" xlink:type="extended">
-    <clink:presentationArc order="1" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="rj-abstr_AnnualReportingGuidelines140Title_loc" xlink:to="venj-bw2-i_ChangeAccountingPoliciesDisclosure_loc" xlink:type="arc"/>
     <ckey:conceptKey key="rj-abstr:AnnualReportingGuidelines140Title" xlink:label="rj-abstr_AnnualReportingGuidelines140Title_loc" xlink:type="resource"/>
-    <ckey:conceptKey key="venj-bw2-i:ChangeAccountingPoliciesDisclosure" xlink:label="venj-bw2-i_ChangeAccountingPoliciesDisclosure_loc" xlink:type="resource"/>
-    <clink:presentationArc order="2" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="rj-abstr_AnnualReportingGuidelines140Title_loc" xlink:to="venj-bw2-i_ChangeAccountingPoliciesDescription_loc" xlink:type="arc"/>
-    <ckey:conceptKey key="venj-bw2-i:ChangeAccountingPoliciesDescription" xlink:label="venj-bw2-i_ChangeAccountingPoliciesDescription_loc" xlink:type="resource"/>
-    <clink:presentationArc order="3" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="rj-abstr_AnnualReportingGuidelines140Title_loc" xlink:to="rj-i_ChangeAccountingPoliciesMethodProcessingDescription_loc" xlink:type="arc"/>
-    <ckey:conceptKey key="rj-i:ChangeAccountingPoliciesMethodProcessingDescription" xlink:label="rj-i_ChangeAccountingPoliciesMethodProcessingDescription_loc" xlink:type="resource"/>
-    <clink:presentationArc order="4" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="rj-abstr_AnnualReportingGuidelines140Title_loc" xlink:to="venj-bw2-i_ChangeAccountingPoliciesEffectOnEquityAndResultsDescription_loc" xlink:type="arc"/>
-    <ckey:conceptKey key="venj-bw2-i:ChangeAccountingPoliciesEffectOnEquityAndResultsDescription" xlink:label="venj-bw2-i_ChangeAccountingPoliciesEffectOnEquityAndResultsDescription_loc" xlink:type="resource"/>
-    <clink:presentationArc order="5" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="rj-abstr_AnnualReportingGuidelines140Title_loc" xlink:to="rj-i_ChangeAccountingPoliciesEffectOnIndividualItemsDescription_loc" xlink:type="arc"/>
-    <ckey:conceptKey key="rj-i:ChangeAccountingPoliciesEffectOnIndividualItemsDescription" xlink:label="rj-i_ChangeAccountingPoliciesEffectOnIndividualItemsDescription_loc" xlink:type="resource"/>
-    <clink:presentationArc order="6" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="rj-abstr_AnnualReportingGuidelines140Title_loc" xlink:to="rj-i_ChangeAccountingPoliciesEffectOnFuturePeriodsDescription_loc" xlink:type="arc"/>
     <ckey:conceptKey key="rj-i:ChangeAccountingPoliciesEffectOnFuturePeriodsDescription" xlink:label="rj-i_ChangeAccountingPoliciesEffectOnFuturePeriodsDescription_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="rj-i:ChangeAccountingPoliciesEffectOnIndividualItemsDescription" xlink:label="rj-i_ChangeAccountingPoliciesEffectOnIndividualItemsDescription_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="rj-i:ChangeAccountingPoliciesMethodProcessingDescription" xlink:label="rj-i_ChangeAccountingPoliciesMethodProcessingDescription_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:ChangeAccountingPoliciesDescription" xlink:label="venj-bw2-i_ChangeAccountingPoliciesDescription_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:ChangeAccountingPoliciesDisclosure" xlink:label="venj-bw2-i_ChangeAccountingPoliciesDisclosure_loc" xlink:type="resource"/>
+    <ckey:conceptKey key="venj-bw2-i:ChangeAccountingPoliciesEffectOnEquityAndResultsDescription" xlink:label="venj-bw2-i_ChangeAccountingPoliciesEffectOnEquityAndResultsDescription_loc" xlink:type="resource"/>
+    <clink:presentationArc order="1" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="rj-abstr_AnnualReportingGuidelines140Title_loc" xlink:to="venj-bw2-i_ChangeAccountingPoliciesDisclosure_loc" xlink:type="arc"/>
+    <clink:presentationArc order="2" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="rj-abstr_AnnualReportingGuidelines140Title_loc" xlink:to="venj-bw2-i_ChangeAccountingPoliciesDescription_loc" xlink:type="arc"/>
+    <clink:presentationArc order="3" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="rj-abstr_AnnualReportingGuidelines140Title_loc" xlink:to="rj-i_ChangeAccountingPoliciesMethodProcessingDescription_loc" xlink:type="arc"/>
+    <clink:presentationArc order="4" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="rj-abstr_AnnualReportingGuidelines140Title_loc" xlink:to="venj-bw2-i_ChangeAccountingPoliciesEffectOnEquityAndResultsDescription_loc" xlink:type="arc"/>
+    <clink:presentationArc order="5" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="rj-abstr_AnnualReportingGuidelines140Title_loc" xlink:to="rj-i_ChangeAccountingPoliciesEffectOnIndividualItemsDescription_loc" xlink:type="arc"/>
+    <clink:presentationArc order="6" xlink:arcrole="http://www.xbrl.org/2003/arcrole/parent-child" xlink:from="rj-abstr_AnnualReportingGuidelines140Title_loc" xlink:to="rj-i_ChangeAccountingPoliciesEffectOnFuturePeriodsDescription_loc" xlink:type="arc"/>
   </clink:presentationLink>
 </clink:linkbase>

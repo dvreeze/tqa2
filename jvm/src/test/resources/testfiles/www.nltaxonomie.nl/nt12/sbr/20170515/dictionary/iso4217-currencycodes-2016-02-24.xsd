@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xbrli="http://www.xbrl.org/2003/instance" targetNamespace="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/iso4217-currencycodes-2016-02-24" attributeFormDefault="unqualified" elementFormDefault="qualified">
   <xs:import namespace="http://www.xbrl.org/2003/instance"/>
-  <xs:import namespace="http://www.xbrl.org/2003/linkbase"/>
   <xs:complexType id="iso4217-enum-sbr_isoCurrencyCodes4217ItemType" name="isoCurrencyCodes4217ItemType">
     <xs:simpleContent>
       <xs:restriction base="xbrli:stringItemType">

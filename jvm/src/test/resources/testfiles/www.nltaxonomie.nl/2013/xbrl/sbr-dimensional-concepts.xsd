@@ -1,9 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xbrldt="http://xbrl.org/2005/xbrldt" xmlns:sbr="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension" xmlns:xbrli="http://www.xbrl.org/2003/instance" targetNamespace="http://www.nltaxonomie.nl/2013/xbrl/sbr-dimensional-concepts" attributeFormDefault="unqualified" elementFormDefault="qualified">
-  <xs:import namespace="http://www.xbrl.org/2003/instance"/>
-  <xs:import namespace="http://www.xbrl.org/2003/linkbase"/>
-  <xs:import namespace="http://xbrl.org/2005/xbrldt"/>
   <xs:import namespace="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension"/>
+  <xs:import namespace="http://www.xbrl.org/2003/instance"/>
+  <xs:import namespace="http://xbrl.org/2005/xbrldt"/>
   <xs:element id="sbr-dim_ValidationTable" name="ValidationTable" abstract="true" nillable="true" substitutionGroup="xbrldt:hypercubeItem" type="xbrli:stringItemType" xbrli:periodType="duration"/>
   <xs:element id="sbr-dim_ValidationLineItems" name="ValidationLineItems" abstract="true" nillable="true" substitutionGroup="sbr:primaryDomainItem" type="xbrli:stringItemType" xbrli:periodType="duration"/>
 </xs:schema>

@@ -6,7 +6,6 @@
   <xs:import namespace="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-types"/>
   <xs:import namespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-codes"/>
   <xs:import namespace="http://www.xbrl.org/2003/instance"/>
-  <xs:import namespace="http://www.xbrl.org/2003/linkbase"/>
   <xs:import namespace="http://www.xbrl.org/dtr/type/numeric"/>
   <xs:element abstract="false" id="rj-i_ALMPolicyDescription" name="ALMPolicyDescription" nillable="false" substitutionGroup="xbrli:item" type="nl-types:formattedExplanationItemType" xbrli:periodType="duration"/>
   <xs:element abstract="false" id="rj-i_AccommodationCosts" name="AccommodationCosts" nillable="false" substitutionGroup="xbrli:item" type="nl-types:monetaryNoDecimalsItemType" xbrli:balance="debit" xbrli:periodType="duration"/>

@@ -2,7 +2,6 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:sbr="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension" xmlns:xbrli="http://www.xbrl.org/2003/instance" targetNamespace="http://www.nltaxonomie.nl/nt12/rj/20170714.a/presentation/rj-abstracts" attributeFormDefault="unqualified" elementFormDefault="qualified">
   <xs:import namespace="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension"/>
   <xs:import namespace="http://www.xbrl.org/2003/instance"/>
-  <xs:import namespace="http://www.xbrl.org/2003/linkbase"/>
   <xs:element abstract="true" id="rj-abstr_AnnualReportingGuidelines100Title" name="AnnualReportingGuidelines100Title" nillable="false" substitutionGroup="sbr:presentationItem" type="xbrli:stringItemType" xbrli:periodType="duration"/>
   <xs:element abstract="true" id="rj-abstr_AnnualReportingGuidelines110Title" name="AnnualReportingGuidelines110Title" nillable="false" substitutionGroup="sbr:presentationItem" type="xbrli:stringItemType" xbrli:periodType="duration"/>
   <xs:element abstract="true" id="rj-abstr_AnnualReportingGuidelines115Title" name="AnnualReportingGuidelines115Title" nillable="false" substitutionGroup="sbr:presentationItem" type="xbrli:stringItemType" xbrli:periodType="duration"/>

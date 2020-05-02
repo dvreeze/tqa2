@@ -16,12 +16,15 @@
 
 package eu.cdevreeze.tqa2.internal.converttaxonomy
 
+import java.net.URI
+
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.namespaceutils.SchemaContentENameExtractor
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.node.nodebuilder
 import eu.cdevreeze.yaidom2.queryapi.BackingNodes
 import eu.cdevreeze.yaidom2.utils.namespaces.DocumentENameExtractor
+import eu.cdevreeze.yaidom2.utils.namespaces.ENameFinder
 
 /**
  * Schema import generator, looking at used namespaces for which an xs:import is needed, and generating those
@@ -65,51 +68,83 @@ final class SchemaImportGenerator(
     }
   }
 
+  def addXsImport(schema: nodebuilder.Elem, namespace: String): nodebuilder.Elem = {
+    assert(schema.name == ENames.XsSchemaEName)
+
+    val xsImport: nodebuilder.Elem =
+      emptyElem(ENames.XsImportEName, schema.prefixedScope).creationApi
+        .plusAttribute(ENames.NamespaceEName, namespace)
+        .underlying
+
+    addXsImport(schema, xsImport)
+  }
+
+  def addXsImport(schema: nodebuilder.Elem, namespace: String, schemaLocation: URI): nodebuilder.Elem = {
+    assert(schema.name == ENames.XsSchemaEName)
+
+    val xsImport: nodebuilder.Elem =
+      emptyElem(ENames.XsImportEName, schema.prefixedScope).creationApi
+        .plusAttribute(ENames.NamespaceEName, namespace)
+        .plusAttribute(ENames.SchemaLocationEName, schemaLocation.toString)
+        .underlying
+
+    addXsImport(schema, xsImport)
+  }
+
   private def findUsedNamespacesInSchemaContent(schema: BackingNodes.Elem): Set[String] = {
     assert(schema.name == ENames.XsSchemaEName)
 
-    schema.findAllDescendantElemsOrSelf.flatMap { e =>
-      val namespacesInText: Set[String] = schemaContentENameExtractor
-        .findElemTextENameExtractor(e)
-        .map(_.extractENames(e.scope, e.text).flatMap(_.namespaceUriOption))
-        .getOrElse(Set.empty)
+    val namespacesInAttrValuesAndElemText: Set[String] =
+      schema.findAllDescendantElemsOrSelf.flatMap { e =>
+        val namespacesInText: Set[String] = schemaContentENameExtractor
+          .findElemTextENameExtractor(e)
+          .map(_.extractENames(e.scope, e.text).flatMap(_.namespaceUriOption))
+          .getOrElse(Set.empty)
 
-      val namespacesInAttrValues: Set[String] = e.attributes.flatMap {
-        case (attrName, attrValue) =>
-          schemaContentENameExtractor
-            .findAttributeValueENameExtractor(e, attrName)
-            .map(_.extractENames(e.scope.withoutDefaultNamespace, attrValue)
-              .flatMap(_.namespaceUriOption))
-            .getOrElse(Set.empty)
+        val namespacesInAttrValues: Set[String] = e.attributes.flatMap {
+          case (attrName, attrValue) =>
+            schemaContentENameExtractor
+              .findAttributeValueENameExtractor(e, attrName)
+              .map(_.extractENames(e.scope.withoutDefaultNamespace, attrValue)
+                .flatMap(_.namespaceUriOption))
+              .getOrElse(Set.empty)
+        }.toSet
+
+        namespacesInText.union(namespacesInAttrValues)
       }.toSet
 
-      namespacesInText.union(namespacesInAttrValues)
-    }.toSet
+    val namespacesInAppInfos: Set[String] = findUsedNamespacesInAppInfos(schema)
+
+    namespacesInAttrValuesAndElemText.union(namespacesInAppInfos)
   }
 
-  private def addXsImport(schema: nodebuilder.Elem, namespace: String): nodebuilder.Elem = {
+  private def findUsedNamespacesInAppInfos(schema: BackingNodes.Elem): Set[String] = {
     assert(schema.name == ENames.XsSchemaEName)
 
-    if (schema.filterChildElems(_.name == ENames.XsImportEName).exists(_.attrOption(ENames.NamespaceEName).contains(namespace))) {
+    schema
+      .filterDescendantElems(_.name == ENames.XsAppinfoEName)
+      .flatMap(_.findAllChildElems)
+      .flatMap { e =>
+        ENameFinder.findAllNamespaces(e, documentENameExtractor)
+      }
+      .toSet
+  }
+
+  private def addXsImport(schema: nodebuilder.Elem, xsImport: nodebuilder.Elem): nodebuilder.Elem = {
+    assert(schema.name == ENames.XsSchemaEName)
+    assert(xsImport.name == ENames.XsImportEName)
+
+    val namespace: String = xsImport.attr(ENames.NamespaceEName)
+
+    if (schema.filterChildElems(_.name == ENames.XsImportEName).exists(_.attr(ENames.NamespaceEName) == namespace)) {
       schema
     } else {
-      val xsImport: nodebuilder.Elem =
-        emptyElem(ENames.XsImportEName, schema.prefixedScope).creationApi
-          .plusAttribute(ENames.NamespaceEName, namespace)
-          .underlying
-
-      val childIndex: Int = schema.children.zipWithIndex
-        .dropWhile {
-          case (che: nodebuilder.Elem, _) => che.name == ENames.XsAnnotationEName
-          case _                          => false
-        }
-        .dropWhile {
-          case (che: nodebuilder.Elem, _) => che.name == ENames.XsImportEName && che.attr(ENames.NamespaceEName) < namespace
-          case _                          => false
-        }
-        .headOption
-        .map(_._2)
-        .getOrElse(0)
+      val childIndex: Int = schema.children.takeWhile {
+        case che: nodebuilder.Elem =>
+          (che.name == ENames.XsAnnotationEName) || (che.name == ENames.XsImportEName && che.attr(ENames.NamespaceEName) < namespace)
+        case _ =>
+          true
+      }.size
 
       schema.creationApi.plusChild(childIndex, xsImport).underlying
     }

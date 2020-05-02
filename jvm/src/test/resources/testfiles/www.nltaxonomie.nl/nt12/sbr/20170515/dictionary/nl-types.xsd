@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:nl-types="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-types" xmlns:xbrli="http://www.xbrl.org/2003/instance" targetNamespace="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-types" attributeFormDefault="unqualified" elementFormDefault="qualified">
+  <xs:import namespace="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-types"/>
+  <xs:import namespace="http://www.w3.org/2001/XMLSchema"/>
   <xs:import namespace="http://www.xbrl.org/2003/instance"/>
   <xs:complexType id="nl-types_Decimal20ItemType" name="decimal20ItemType">
     <xs:simpleContent>

@@ -2,7 +2,6 @@
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xbrldt="http://xbrl.org/2005/xbrldt" xmlns:xbrli="http://www.xbrl.org/2003/instance" xmlns:venj-bw2-dm="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-domains" xmlns:cxbrldt="http://locfreexbrl.org/2005/xbrldt" targetNamespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-axes" attributeFormDefault="unqualified" elementFormDefault="qualified">
   <xs:import namespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-bw2-domains"/>
   <xs:import namespace="http://www.xbrl.org/2003/instance"/>
-  <xs:import namespace="http://www.xbrl.org/2003/linkbase"/>
   <xs:import namespace="http://xbrl.org/2005/xbrldt"/>
   <xs:element abstract="true" id="venj-bw2-dim_AverageNumberEmployeesSegmentsAxis" name="AverageNumberEmployeesSegmentsAxis" nillable="false" substitutionGroup="xbrldt:dimensionItem" type="xbrli:stringItemType" cxbrldt:typedDomainKey="venj-bw2-dm:SegmentForAverageNumberEmployeesTypedMember" xbrli:periodType="duration"/>
   <xs:element abstract="true" id="venj-bw2-dim_BasisOfPreparationAxis" name="BasisOfPreparationAxis" nillable="false" substitutionGroup="xbrldt:dimensionItem" type="xbrli:stringItemType" xbrli:periodType="duration"/>

@@ -19,6 +19,7 @@ package eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy.builder
 import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
+import eu.cdevreeze.tqa2.common.taxoutils.Taxonomies
 import eu.cdevreeze.tqa2.internal.standardtaxonomy.dom._
 import eu.cdevreeze.yaidom2.queryapi.anyElem
 
@@ -164,4 +165,11 @@ trait DefaultDtsUriCollector extends DtsUriCollector {
 object DefaultDtsUriCollector {
 
   val instance: DefaultDtsUriCollector = new DefaultDtsUriCollector {}
+
+  val instanceAddingLocfreeSchemas: DefaultDtsUriCollector = new DefaultDtsUriCollector {
+
+    override def findAllDtsUris(entrypoint: Set[URI], taxoElemBuilder: URI => TaxonomyElem): Set[URI] = {
+      super.findAllDtsUris(entrypoint.union(Taxonomies.locfreeSchemaUris), taxoElemBuilder)
+    }
+  }
 }

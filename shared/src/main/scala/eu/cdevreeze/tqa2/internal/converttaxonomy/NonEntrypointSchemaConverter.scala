@@ -62,7 +62,8 @@ final class NonEntrypointSchemaConverter(
   import elemCreator._
   import nodebuilder.NodeBuilderCreator._
 
-  private val schemaImportGenerator: SchemaImportGenerator = SchemaImportGenerator(namespacePrefixMapper, documentENameExtractor)
+  private[converttaxonomy] val schemaImportGenerator: SchemaImportGenerator =
+    SchemaImportGenerator(namespacePrefixMapper, documentENameExtractor)
 
   // TODO Add xs:import for every namespace used in an XML Schema sense (using another DocumentENameExtractor)
 
@@ -111,16 +112,14 @@ final class NonEntrypointSchemaConverter(
       .plusAttributeOption(ENames.IdEName, inputSchema.attrOption(ENames.IdEName))
       .plusAttributeOption(ENames.AttributeFormDefaultEName, inputSchema.attrOption(ENames.AttributeFormDefaultEName))
       .plusAttributeOption(ENames.ElementFormDefaultEName, inputSchema.attrOption(ENames.ElementFormDefaultEName))
-      .plusChildren(inputSchema.findAllChildElems.flatMap {
+      .plusChildren(inputSchema.filterChildElems(!_.isInstanceOf[standardtaxonomy.dom.Import]).map {
         case annotation: standardtaxonomy.dom.Annotation =>
-          Some(convertAnnotation(annotation, inputTaxonomyBase, parentScope))
-        case xsImport: standardtaxonomy.dom.Import =>
-          None
+          convertAnnotation(annotation, inputTaxonomyBase, parentScope)
         case elemDecl: standardtaxonomy.dom.GlobalElementDeclaration =>
-          Some(convertGlobalElementDeclaration(elemDecl, inputTaxonomyBase, parentScope))
+          convertGlobalElementDeclaration(elemDecl, inputTaxonomyBase, parentScope)
         case che =>
           // TODO Make sure no default namespace is used or that it is "converted away"
-          Some(nodebuilder.Elem.from(che).creationApi.usingNonConflictingParentScope(parentScope).underlyingElem)
+          nodebuilder.Elem.from(che).creationApi.usingNonConflictingParentScope(parentScope).underlyingElem
       })
       .underlying
       .transformChildElemsToNodeSeq(e => removeIfEmptyAnnotation(e).toSeq)

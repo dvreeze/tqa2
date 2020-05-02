@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <xs:schema xmlns:xs="http://www.w3.org/2001/XMLSchema" xmlns:xbrli="http://www.xbrl.org/2003/instance" targetNamespace="http://www.nltaxonomie.nl/nt12/venj/20170714.a/dictionary/venj-codes" attributeFormDefault="unqualified" elementFormDefault="qualified">
   <xs:import namespace="http://www.xbrl.org/2003/instance"/>
-  <xs:import namespace="http://www.xbrl.org/2003/linkbase"/>
   <xs:complexType id="venj-codes_basisOfPreparationItemType" name="basisOfPreparationItemType">
     <xs:simpleContent>
       <xs:restriction base="xbrli:stringItemType">

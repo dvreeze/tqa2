@@ -126,35 +126,38 @@ final class TaxonomyBaseConverter(
 
     checkInputTaxonomyBaseIgnoringEntrypoints(inputTaxonomyBase, excludedEntrypointFilter)
 
+    require(
+      inputTaxonomyBase.documentMap.keySet.exists(uri => uri.getHost == "www.locfreexbrl.org"),
+      s"Expected at least one schema under http://www.locfreexbrl.org")
+
     val nonEntrypointSchemaConverter: NonEntrypointSchemaConverter =
       new NonEntrypointSchemaConverter(namespacePrefixMapper, documentENameExtractor)
     val linkbaseConverter: LinkbaseConverter =
       new LinkbaseConverter(xlinkResourceConverter, namespacePrefixMapper, documentENameExtractor)
 
-    val rootElems: Seq[locfreetaxonomy.dom.TaxonomyElem] = inputTaxonomyBase.rootElems
-      .filterNot(e => excludedEntrypointFilter(e.docUri))
-      .flatMap {
-        case e: standardtaxonomy.dom.XsSchema if Taxonomies.isCoreDocumentUri(e.docUri) =>
-          println(s"Parsing (not converting) schema '${e.docUri}'") // scalastyle:off
-          Some(locfreetaxonomy.dom.TaxonomyElem(e.underlyingElem))
-        case e: standardtaxonomy.dom.XsSchema =>
-          // TODO Require non-entrypoint schema in terms of content
-          println(s"Converting schema '${e.docUri}'") // scalastyle:off
-          Some(nonEntrypointSchemaConverter.convertSchema(e, inputTaxonomyBase))
-        case e: standardtaxonomy.dom.Linkbase if Taxonomies.isCoreDocumentUri(e.docUri) =>
-          println(s"Parsing (not converting) linkbase '${e.docUri}'") // scalastyle:off
-          Some(locfreetaxonomy.dom.TaxonomyElem(e.underlyingElem))
-        case e: standardtaxonomy.dom.Linkbase =>
-          println(s"Converting linkbase '${e.docUri}'") // scalastyle:off
-          Some(linkbaseConverter.convertLinkbase(e, inputTaxonomyBase))
-        case _ =>
-          None
-      }
+    val rootElems: Seq[locfreetaxonomy.dom.TaxonomyElem] =
+      inputTaxonomyBase.rootElems
+        .filterNot(e => excludedEntrypointFilter(e.docUri))
+        .flatMap {
+          case e: standardtaxonomy.dom.XsSchema if Taxonomies.isCoreDocumentUri(e.docUri) =>
+            println(s"Parsing (not converting) schema '${e.docUri}'") // scalastyle:off
+            Some(locfreetaxonomy.dom.TaxonomyElem(e.underlyingElem))
+          case e: standardtaxonomy.dom.XsSchema =>
+            // TODO Require non-entrypoint schema in terms of content
+            println(s"Converting schema '${e.docUri}'") // scalastyle:off
+            Some(nonEntrypointSchemaConverter.convertSchema(e, inputTaxonomyBase))
+          case e: standardtaxonomy.dom.Linkbase if Taxonomies.isCoreDocumentUri(e.docUri) =>
+            println(s"Parsing (not converting) linkbase '${e.docUri}'") // scalastyle:off
+            Some(locfreetaxonomy.dom.TaxonomyElem(e.underlyingElem))
+          case e: standardtaxonomy.dom.Linkbase =>
+            println(s"Converting linkbase '${e.docUri}'") // scalastyle:off
+            Some(linkbaseConverter.convertLinkbase(e, inputTaxonomyBase))
+          case _ =>
+            None
+        }
 
     // Not losing the document URI, but potentially losing top-level comments or processing instructions.
     val documents: Seq[locfreetaxonomy.dom.TaxonomyDocument] = rootElems.map(e => locfreetaxonomy.dom.TaxonomyDocument(e))
-
-    // TODO Add new core schemas for locator-free model
 
     locfreetaxonomy.taxonomy.TaxonomyBase.build(documents, SubstitutionGroupMap.Empty)
   }

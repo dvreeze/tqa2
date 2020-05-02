@@ -3,7 +3,6 @@
   <xs:import namespace="http://www.nltaxonomie.nl/2011/xbrl/xbrl-syntax-extension"/>
   <xs:import namespace="http://www.nltaxonomie.nl/nt12/sbr/20170515/dictionary/nl-types"/>
   <xs:import namespace="http://www.xbrl.org/2003/instance"/>
-  <xs:import namespace="http://www.xbrl.org/2003/linkbase"/>
   <xs:element abstract="true" id="venj-bw2-dm_AccidentsAndIllnessesMember" name="AccidentsAndIllnessesMember" nillable="false" substitutionGroup="sbr:domainMemberItem" type="xbrli:stringItemType" xbrli:periodType="duration"/>
   <xs:element abstract="true" id="venj-bw2-dm_AccrualsAndDeferredIncomeMember" name="AccrualsAndDeferredIncomeMember" nillable="false" substitutionGroup="sbr:domainMemberItem" type="xbrli:stringItemType" xbrli:periodType="duration"/>
   <xs:element abstract="true" id="venj-bw2-dm_AccruedIncomeMember" name="AccruedIncomeMember" nillable="false" substitutionGroup="sbr:domainMemberItem" type="xbrli:stringItemType" xbrli:periodType="duration"/>
