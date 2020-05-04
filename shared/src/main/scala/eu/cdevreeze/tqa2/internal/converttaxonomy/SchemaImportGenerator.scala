@@ -18,7 +18,6 @@ package eu.cdevreeze.tqa2.internal.converttaxonomy
 
 import java.net.URI
 
-import eu.cdevreeze.tqa2.common.namespaceutils.SchemaContentENameExtractor
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
@@ -33,10 +32,7 @@ import eu.cdevreeze.yaidom2.utils.namespaces.ENameFinder
  *
  * @author Chris de Vreeze
  */
-final class SchemaImportGenerator(
-    val namespacePrefixMapper: NamespacePrefixMapper,
-    val documentENameExtractor: DocumentENameExtractor,
-    val schemaContentENameExtractor: SchemaContentENameExtractor) {
+final class SchemaImportGenerator(val namespacePrefixMapper: NamespacePrefixMapper, val documentENameExtractor: DocumentENameExtractor) {
 
   implicit private val elemCreator: nodebuilder.NodeBuilderCreator = nodebuilder.NodeBuilderCreator(namespacePrefixMapper)
 
@@ -54,7 +50,7 @@ final class SchemaImportGenerator(
       s"Default namespace used, which is not allowed (in ${schema.docUri})"
     )
 
-    val namespacesUsedInSchemaContent: Seq[String] = findUsedNamespacesInSchemaContent(schema).toSeq.sorted
+    val namespacesUsedInSchemaContent: Seq[String] = ENameFinder.findAllNamespaces(schema, documentENameExtractor).toSeq.sorted
 
     val alreadyImportedNamespaces: Set[String] =
       schema.filterChildElems(_.name == ENames.XsImportEName).map(_.attr(ENames.NamespaceEName)).toSet
@@ -97,45 +93,6 @@ final class SchemaImportGenerator(
     addXsImport(schema, xsImport)
   }
 
-  private def findUsedNamespacesInSchemaContent(schema: BackingNodes.Elem): Set[String] = {
-    assert(schema.name == ENames.XsSchemaEName)
-
-    val namespacesInAttrValuesAndElemText: Set[String] =
-      schema.findAllDescendantElemsOrSelf.flatMap { e =>
-        val namespacesInText: Set[String] = schemaContentENameExtractor
-          .findElemTextENameExtractor(e)
-          .map(_.extractENames(e.scope, e.text).flatMap(_.namespaceUriOption))
-          .getOrElse(Set.empty)
-
-        val namespacesInAttrValues: Set[String] = e.attributes.flatMap {
-          case (attrName, attrValue) =>
-            schemaContentENameExtractor
-              .findAttributeValueENameExtractor(e, attrName)
-              .map(_.extractENames(e.scope.withoutDefaultNamespace, attrValue)
-                .flatMap(_.namespaceUriOption))
-              .getOrElse(Set.empty)
-        }.toSet
-
-        namespacesInText.union(namespacesInAttrValues)
-      }.toSet
-
-    val namespacesInAppInfos: Set[String] = findUsedNamespacesInAppInfos(schema)
-
-    namespacesInAttrValuesAndElemText.union(namespacesInAppInfos)
-  }
-
-  private def findUsedNamespacesInAppInfos(schema: BackingNodes.Elem): Set[String] = {
-    assert(schema.name == ENames.XsSchemaEName)
-
-    schema
-      .filterDescendantElems(_.name == ENames.XsAppinfoEName)
-      .flatMap(_.findAllChildElems)
-      .flatMap { e =>
-        ENameFinder.findAllNamespaces(e, documentENameExtractor)
-      }
-      .toSet
-  }
-
   private def addXsImport(schema: nodebuilder.Elem, xsImport: nodebuilder.Elem): nodebuilder.Elem = {
     assert(schema.name == ENames.XsSchemaEName)
     assert(xsImport.name == ENames.XsImportEName)
@@ -159,14 +116,7 @@ final class SchemaImportGenerator(
 
 object SchemaImportGenerator {
 
-  def apply(
-      namespacePrefixMapper: NamespacePrefixMapper,
-      documentENameExtractor: DocumentENameExtractor,
-      schemaContentENameExtractor: SchemaContentENameExtractor): SchemaImportGenerator = {
-    new SchemaImportGenerator(namespacePrefixMapper, documentENameExtractor, schemaContentENameExtractor)
-  }
-
   def apply(namespacePrefixMapper: NamespacePrefixMapper, documentENameExtractor: DocumentENameExtractor): SchemaImportGenerator = {
-    apply(namespacePrefixMapper, documentENameExtractor, SchemaContentENameExtractor.defaultInstance)
+    new SchemaImportGenerator(namespacePrefixMapper, documentENameExtractor)
   }
 }
