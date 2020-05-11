@@ -857,7 +857,7 @@ final case class NonStandardLink(underlyingElem: BackingNodes.Elem) extends AnyN
 
 /**
  * Non-standard arc, as extensible non-sealed trait. This enables us to "replace" a NonStandardArc
- * by an arc in a formula or table context.
+ * by an arc in a formula or table context (or in any custom XBRL context).
  */
 trait AnyNonStandardArc extends TaxonomyElem with XLinkArc
 
@@ -868,7 +868,8 @@ final case class NonStandardArc(underlyingElem: BackingNodes.Elem) extends AnyNo
 
 /**
  * Non-standard resource, which is also not a taxonomy element key, as extensible non-sealed trait.
- * This enables us to "replace" a NonStandardResource by an XLink resource in a formula or table context.
+ * This enables us to "replace" a NonStandardResource by an XLink resource in a formula or table context
+ * (or in any custom XBRL context).
  */
 trait AnyNonStandardResource extends TaxonomyElem with NonKeyResource
 
@@ -879,7 +880,8 @@ final case class NonStandardResource(underlyingElem: BackingNodes.Elem) extends 
 
 /**
  * Any other non-XLink element, not in the "xs", "clink" or "link" namespaces, as extensible non-sealed trait.
- * This enables us to "replace" an OtherNonXLinkElem by a non-XLink element in a formula or table context.
+ * This enables us to "replace" an OtherNonXLinkElem by a non-XLink element in a formula or table context
+ * (or in any custom XBRL context).
  */
 trait AnyOtherNonXLinkElem extends TaxonomyElem
 
