@@ -846,24 +846,47 @@ final case class AnyElementKey(underlyingElem: BackingNodes.Elem) extends Taxono
 }
 
 /**
+ * Non-standard extended link, as extensible non-sealed trait
+ */
+trait AnyNonStandardLink extends TaxonomyElem with ExtendedLink
+
+/**
  * Non-standard extended link
  */
-final case class NonStandardLink(underlyingElem: BackingNodes.Elem) extends TaxonomyElem with ExtendedLink
+final case class NonStandardLink(underlyingElem: BackingNodes.Elem) extends AnyNonStandardLink
+
+/**
+ * Non-standard arc, as extensible non-sealed trait. This enables us to "replace" a NonStandardArc
+ * by an arc in a formula or table context.
+ */
+trait AnyNonStandardArc extends TaxonomyElem with XLinkArc
 
 /**
  * Non-standard arc
  */
-final case class NonStandardArc(underlyingElem: BackingNodes.Elem) extends TaxonomyElem with XLinkArc
+final case class NonStandardArc(underlyingElem: BackingNodes.Elem) extends AnyNonStandardArc
+
+/**
+ * Non-standard resource, which is also not a taxonomy element key, as extensible non-sealed trait.
+ * This enables us to "replace" a NonStandardResource by an XLink resource in a formula or table context.
+ */
+trait AnyNonStandardResource extends TaxonomyElem with NonKeyResource
 
 /**
  * Non-standard resource, which is also not a taxonomy element key
  */
-final case class NonStandardResource(underlyingElem: BackingNodes.Elem) extends TaxonomyElem with NonKeyResource
+final case class NonStandardResource(underlyingElem: BackingNodes.Elem) extends AnyNonStandardResource
+
+/**
+ * Any other non-XLink element, not in the "xs", "clink" or "link" namespaces, as extensible non-sealed trait.
+ * This enables us to "replace" an OtherNonXLinkElem by a non-XLink element in a formula or table context.
+ */
+trait AnyOtherNonXLinkElem extends TaxonomyElem
 
 /**
  * Any other non-XLink element, not in the "xs", "clink" or "link" namespaces.
  */
-final case class OtherNonXLinkElem(underlyingElem: BackingNodes.Elem) extends TaxonomyElem
+final case class OtherNonXLinkElem(underlyingElem: BackingNodes.Elem) extends AnyOtherNonXLinkElem
 
 // Companion objects
 
@@ -978,6 +1001,7 @@ object TaxonomyElem {
   }
 
   private def fallbackElem(underlyingElem: BackingNodes.Elem): TaxonomyElem = {
+    // Not an OtherElemInXsNamespace, OtherElemInCLinkNamespace or OtherElemInLinkNamespace.
     underlyingElem.attrOption(ENames.XLinkTypeEName) match {
       case Some("extended") => NonStandardLink(underlyingElem)
       case Some("arc")      => NonStandardArc(underlyingElem)
