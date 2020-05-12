@@ -275,8 +275,7 @@ final case class FunctionImplementation(underlyingElem: BackingNodes.Elem) exten
 }
 
 /**
- * A msg:message, as used in a formula-related context. Strictly speaking messages are not just related
- * to formulas, but they are introduced here to avoid sub-classing the core DOM type NonStandardResource.
+ * A msg:message, as used in a formula-related context.
  */
 final case class Message(underlyingElem: BackingNodes.Elem) extends FormulaResource {
   requireName(ENames.MsgMessageEName)
@@ -1076,7 +1075,7 @@ final case class OccEmptyAspect(underlyingElem: BackingNodes.Elem) extends OccAs
 }
 
 /**
- * A formula:fragments.
+ * A formula:occFragments.
  */
 final case class OccFragmentsAspect(underlyingElem: BackingNodes.Elem) extends OccAspect {
   requireName(ENames.FormulaOccFragmentsEName)
