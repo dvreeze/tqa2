@@ -201,7 +201,16 @@ sealed trait VariableOrParameter extends FormulaResource
 /**
  * A variable. See variable.xsd.
  */
-sealed trait Variable extends VariableOrParameter
+sealed trait Variable extends VariableOrParameter {
+
+  /**
+   * Returns the mandatory bindAsSequence attribute as Boolean.
+   * This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  final def bindAsSequence: Boolean = {
+    XsBooleans.parseBoolean(attr(ENames.BindAsSequenceEName))
+  }
+}
 
 /**
  * An assertion. Either in substitution group validation:assertion or validation:variableSetAssertion. See validation.xsd.
@@ -398,14 +407,6 @@ final case class FactVariable(underlyingElem: BackingNodes.Elem) extends Variabl
   def fallbackValueExprOption: Option[ScopedXPathString] = {
     attrOption(ENames.FallbackValueEName).map(v => ScopedXPathString(v, scope))
   }
-
-  /**
-   * Returns the mandatory bindAsSequence attribute as Boolean.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def bindAsSequence: Boolean = {
-    XsBooleans.parseBoolean(attr(ENames.BindAsSequenceEName))
-  }
 }
 
 /**
@@ -420,14 +421,6 @@ final case class GeneralVariable(underlyingElem: BackingNodes.Elem) extends Vari
    */
   def selectExpr: ScopedXPathString = {
     ScopedXPathString(attr(ENames.SelectEName), scope)
-  }
-
-  /**
-   * Returns the mandatory bindAsSequence attribute as Boolean.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def bindAsSequence: Boolean = {
-    XsBooleans.parseBoolean(attr(ENames.BindAsSequenceEName))
   }
 }
 
@@ -789,7 +782,7 @@ sealed trait MatchFilter extends Filter {
    */
   final def variable: EName = {
     val qn = attrAsQName(ENames.VariableEName)
-    scope.withoutDefaultNamespace.resolveQNameOption(qn).get
+    scope.withoutDefaultNamespace.resolveQName(qn)
   }
 
   final def matchAny: Boolean = {
@@ -978,7 +971,7 @@ final case class InstantDurationFilter(underlyingElem: BackingNodes.Elem) extend
    */
   def variable: EName = {
     val qn = attrAsQName(ENames.VariableEName)
-    scope.withoutDefaultNamespace.resolveQNameOption(qn).get
+    scope.withoutDefaultNamespace.resolveQName(qn)
   }
 
   def boundary: String = {
@@ -997,7 +990,7 @@ final case class RelativeFilter(underlyingElem: BackingNodes.Elem) extends Filte
    */
   def variable: EName = {
     val qn = attrAsQName(ENames.VariableEName)
-    scope.withoutDefaultNamespace.resolveQNameOption(qn).get
+    scope.withoutDefaultNamespace.resolveQName(qn)
   }
 }
 
@@ -1067,7 +1060,7 @@ final case class SiblingFilter(underlyingElem: BackingNodes.Elem) extends TupleF
    */
   def variable: EName = {
     val qn = attrAsQName(ENames.VariableEName)
-    scope.withoutDefaultNamespace.resolveQNameOption(qn).get
+    scope.withoutDefaultNamespace.resolveQName(qn)
   }
 }
 
@@ -1082,7 +1075,7 @@ final case class LocationFilter(underlyingElem: BackingNodes.Elem) extends Tuple
    */
   def variable: EName = {
     val qn = attrAsQName(ENames.VariableEName)
-    scope.withoutDefaultNamespace.resolveQNameOption(qn).get
+    scope.withoutDefaultNamespace.resolveQName(qn)
   }
 
   /**
@@ -1346,7 +1339,7 @@ final case class FunctionInput(underlyingElem: BackingNodes.Elem) extends Functi
   /**
    * Returns the type attribute. This may fail with an exception if the taxonomy is not schema-valid.
    */
-  def inputType: String = underlyingElem.attr(ENames.TypeEName)
+  def inputType: String = attr(ENames.TypeEName)
 }
 
 /**
@@ -1830,7 +1823,7 @@ final case class AspectCoverFilterAspect(underlyingElem: BackingNodes.Elem) exte
   requireName(ENames.AcfAspectEName)
 
   def aspectValue: AspectCoverFilters.Aspect = {
-    AspectCoverFilters.Aspect.fromString(underlyingElem.text)
+    AspectCoverFilters.Aspect.fromString(text)
   }
 }
 
@@ -2275,6 +2268,10 @@ sealed trait DimensionAspect extends FormulaAspect {
   final def dimension: EName = {
     attrAsResolvedQName(ENames.DimensionEName)
   }
+
+  final def omitElemOption: Option[OmitElem] = {
+    findFirstChildElemOfType(classTag[OmitElem])
+  }
 }
 
 /**
@@ -2285,10 +2282,6 @@ final case class ExplicitDimensionAspect(underlyingElem: BackingNodes.Elem) exte
 
   def memberElemOption: Option[MemberElem] = {
     findFirstChildElemOfType(classTag[MemberElem])
-  }
-
-  def omitElemOption: Option[OmitElem] = {
-    findFirstChildElemOfType(classTag[OmitElem])
   }
 }
 
@@ -2304,10 +2297,6 @@ final case class TypedDimensionAspect(underlyingElem: BackingNodes.Elem) extends
 
   def valueElemOption: Option[ValueElem] = {
     findFirstChildElemOfType(classTag[ValueElem])
-  }
-
-  def omitElemOption: Option[OmitElem] = {
-    findFirstChildElemOfType(classTag[OmitElem])
   }
 }
 
