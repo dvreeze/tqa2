@@ -24,14 +24,13 @@ import eu.cdevreeze.tqa2.common.xpath.ScopedXPathString
 import eu.cdevreeze.tqa2.common.xpath.TypedValue
 import eu.cdevreeze.tqa2.common.xpath.TypedValueExpr
 import eu.cdevreeze.tqa2.common.xpath.TypedValueProvider
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.AspectCoverFilters
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.ConceptRelationFilters
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.Occ
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.PeriodType
+import eu.cdevreeze.tqa2.locfreetaxonomy.common._
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.queryapi.BackingNodes
 
+import scala.reflect.ClassTag
 import scala.reflect.classTag
+import scala.util.chaining._
 
 /**
  * Standardized but non-standard taxonomy element in a locator-free taxonomy. Typically but not necessarily
@@ -2015,6 +2014,14 @@ final case class DecimalsElem(underlyingElem: BackingNodes.Elem)
  */
 final case class TableBreakdownArc(underlyingElem: BackingNodes.Elem) extends TableArc {
   requireName(ENames.TableTableBreakdownArcEName)
+
+  /**
+   * Returns the axis attribute.
+   * This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def axis: TableAxis = {
+    TableAxis.fromString(attr(ENames.AxisEName))
+  }
 }
 
 /**
@@ -2036,6 +2043,16 @@ final case class DefinitionNodeSubtreeArc(underlyingElem: BackingNodes.Elem) ext
  */
 final case class TableFilterArc(underlyingElem: BackingNodes.Elem) extends TableArc {
   requireName(ENames.TableTableFilterArcEName)
+
+  /**
+   * Returns the boolean complement attribute.
+   * This may fail with an exception if the taxonomy is not schema-valid.
+   *
+   * TODO Is the complement attribute mandatory? In that case, why has a TableFilterRelationship a default complement value (false)?
+   */
+  def complement: Boolean = {
+    attrOption(ENames.ComplementEName).exists(s => XsBooleans.parseBoolean(s))
+  }
 }
 
 /**
@@ -2043,6 +2060,15 @@ final case class TableFilterArc(underlyingElem: BackingNodes.Elem) extends Table
  */
 final case class TableParameterArc(underlyingElem: BackingNodes.Elem) extends TableArc {
   requireName(ENames.TableTableParameterArcEName)
+
+  /**
+   * Returns the name attribute as EName. The default namespace is not used to resolve the QName.
+   * This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def nameAttrValue: EName = {
+    val qname = attrAsQName(ENames.NameEName)
+    scope.withoutDefaultNamespace.resolveQName(qname)
+  }
 }
 
 /**
@@ -2050,6 +2076,14 @@ final case class TableParameterArc(underlyingElem: BackingNodes.Elem) extends Ta
  */
 final case class AspectNodeFilterArc(underlyingElem: BackingNodes.Elem) extends TableArc {
   requireName(ENames.TableAspectNodeFilterArcEName)
+
+  /**
+   * Returns the boolean complement attribute.
+   * This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def complement: Boolean = {
+    attrOption(ENames.ComplementEName).exists(s => XsBooleans.parseBoolean(s))
+  }
 }
 
 // Table resources
@@ -2059,6 +2093,14 @@ final case class AspectNodeFilterArc(underlyingElem: BackingNodes.Elem) extends 
  */
 final case class Table(underlyingElem: BackingNodes.Elem) extends TableResource {
   requireName(ENames.TableTableEName)
+
+  /**
+   * Returns the parent-child-order, defaulting to parent-first.
+   * This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def parentChildOrder: ParentChildOrder = {
+    attrOption(ENames.ParentChildOrderEName).map(s => ParentChildOrder.fromString(s)).getOrElse(ParentChildOrder.ParentFirst)
+  }
 }
 
 /**
@@ -2066,17 +2108,39 @@ final case class Table(underlyingElem: BackingNodes.Elem) extends TableResource 
  */
 final case class TableBreakdown(underlyingElem: BackingNodes.Elem) extends TableResource {
   requireName(ENames.TableBreakdownEName)
+
+  /**
+   * Returns the optional parent-child-order.
+   * This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def parentChildOrderOption: Option[ParentChildOrder] = {
+    attrOption(ENames.ParentChildOrderEName).map(s => ParentChildOrder.fromString(s))
+  }
 }
 
 /**
  * A definition node.
  */
-sealed trait DefinitionNode extends TableResource
+sealed trait DefinitionNode extends TableResource {
+
+  final def tagSelectorOption: Option[String] = {
+    attrOption(ENames.TagSelectorEName)
+  }
+}
 
 /**
  * A closed definition node.
  */
-sealed trait ClosedDefinitionNode extends DefinitionNode
+sealed trait ClosedDefinitionNode extends DefinitionNode {
+
+  /**
+   * Returns the optional parent-child-order.
+   * This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  final def parentChildOrderOption: Option[ParentChildOrder] = {
+    attrOption(ENames.ParentChildOrderEName).map(s => ParentChildOrder.fromString(s))
+  }
+}
 
 /**
  * An open definition node.
@@ -2088,6 +2152,45 @@ sealed trait OpenDefinitionNode extends DefinitionNode
  */
 final case class RuleNode(underlyingElem: BackingNodes.Elem) extends ClosedDefinitionNode {
   requireName(ENames.TableRuleNodeEName)
+
+  def untaggedAspects: Seq[FormulaAspect] = {
+    findAllChildElemsOfType(classTag[FormulaAspect])
+  }
+
+  def allAspects: Seq[FormulaAspect] = {
+    untaggedAspects.appendedAll(ruleSets.flatMap(_.aspects))
+  }
+
+  def findAllUntaggedAspectsOfType[A <: FormulaAspect](cls: ClassTag[A]): Seq[A] = {
+    implicit val clsTag: ClassTag[A] = cls
+    untaggedAspects.collect { case asp: A => asp }
+  }
+
+  def allAspectsByTagOption: Map[Option[String], Seq[FormulaAspect]] = {
+    val taggedAspects: Seq[(FormulaAspect, Option[String])] =
+      untaggedAspects.map(aspect => (aspect, None)) ++
+        ruleSets.flatMap(ruleSet => ruleSet.aspects.map(aspect => (aspect, Some(ruleSet.tag))))
+
+    taggedAspects.groupBy({ case (_, tagOption) => tagOption }).view.mapValues(taggedAspects => taggedAspects.map(_._1)).toMap
+  }
+
+  def ruleSets: Seq[RuleSet] = {
+    findAllChildElemsOfType(classTag[RuleSet])
+  }
+
+  /**
+   * Returns the abstract attribute as boolean, returning false if absent.
+   * This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def isAbstract: Boolean =
+    attrOption(ENames.AbstractEName).exists(v => XsBooleans.parseBoolean(v))
+
+  /**
+   * Returns the merge attribute as boolean, returning false if absent.
+   * This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def isMerged: Boolean =
+    attrOption(ENames.MergeEName).exists(v => XsBooleans.parseBoolean(v))
 }
 
 /**
@@ -2100,6 +2203,131 @@ sealed trait RelationshipNode extends ClosedDefinitionNode
  */
 final case class ConceptRelationshipNode(underlyingElem: BackingNodes.Elem) extends RelationshipNode {
   requireName(ENames.TableConceptRelationshipNodeEName)
+
+  def relationshipSources: Seq[RelationshipSource] = {
+    findAllChildElemsOfType(classTag[RelationshipSource])
+  }
+
+  def relationshipSourceExpressions: Seq[RelationshipSourceExpression] = {
+    findAllChildElemsOfType(classTag[RelationshipSourceExpression])
+  }
+
+  /**
+   * Returns the sources as collection of TypedValueProvider[EName] objects. This may fail if this element is not schema-valid.
+   */
+  def sourceValuesOrExpressions: Seq[TypedValueProvider[EName]] = {
+    relationshipSources.map(_.source).map(v => TypedValue(v)) ++
+      relationshipSourceExpressions.map(_.expr).map(v => TypedValueExpr(classTag[EName], v))
+  }
+
+  def linkroleOption: Option[Linkrole] = {
+    findFirstChildElemOfType(classTag[Linkrole])
+  }
+
+  def linkroleExpressionOption: Option[LinkroleExpression] = {
+    findFirstChildElemOfType(classTag[LinkroleExpression])
+  }
+
+  /**
+   * Returns the optional linkrole as TypedValueProvider[String]. This may fail if this element is not schema-valid.
+   */
+  def linkroleValueOrExprOption: Option[TypedValueProvider[String]] = {
+    linkroleOption
+      .map(_.linkrole)
+      .map(v => TypedValue(v))
+      .orElse(linkroleExpressionOption.map(_.expr).map(v => TypedValueExpr(classTag[String], v)))
+  }
+
+  def arcroleOption: Option[Arcrole] = {
+    findFirstChildElemOfType(classTag[Arcrole])
+  }
+
+  def arcroleExpressionOption: Option[ArcroleExpression] = {
+    findFirstChildElemOfType(classTag[ArcroleExpression])
+  }
+
+  /**
+   * Returns the arcrole as TypedValueProvider[String]. This may fail if this element is not schema-valid.
+   */
+  def arcroleValueOrExpr: TypedValueProvider[String] = {
+    arcroleOption
+      .map(_.arcrole)
+      .map(v => TypedValue(v))
+      .orElse(arcroleExpressionOption.map(_.expr).map(v => TypedValueExpr(classTag[String], v)))
+      .get
+  }
+
+  def formulaAxisOption: Option[ConceptRelationshipNodeFormulaAxis] = {
+    findFirstChildElemOfType(classTag[ConceptRelationshipNodeFormulaAxis])
+  }
+
+  def formulaAxisExpressionOption: Option[ConceptRelationshipNodeFormulaAxisExpression] = {
+    findFirstChildElemOfType(classTag[ConceptRelationshipNodeFormulaAxisExpression])
+  }
+
+  /**
+   * Returns the optional formulaAxis as TypedValueProvider[String]. This may fail if this element is not schema-valid.
+   */
+  def formulaAxisValueOrExprOption: Option[TypedValueProvider[String]] = {
+    formulaAxisOption
+      .map(_.formulaAxis)
+      .map(v => TypedValue(v.toString))
+      .orElse(formulaAxisExpressionOption.map(_.expr).map(v => TypedValueExpr(classTag[String], v)))
+  }
+
+  def generationsOption: Option[Generations] = {
+    findFirstChildElemOfType(classTag[Generations])
+  }
+
+  def generationsExpressionOption: Option[GenerationsExpression] = {
+    findFirstChildElemOfType(classTag[GenerationsExpression])
+  }
+
+  /**
+   * Returns the optional generations as TypedValueProvider[BigDecimal]. This may fail if this element is not schema-valid.
+   */
+  def generationsValueOrExprOption: Option[TypedValueProvider[BigDecimal]] = {
+    generationsOption
+      .map(_.generations.pipe(BigDecimal(_)))
+      .map(v => TypedValue(v))
+      .orElse(generationsExpressionOption.map(_.expr).map(v => TypedValueExpr(classTag[BigDecimal], v)))
+  }
+
+  def linknameOption: Option[Linkname] = {
+    findFirstChildElemOfType(classTag[Linkname])
+  }
+
+  def linknameExpressionOption: Option[LinknameExpression] = {
+    findFirstChildElemOfType(classTag[LinknameExpression])
+  }
+
+  /**
+   * Returns the optional linkname as TypedValueProvider[EName]. This may fail if this element is not schema-valid.
+   */
+  def linknameValueOrExprOption: Option[TypedValueProvider[EName]] = {
+    linknameOption
+      .map(_.linkname)
+      .map(v => TypedValue(v))
+      .orElse(linknameExpressionOption.map(_.expr).map(v => TypedValueExpr(classTag[EName], v)))
+  }
+
+  def arcnameOption: Option[Arcname] = {
+    findFirstChildElemOfType(classTag[Arcname])
+  }
+
+  def arcnameExpressionOption: Option[ArcnameExpression] = {
+    findFirstChildElemOfType(classTag[ArcnameExpression])
+  }
+
+  /**
+   * Returns the optional arcname as TypedValueProvider[EName]. This may fail if this element is not schema-valid.
+   */
+  def arcnameValueOrExprOption: Option[TypedValueProvider[EName]] = {
+    arcnameOption
+      .map(_.arcname)
+      .map(v => TypedValue(v))
+      .orElse(arcnameExpressionOption.map(_.expr).map(v => TypedValueExpr(classTag[EName], v)))
+  }
 }
 
 /**
@@ -2107,6 +2335,88 @@ final case class ConceptRelationshipNode(underlyingElem: BackingNodes.Elem) exte
  */
 final case class DimensionRelationshipNode(underlyingElem: BackingNodes.Elem) extends RelationshipNode {
   requireName(ENames.TableDimensionRelationshipNodeEName)
+
+  /**
+   * Returns the single table:dimension child element. This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def dimension: TableDimension = {
+    findAllChildElemsOfType(classTag[TableDimension]).head
+  }
+
+  def relationshipSources: Seq[RelationshipSource] = {
+    findAllChildElemsOfType(classTag[RelationshipSource])
+  }
+
+  def relationshipSourceExpressions: Seq[RelationshipSourceExpression] = {
+    findAllChildElemsOfType(classTag[RelationshipSourceExpression])
+  }
+
+  /**
+   * Returns the sources as collection of TypedValueProvider[EName] objects. This may fail if this element is not schema-valid.
+   */
+  def sourceValuesOrExpressions: Seq[TypedValueProvider[EName]] = {
+    relationshipSources.map(_.source).map(v => TypedValue(v)) ++
+      relationshipSourceExpressions.map(_.expr).map(v => TypedValueExpr(classTag[EName], v))
+  }
+
+  def linkroleOption: Option[Linkrole] = {
+    findFirstChildElemOfType(classTag[Linkrole])
+  }
+
+  def linkroleExpressionOption: Option[LinkroleExpression] = {
+    findFirstChildElemOfType(classTag[LinkroleExpression])
+  }
+
+  /**
+   * Returns the optional linkrole as TypedValueProvider[String]. This may fail if this element is not schema-valid.
+   */
+  def linkroleValueOrExprOption: Option[TypedValueProvider[String]] = {
+    linkroleOption
+      .map(_.linkrole)
+      .map(v => TypedValue(v))
+      .orElse(linkroleExpressionOption.map(_.expr).map(v => TypedValueExpr(classTag[String], v)))
+  }
+
+  def formulaAxisOption: Option[DimensionRelationshipNodeFormulaAxis] = {
+    findFirstChildElemOfType(classTag[DimensionRelationshipNodeFormulaAxis])
+  }
+
+  def formulaAxisExpressionOption: Option[DimensionRelationshipNodeFormulaAxisExpression] = {
+    findFirstChildElemOfType(classTag[DimensionRelationshipNodeFormulaAxisExpression])
+  }
+
+  /**
+   * Returns the optional formulaAxis as TypedValueProvider[String]. This may fail if this element is not schema-valid.
+   */
+  def formulaAxisValueOrExprOption: Option[TypedValueProvider[String]] = {
+    formulaAxisOption
+      .map(_.formulaAxis)
+      .map(v => TypedValue(v.toString))
+      .orElse(formulaAxisExpressionOption.map(_.expr).map(v => TypedValueExpr(classTag[String], v)))
+  }
+
+  def generationsOption: Option[Generations] = {
+    findFirstChildElemOfType(classTag[Generations])
+  }
+
+  def generationsExpressionOption: Option[GenerationsExpression] = {
+    findFirstChildElemOfType(classTag[GenerationsExpression])
+  }
+
+  /**
+   * Returns the optional generations as TypedValueProvider[BigDecimal]. This may fail if this element is not schema-valid.
+   */
+  def generationsValueOrExprOption: Option[TypedValueProvider[BigDecimal]] = {
+    generationsOption
+      .map(_.generations.pipe(BigDecimal(_)))
+      .map(v => TypedValue(v))
+      .orElse(generationsExpressionOption.map(_.expr).map(v => TypedValueExpr(classTag[BigDecimal], v)))
+  }
+
+  /**
+   * Returns the dimension as EName. This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def dimensionName: EName = dimension.dimension
 }
 
 /**
@@ -2114,6 +2424,10 @@ final case class DimensionRelationshipNode(underlyingElem: BackingNodes.Elem) ex
  */
 final case class AspectNode(underlyingElem: BackingNodes.Elem) extends OpenDefinitionNode {
   requireName(ENames.TableAspectNodeEName)
+
+  def aspectSpec: AspectSpec = {
+    findFirstChildElemOfType(classTag[AspectSpec]).get
+  }
 }
 
 // Table non-XLink elements
@@ -2174,6 +2488,14 @@ final case class DimensionAspectSpec(underlyingElem: BackingNodes.Elem) extends 
   def aspect: Aspect = Aspect.DimensionAspect(dimension)
 
   def dimension: EName = textAsResolvedQName
+
+  /**
+   * Returns the includeUnreportedValue attribute as Boolean.
+   * This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def isIncludeUnreportedValue: Boolean = {
+    attrOption(ENames.IncludeUnreportedValueEName).exists(v => XsBooleans.parseBoolean(v))
+  }
 }
 
 /**
@@ -2181,6 +2503,22 @@ final case class DimensionAspectSpec(underlyingElem: BackingNodes.Elem) extends 
  */
 final case class RuleSet(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
   requireName(ENames.TableRuleSetEName)
+
+  def aspects: Seq[FormulaAspect] = {
+    findAllChildElemsOfType(classTag[FormulaAspect])
+  }
+
+  def findAllAspectsOfType[A <: FormulaAspect](cls: ClassTag[A]): Seq[A] = {
+    implicit val clsTag: ClassTag[A] = cls
+    aspects.collect { case asp: A => asp }
+  }
+
+  /**
+   * Returns the tag attribute. This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def tag: String = {
+    attr(ENames.TagEName)
+  }
 }
 
 /**
@@ -2188,12 +2526,21 @@ final case class RuleSet(underlyingElem: BackingNodes.Elem) extends TableNonXLin
  */
 final case class RelationshipSource(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
   requireName(ENames.TableRelationshipSourceEName)
+
+  /**
+   * Returns the source as EName. This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def source: EName = {
+    textAsResolvedQName
+  }
 }
 
 /**
  * A table:relationshipSourceExpression.
  */
-final case class RelationshipSourceExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class RelationshipSourceExpression(underlyingElem: BackingNodes.Elem)
+    extends TableNonXLinkElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableRelationshipSourceExpressionEName)
 }
 
@@ -2202,12 +2549,16 @@ final case class RelationshipSourceExpression(underlyingElem: BackingNodes.Elem)
  */
 final case class Linkrole(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
   requireName(ENames.TableLinkroleEName)
+
+  def linkrole: String = text
 }
 
 /**
  * A table:linkroleExpression.
  */
-final case class LinkroleExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class LinkroleExpression(underlyingElem: BackingNodes.Elem)
+    extends TableNonXLinkElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableLinkroleExpressionEName)
 }
 
@@ -2216,12 +2567,16 @@ final case class LinkroleExpression(underlyingElem: BackingNodes.Elem) extends T
  */
 final case class Arcrole(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
   requireName(ENames.TableArcroleEName)
+
+  def arcrole: String = text
 }
 
 /**
  * A table:arcroleExpression.
  */
-final case class ArcroleExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class ArcroleExpression(underlyingElem: BackingNodes.Elem)
+    extends TableNonXLinkElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableArcroleExpressionEName)
 }
 
@@ -2230,12 +2585,21 @@ final case class ArcroleExpression(underlyingElem: BackingNodes.Elem) extends Ta
  */
 final case class ConceptRelationshipNodeFormulaAxis(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
   requireName(ENames.TableFormulaAxisEName)
+
+  /**
+   * Returns the value as FormulaAxis. This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def formulaAxis: ConceptRelationshipNodes.FormulaAxis = {
+    ConceptRelationshipNodes.FormulaAxis.fromString(text)
+  }
 }
 
 /**
  * A table:formulaAxisExpression in a table:conceptRelationshipNode.
  */
-final case class ConceptRelationshipNodeFormulaAxisExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class ConceptRelationshipNodeFormulaAxisExpression(underlyingElem: BackingNodes.Elem)
+    extends TableNonXLinkElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableFormulaAxisExpressionEName)
 }
 
@@ -2244,12 +2608,21 @@ final case class ConceptRelationshipNodeFormulaAxisExpression(underlyingElem: Ba
  */
 final case class DimensionRelationshipNodeFormulaAxis(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
   requireName(ENames.TableFormulaAxisEName)
+
+  /**
+   * Returns the value as FormulaAxis. This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def formulaAxis: DimensionRelationshipNodes.FormulaAxis = {
+    DimensionRelationshipNodes.FormulaAxis.fromString(text)
+  }
 }
 
 /**
  * A table:formulaAxisExpression in a table:dimensionRelationshipNode.
  */
-final case class DimensionRelationshipNodeFormulaAxisExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class DimensionRelationshipNodeFormulaAxisExpression(underlyingElem: BackingNodes.Elem)
+    extends TableNonXLinkElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableFormulaAxisExpressionEName)
 }
 
@@ -2258,12 +2631,19 @@ final case class DimensionRelationshipNodeFormulaAxisExpression(underlyingElem: 
  */
 final case class Generations(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
   requireName(ENames.TableGenerationsEName)
+
+  /**
+   * Returns the value as integer. This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def generations: Int = text.toInt
 }
 
 /**
  * A table:generationsExpression.
  */
-final case class GenerationsExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class GenerationsExpression(underlyingElem: BackingNodes.Elem)
+    extends TableNonXLinkElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableGenerationsExpressionEName)
 }
 
@@ -2272,12 +2652,19 @@ final case class GenerationsExpression(underlyingElem: BackingNodes.Elem) extend
  */
 final case class Linkname(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
   requireName(ENames.TableLinknameEName)
+
+  /**
+   * Returns the value as EName. This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def linkname: EName = textAsResolvedQName
 }
 
 /**
  * A table:linknameExpression.
  */
-final case class LinknameExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class LinknameExpression(underlyingElem: BackingNodes.Elem)
+    extends TableNonXLinkElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableLinknameExpressionEName)
 }
 
@@ -2286,12 +2673,19 @@ final case class LinknameExpression(underlyingElem: BackingNodes.Elem) extends T
  */
 final case class Arcname(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
   requireName(ENames.TableArcnameEName)
+
+  /**
+   * Returns the value as EName. This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def arcname: EName = textAsResolvedQName
 }
 
 /**
  * A table:arcnameExpression.
  */
-final case class ArcnameExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class ArcnameExpression(underlyingElem: BackingNodes.Elem)
+    extends TableNonXLinkElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableArcnameExpressionEName)
 }
 
@@ -2300,4 +2694,11 @@ final case class ArcnameExpression(underlyingElem: BackingNodes.Elem) extends Ta
  */
 final case class TableDimension(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
   requireName(ENames.TableDimensionEName)
+
+  /**
+   * Returns the dimension as EName. This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  def dimension: EName = {
+    textAsResolvedQName
+  }
 }
