@@ -1194,7 +1194,7 @@ final case class ConceptRelationFilter(underlyingElem: BackingNodes.Elem) extend
    */
   def sourceValueOrExpr: TypedValueProvider[EName] = {
     variableOption
-      .map(_.name)
+      .map(_.nameTextValue)
       .map(v => TypedValue(v))
       .orElse(
         qnameOption
@@ -1366,7 +1366,9 @@ final case class FunctionImplementationInput(underlyingElem: BackingNodes.Elem) 
 /**
  * A cfi:step child element of a cfi:implementation.
  */
-final case class FunctionImplementationStep(underlyingElem: BackingNodes.Elem) extends FunctionImplementationContentElem {
+final case class FunctionImplementationStep(underlyingElem: BackingNodes.Elem)
+    extends FunctionImplementationContentElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CfiStepEName)
 
   /**
@@ -1377,21 +1379,15 @@ final case class FunctionImplementationStep(underlyingElem: BackingNodes.Elem) e
     val qn = attrAsQName(ENames.NameEName)
     scope.withoutDefaultNamespace.resolveQName(qn)
   }
-
-  def expr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 /**
  * A cfi:output child element of a cfi:implementation.
  */
-final case class FunctionImplementationOutput(underlyingElem: BackingNodes.Elem) extends FunctionImplementationContentElem {
+final case class FunctionImplementationOutput(underlyingElem: BackingNodes.Elem)
+    extends FunctionImplementationContentElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CfiOutputEName)
-
-  def expr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 /**
@@ -1402,130 +1398,55 @@ sealed trait ConceptFilterContentElem extends FormulaNonXLinkElem
 /**
  * A cf:concept child element of a concept filter.
  */
-final case class ConceptFilterConcept(underlyingElem: BackingNodes.Elem) extends ConceptFilterContentElem {
+final case class ConceptFilterConcept(underlyingElem: BackingNodes.Elem)
+    extends ConceptFilterContentElem
+    with NonStandardTaxonomyElemSupport.ProvidesQName[ConceptFilterQName, ConceptFilterQNameExpression] {
   requireName(ENames.CfConceptEName)
-
-  def qnameElemOption: Option[ConceptFilterQName] = {
-    findFirstChildElemOfType(classTag[ConceptFilterQName])
-  }
-
-  def qnameExpressionElemOption: Option[ConceptFilterQNameExpression] = {
-    findFirstChildElemOfType(classTag[ConceptFilterQNameExpression])
-  }
-
-  /**
-   * Returns the qname as EName value provider. This may fail if this element is not schema-valid.
-   */
-  def qnameValueOrExpr: TypedValueProvider[EName] = {
-    qnameElemOption
-      .map(_.qnameValue)
-      .map(v => TypedValue(v))
-      .orElse(qnameExpressionElemOption.map(_.expr).map(v => TypedValueExpr(classTag[EName], v)))
-      .get
-  }
 }
 
 /**
  * A cf:attribute child element of a concept filter.
  */
-final case class ConceptFilterAttribute(underlyingElem: BackingNodes.Elem) extends ConceptFilterContentElem {
+final case class ConceptFilterAttribute(underlyingElem: BackingNodes.Elem)
+    extends ConceptFilterContentElem
+    with NonStandardTaxonomyElemSupport.ProvidesQName[ConceptFilterQName, ConceptFilterQNameExpression] {
   requireName(ENames.CfAttributeEName)
-
-  def qnameElemOption: Option[ConceptFilterQName] = {
-    findFirstChildElemOfType(classTag[ConceptFilterQName])
-  }
-
-  def qnameExpressionElemOption: Option[ConceptFilterQNameExpression] = {
-    findFirstChildElemOfType(classTag[ConceptFilterQNameExpression])
-  }
-
-  /**
-   * Returns the qname as EName value provider. This may fail if this element is not schema-valid.
-   */
-  def qnameValueOrExpr: TypedValueProvider[EName] = {
-    qnameElemOption
-      .map(_.qnameValue)
-      .map(v => TypedValue(v))
-      .orElse(qnameExpressionElemOption.map(_.expr).map(v => TypedValueExpr(classTag[EName], v)))
-      .get
-  }
 }
 
 /**
  * A cf:type child element of a concept filter.
  */
-final case class ConceptFilterType(underlyingElem: BackingNodes.Elem) extends ConceptFilterContentElem {
+final case class ConceptFilterType(underlyingElem: BackingNodes.Elem)
+    extends ConceptFilterContentElem
+    with NonStandardTaxonomyElemSupport.ProvidesQName[ConceptFilterQName, ConceptFilterQNameExpression] {
   requireName(ENames.CfTypeEName)
-
-  def qnameElemOption: Option[ConceptFilterQName] = {
-    findFirstChildElemOfType(classTag[ConceptFilterQName])
-  }
-
-  def qnameExpressionElemOption: Option[ConceptFilterQNameExpression] = {
-    findFirstChildElemOfType(classTag[ConceptFilterQNameExpression])
-  }
-
-  /**
-   * Returns the qname as EName value provider. This may fail if this element is not schema-valid.
-   */
-  def qnameValueOrExpr: TypedValueProvider[EName] = {
-    qnameElemOption
-      .map(_.qnameValue)
-      .map(v => TypedValue(v))
-      .orElse(qnameExpressionElemOption.map(_.expr).map(v => TypedValueExpr(classTag[EName], v)))
-      .get
-  }
 }
 
 /**
  * A cf:substitutionGroup child element of a concept filter.
  */
-final case class ConceptFilterSubstitutionGroup(underlyingElem: BackingNodes.Elem) extends ConceptFilterContentElem {
+final case class ConceptFilterSubstitutionGroup(underlyingElem: BackingNodes.Elem)
+    extends ConceptFilterContentElem
+    with NonStandardTaxonomyElemSupport.ProvidesQName[ConceptFilterQName, ConceptFilterQNameExpression] {
   requireName(ENames.CfSubstitutionGroupEName)
-
-  def qnameElemOption: Option[ConceptFilterQName] = {
-    findFirstChildElemOfType(classTag[ConceptFilterQName])
-  }
-
-  def qnameExpressionElemOption: Option[ConceptFilterQNameExpression] = {
-    findFirstChildElemOfType(classTag[ConceptFilterQNameExpression])
-  }
-
-  /**
-   * Returns the qname as EName value provider. This may fail if this element is not schema-valid.
-   */
-  def qnameValueOrExpr: TypedValueProvider[EName] = {
-    qnameElemOption
-      .map(_.qnameValue)
-      .map(v => TypedValue(v))
-      .orElse(qnameExpressionElemOption.map(_.expr).map(v => TypedValueExpr(classTag[EName], v)))
-      .get
-  }
 }
 
 /**
  * A cf:qname descendant element of a concept filter.
  */
-final case class ConceptFilterQName(underlyingElem: BackingNodes.Elem) extends ConceptFilterContentElem {
+final case class ConceptFilterQName(underlyingElem: BackingNodes.Elem)
+    extends ConceptFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasQNameValue {
   requireName(ENames.CfQnameEName)
-
-  /**
-   * Returns the element text resolved as EName. This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def qnameValue: EName = {
-    textAsResolvedQName
-  }
 }
 
 /**
  * A cf:qnameExpression descendant element of a concept filter.
  */
-final case class ConceptFilterQNameExpression(underlyingElem: BackingNodes.Elem) extends ConceptFilterContentElem {
+final case class ConceptFilterQNameExpression(underlyingElem: BackingNodes.Elem)
+    extends ConceptFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CfQnameExpressionEName)
-
-  def expr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 /**
@@ -1536,78 +1457,37 @@ sealed trait TupleFilterContentElem extends FormulaNonXLinkElem
 /**
  * A tf:parent child element of a concept filter.
  */
-final case class TupleFilterParent(underlyingElem: BackingNodes.Elem) extends TupleFilterContentElem {
+final case class TupleFilterParent(underlyingElem: BackingNodes.Elem)
+    extends TupleFilterContentElem
+    with NonStandardTaxonomyElemSupport.ProvidesQName[TupleFilterQName, TupleFilterQNameExpression] {
   requireName(ENames.TfParentEName)
-
-  def qnameElemOption: Option[TupleFilterQName] = {
-    findFirstChildElemOfType(classTag[TupleFilterQName])
-  }
-
-  def qnameExpressionElemOption: Option[TupleFilterQNameExpression] = {
-    findFirstChildElemOfType(classTag[TupleFilterQNameExpression])
-  }
-
-  /**
-   * Returns the qname as EName value provider. This may fail if this element is not schema-valid.
-   */
-  def qnameValueOrExpr: TypedValueProvider[EName] = {
-    qnameElemOption
-      .map(_.qnameValue)
-      .map(v => TypedValue(v))
-      .orElse(qnameExpressionElemOption.map(_.expr).map(v => TypedValueExpr(classTag[EName], v)))
-      .get
-  }
 }
 
 /**
  * A tf:ancestor child element of a concept filter.
  */
-final case class TupleFilterAncestor(underlyingElem: BackingNodes.Elem) extends TupleFilterContentElem {
+final case class TupleFilterAncestor(underlyingElem: BackingNodes.Elem)
+    extends TupleFilterContentElem
+    with NonStandardTaxonomyElemSupport.ProvidesQName[TupleFilterQName, TupleFilterQNameExpression] {
   requireName(ENames.TfAncestorEName)
-
-  def qnameElemOption: Option[TupleFilterQName] = {
-    findFirstChildElemOfType(classTag[TupleFilterQName])
-  }
-
-  def qnameExpressionElemOption: Option[TupleFilterQNameExpression] = {
-    findFirstChildElemOfType(classTag[TupleFilterQNameExpression])
-  }
-
-  /**
-   * Returns the qname as EName value provider. This may fail if this element is not schema-valid.
-   */
-  def qnameValueOrExpr: TypedValueProvider[EName] = {
-    qnameElemOption
-      .map(_.qnameValue)
-      .map(v => TypedValue(v))
-      .orElse(qnameExpressionElemOption.map(_.expr).map(v => TypedValueExpr(classTag[EName], v)))
-      .get
-  }
 }
 
 /**
  * A tf:qname descendant element of a tuple filter.
  */
-final case class TupleFilterQName(underlyingElem: BackingNodes.Elem) extends TupleFilterContentElem {
+final case class TupleFilterQName(underlyingElem: BackingNodes.Elem)
+    extends TupleFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasQNameValue {
   requireName(ENames.TfQnameEName)
-
-  /**
-   * Returns the element text resolved as EName. This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def qnameValue: EName = {
-    textAsResolvedQName
-  }
 }
 
 /**
  * A tf:qnameExpression descendant element of a tuple filter.
  */
-final case class TupleFilterQNameExpression(underlyingElem: BackingNodes.Elem) extends TupleFilterContentElem {
+final case class TupleFilterQNameExpression(underlyingElem: BackingNodes.Elem)
+    extends TupleFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TfQnameExpressionEName)
-
-  def expr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 /**
@@ -1618,27 +1498,10 @@ sealed trait DimensionFilterContentElem extends FormulaNonXLinkElem
 /**
  * A df:dimension child element of a dimension filter.
  */
-final case class DimensionFilterDimension(underlyingElem: BackingNodes.Elem) extends DimensionFilterContentElem {
+final case class DimensionFilterDimension(underlyingElem: BackingNodes.Elem)
+    extends DimensionFilterContentElem
+    with NonStandardTaxonomyElemSupport.ProvidesQName[DimensionFilterQName, DimensionFilterQNameExpression] {
   requireName(ENames.DfDimensionEName)
-
-  def qnameElemOption: Option[DimensionFilterQName] = {
-    findFirstChildElemOfType(classTag[DimensionFilterQName])
-  }
-
-  def qnameExpressionElemOption: Option[DimensionFilterQNameExpression] = {
-    findFirstChildElemOfType(classTag[DimensionFilterQNameExpression])
-  }
-
-  /**
-   * Returns the qname as EName value provider. This may fail if this element is not schema-valid.
-   */
-  def qnameValueOrExpr: TypedValueProvider[EName] = {
-    qnameElemOption
-      .map(_.qnameValue)
-      .map(v => TypedValue(v))
-      .orElse(qnameExpressionElemOption.map(_.expr).map(v => TypedValueExpr(classTag[EName], v)))
-      .get
-  }
 }
 
 /**
@@ -1664,7 +1527,7 @@ final case class DimensionFilterMember(underlyingElem: BackingNodes.Elem) extend
    */
   def qnameValueOrExpr: TypedValueProvider[EName] = {
     variableElemOption
-      .map(_.name)
+      .map(_.nameTextValue)
       .map(v => TypedValue(v))
       .orElse(
         qnameElemOption
@@ -1697,7 +1560,7 @@ final case class DimensionFilterVariable(underlyingElem: BackingNodes.Elem) exte
    * Returns the text as EName. The default namespace is not used to resolve the QName.
    * This may fail with an exception if the taxonomy is not schema-valid.
    */
-  def nameAttrValue: EName = {
+  def nameTextValue: EName = {
     val qname = textAsQName
     scope.withoutDefaultNamespace.resolveQName(qname)
   }
@@ -1733,26 +1596,19 @@ final case class DimensionFilterAxis(underlyingElem: BackingNodes.Elem) extends 
 /**
  * A df:qname descendant element of a dimension filter.
  */
-final case class DimensionFilterQName(underlyingElem: BackingNodes.Elem) extends DimensionFilterContentElem {
+final case class DimensionFilterQName(underlyingElem: BackingNodes.Elem)
+    extends DimensionFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasQNameValue {
   requireName(ENames.DfQnameEName)
-
-  /**
-   * Returns the element text resolved as EName. This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def qnameValue: EName = {
-    textAsResolvedQName
-  }
 }
 
 /**
  * A df:qnameExpression descendant element of a dimension filter.
  */
-final case class DimensionFilterQNameExpression(underlyingElem: BackingNodes.Elem) extends DimensionFilterContentElem {
+final case class DimensionFilterQNameExpression(underlyingElem: BackingNodes.Elem)
+    extends DimensionFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.DfQnameExpressionEName)
-
-  def expr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 /**
@@ -1763,52 +1619,28 @@ sealed trait UnitFilterContentElem extends FormulaNonXLinkElem
 /**
  * A uf:measure child element of a dimension filter.
  */
-final case class UnitFilterMeasure(underlyingElem: BackingNodes.Elem) extends UnitFilterContentElem {
+final case class UnitFilterMeasure(underlyingElem: BackingNodes.Elem)
+    extends UnitFilterContentElem
+    with NonStandardTaxonomyElemSupport.ProvidesQName[UnitFilterQName, UnitFilterQNameExpression] {
   requireName(ENames.UfMeasureEName)
-
-  def qnameElemOption: Option[UnitFilterQName] = {
-    findFirstChildElemOfType(classTag[UnitFilterQName])
-  }
-
-  def qnameExpressionElemOption: Option[UnitFilterQNameExpression] = {
-    findFirstChildElemOfType(classTag[UnitFilterQNameExpression])
-  }
-
-  /**
-   * Returns the qname as EName value provider. This may fail if this element is not schema-valid.
-   */
-  def qnameValueOrExpr: TypedValueProvider[EName] = {
-    qnameElemOption
-      .map(_.qnameValue)
-      .map(v => TypedValue(v))
-      .orElse(qnameExpressionElemOption.map(_.expr).map(v => TypedValueExpr(classTag[EName], v)))
-      .get
-  }
 }
 
 /**
  * A uf:qname descendant element of a unit filter.
  */
-final case class UnitFilterQName(underlyingElem: BackingNodes.Elem) extends UnitFilterContentElem {
+final case class UnitFilterQName(underlyingElem: BackingNodes.Elem)
+    extends UnitFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasQNameValue {
   requireName(ENames.UfQnameEName)
-
-  /**
-   * Returns the element text resolved as EName. This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def qnameValue: EName = {
-    textAsResolvedQName
-  }
 }
 
 /**
  * A uf:qnameExpression descendant element of a unit filter.
  */
-final case class UnitFilterQNameExpression(underlyingElem: BackingNodes.Elem) extends UnitFilterContentElem {
+final case class UnitFilterQNameExpression(underlyingElem: BackingNodes.Elem)
+    extends UnitFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.UfQnameExpressionEName)
-
-  def expr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 /**
@@ -1830,78 +1662,37 @@ final case class AspectCoverFilterAspect(underlyingElem: BackingNodes.Elem) exte
 /**
  * An acf:dimension descendant element of a dimension filter.
  */
-final case class AspectCoverFilterDimension(underlyingElem: BackingNodes.Elem) extends AspectCoverFilterContentElem {
+final case class AspectCoverFilterDimension(underlyingElem: BackingNodes.Elem)
+    extends AspectCoverFilterContentElem
+    with NonStandardTaxonomyElemSupport.ProvidesQName[AspectCoverFilterQName, AspectCoverFilterQNameExpression] {
   requireName(ENames.AcfDimensionEName)
-
-  def qnameElemOption: Option[AspectCoverFilterQName] = {
-    findFirstChildElemOfType(classTag[AspectCoverFilterQName])
-  }
-
-  def qnameExpressionElemOption: Option[AspectCoverFilterQNameExpression] = {
-    findFirstChildElemOfType(classTag[AspectCoverFilterQNameExpression])
-  }
-
-  /**
-   * Returns the qname as EName value provider. This may fail if this element is not schema-valid.
-   */
-  def qnameValueOrExpr: TypedValueProvider[EName] = {
-    qnameElemOption
-      .map(_.qnameValue)
-      .map(v => TypedValue(v))
-      .orElse(qnameExpressionElemOption.map(_.expr).map(v => TypedValueExpr(classTag[EName], v)))
-      .get
-  }
 }
 
 /**
  * An acf:excludeDimension descendant element of a dimension filter.
  */
-final case class AspectCoverFilterExcludeDimension(underlyingElem: BackingNodes.Elem) extends AspectCoverFilterContentElem {
+final case class AspectCoverFilterExcludeDimension(underlyingElem: BackingNodes.Elem)
+    extends AspectCoverFilterContentElem
+    with NonStandardTaxonomyElemSupport.ProvidesQName[AspectCoverFilterQName, AspectCoverFilterQNameExpression] {
   requireName(ENames.AcfExcludeDimensionEName)
-
-  def qnameElemOption: Option[AspectCoverFilterQName] = {
-    findFirstChildElemOfType(classTag[AspectCoverFilterQName])
-  }
-
-  def qnameExpressionElemOption: Option[AspectCoverFilterQNameExpression] = {
-    findFirstChildElemOfType(classTag[AspectCoverFilterQNameExpression])
-  }
-
-  /**
-   * Returns the qname as EName value provider. This may fail if this element is not schema-valid.
-   */
-  def qnameValueOrExpr: TypedValueProvider[EName] = {
-    qnameElemOption
-      .map(_.qnameValue)
-      .map(v => TypedValue(v))
-      .orElse(qnameExpressionElemOption.map(_.expr).map(v => TypedValueExpr(classTag[EName], v)))
-      .get
-  }
 }
 
 /**
  * An acf:qname descendant element of an aspect cover filter.
  */
-final case class AspectCoverFilterQName(underlyingElem: BackingNodes.Elem) extends AspectCoverFilterContentElem {
+final case class AspectCoverFilterQName(underlyingElem: BackingNodes.Elem)
+    extends AspectCoverFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasQNameValue {
   requireName(ENames.AcfQnameEName)
-
-  /**
-   * Returns the element text resolved as EName. This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def qnameValue: EName = {
-    textAsResolvedQName
-  }
 }
 
 /**
  * An acf:qnameExpression descendant element of an aspect cover filter.
  */
-final case class AspectCoverFilterQNameExpression(underlyingElem: BackingNodes.Elem) extends AspectCoverFilterContentElem {
+final case class AspectCoverFilterQNameExpression(underlyingElem: BackingNodes.Elem)
+    extends AspectCoverFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.AcfQnameExpressionEName)
-
-  def expr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 /**
@@ -1941,7 +1732,7 @@ final case class ConceptRelationFilterVariable(underlyingElem: BackingNodes.Elem
    * Returns the text as EName. The default namespace is not used to resolve the QName.
    * This may fail with an exception if the taxonomy is not schema-valid.
    */
-  def nameAttrValue: EName = {
+  def nameTextValue: EName = {
     val qname = textAsQName
     scope.withoutDefaultNamespace.resolveQName(qname)
   }
@@ -1959,12 +1750,10 @@ final case class ConceptRelationFilterLinkrole(underlyingElem: BackingNodes.Elem
 /**
  * A crf:linkroleExpression descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterLinkroleExpression(underlyingElem: BackingNodes.Elem) extends ConceptRelationFilterContentElem {
+final case class ConceptRelationFilterLinkroleExpression(underlyingElem: BackingNodes.Elem)
+    extends ConceptRelationFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CrfLinkroleExpressionEName)
-
-  def expr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 /**
@@ -1984,12 +1773,10 @@ final case class ConceptRelationFilterLinkname(underlyingElem: BackingNodes.Elem
 /**
  * A crf:linknameExpression descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterLinknameExpression(underlyingElem: BackingNodes.Elem) extends ConceptRelationFilterContentElem {
+final case class ConceptRelationFilterLinknameExpression(underlyingElem: BackingNodes.Elem)
+    extends ConceptRelationFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CrfLinknameExpressionEName)
-
-  def expr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 /**
@@ -2004,12 +1791,10 @@ final case class ConceptRelationFilterArcrole(underlyingElem: BackingNodes.Elem)
 /**
  * A crf:arcroleExpression descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterArcroleExpression(underlyingElem: BackingNodes.Elem) extends ConceptRelationFilterContentElem {
+final case class ConceptRelationFilterArcroleExpression(underlyingElem: BackingNodes.Elem)
+    extends ConceptRelationFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CrfArcroleExpressionEName)
-
-  def expr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 /**
@@ -2029,37 +1814,28 @@ final case class ConceptRelationFilterArcname(underlyingElem: BackingNodes.Elem)
 /**
  * A crf:arcnameExpression descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterArcnameExpression(underlyingElem: BackingNodes.Elem) extends ConceptRelationFilterContentElem {
+final case class ConceptRelationFilterArcnameExpression(underlyingElem: BackingNodes.Elem)
+    extends ConceptRelationFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CrfArcnameExpressionEName)
-
-  def expr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 /**
  * A crf:qname descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterQName(underlyingElem: BackingNodes.Elem) extends ConceptRelationFilterContentElem {
+final case class ConceptRelationFilterQName(underlyingElem: BackingNodes.Elem)
+    extends ConceptRelationFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasQNameValue {
   requireName(ENames.CrfQnameEName)
-
-  /**
-   * Returns the element text resolved as EName. This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def qnameValue: EName = {
-    textAsResolvedQName
-  }
 }
 
 /**
  * A crf:qnameExpression descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterQNameExpression(underlyingElem: BackingNodes.Elem) extends ConceptRelationFilterContentElem {
+final case class ConceptRelationFilterQNameExpression(underlyingElem: BackingNodes.Elem)
+    extends ConceptRelationFilterContentElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CrfQnameExpressionEName)
-
-  def expr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 /**
@@ -2115,29 +1891,12 @@ sealed trait FormulaAspect extends FormulaAspectOrAspectsElem {
 /**
  * A formula:concept.
  */
-final case class ConceptAspect(underlyingElem: BackingNodes.Elem) extends FormulaAspect {
+final case class ConceptAspect(underlyingElem: BackingNodes.Elem)
+    extends FormulaAspect
+    with NonStandardTaxonomyElemSupport.ProvidesQName[QNameElem, QNameExpressionElem] {
   requireName(ENames.FormulaConceptEName)
 
   def aspect(aspectModel: AspectModel): Aspect = Aspect.ConceptAspect
-
-  def qnameElemOption: Option[QNameElem] = {
-    findFirstChildElemOfType(classTag[QNameElem])
-  }
-
-  def qnameExpressionElemOption: Option[QNameExpressionElem] = {
-    findFirstChildElemOfType(classTag[QNameExpressionElem])
-  }
-
-  /**
-   * Returns the qname as EName value provider. This may fail if this element is not schema-valid.
-   */
-  def qnameValueOrExpr: TypedValueProvider[EName] = {
-    qnameElemOption
-      .map(_.qnameValue)
-      .map(v => TypedValue(v))
-      .orElse(qnameExpressionElemOption.map(_.qnameExpr).map(v => TypedValueExpr(classTag[EName], v)))
-      .get
-  }
 }
 
 /**
@@ -2303,26 +2062,19 @@ final case class TypedDimensionAspect(underlyingElem: BackingNodes.Elem) extends
 /**
  * A formula:qname.
  */
-final case class QNameElem(underlyingElem: BackingNodes.Elem) extends FormulaNonXLinkElem {
+final case class QNameElem(underlyingElem: BackingNodes.Elem)
+    extends FormulaNonXLinkElem
+    with NonStandardTaxonomyElemSupport.HasQNameValue {
   requireName(ENames.FormulaQNameEName)
-
-  /**
-   * Returns the element text resolved as EName. This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def qnameValue: EName = {
-    textAsResolvedQName
-  }
 }
 
 /**
  * A formula:qnameExpression.
  */
-final case class QNameExpressionElem(underlyingElem: BackingNodes.Elem) extends FormulaNonXLinkElem {
+final case class QNameExpressionElem(underlyingElem: BackingNodes.Elem)
+    extends FormulaNonXLinkElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.FormulaQNameExpressionEName)
-
-  def qnameExpr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 /**
@@ -2415,27 +2167,10 @@ final case class DivideByElem(underlyingElem: BackingNodes.Elem) extends Formula
 /**
  * A formula:member.
  */
-final case class MemberElem(underlyingElem: BackingNodes.Elem) extends FormulaNonXLinkElem {
+final case class MemberElem(underlyingElem: BackingNodes.Elem)
+    extends FormulaNonXLinkElem
+    with NonStandardTaxonomyElemSupport.ProvidesQName[QNameElem, QNameExpressionElem] {
   requireName(ENames.FormulaMemberEName)
-
-  def qnameElemOption: Option[QNameElem] = {
-    findFirstChildElemOfType(classTag[QNameElem])
-  }
-
-  def qnameExpressionElemOption: Option[QNameExpressionElem] = {
-    findFirstChildElemOfType(classTag[QNameExpressionElem])
-  }
-
-  /**
-   * Returns the qname as EName value provider. This may fail if this element is not schema-valid.
-   */
-  def qnameValueOrExpr: TypedValueProvider[EName] = {
-    qnameElemOption
-      .map(_.qnameValue)
-      .map(v => TypedValue(v))
-      .orElse(qnameExpressionElemOption.map(_.qnameExpr).map(v => TypedValueExpr(classTag[EName], v)))
-      .get
-  }
 }
 
 /**
@@ -2448,12 +2183,8 @@ final case class OmitElem(underlyingElem: BackingNodes.Elem) extends FormulaNonX
 /**
  * A formula:xpath.
  */
-final case class XpathElem(underlyingElem: BackingNodes.Elem) extends FormulaNonXLinkElem {
+final case class XpathElem(underlyingElem: BackingNodes.Elem) extends FormulaNonXLinkElem with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.FormulaXpathEName)
-
-  def expr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 /**
@@ -2466,23 +2197,19 @@ final case class ValueElem(underlyingElem: BackingNodes.Elem) extends FormulaNon
 /**
  * A formula:precision.
  */
-final case class PrecisionElem(underlyingElem: BackingNodes.Elem) extends FormulaNonXLinkElem {
+final case class PrecisionElem(underlyingElem: BackingNodes.Elem)
+    extends FormulaNonXLinkElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.FormulaPrecisionEName)
-
-  def expr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 /**
  * A formula:decimals.
  */
-final case class DecimalsElem(underlyingElem: BackingNodes.Elem) extends FormulaNonXLinkElem {
+final case class DecimalsElem(underlyingElem: BackingNodes.Elem)
+    extends FormulaNonXLinkElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.FormulaDecimalsEName)
-
-  def expr: ScopedXPathString = {
-    ScopedXPathString(text, scope)
-  }
 }
 
 // Table arcs
