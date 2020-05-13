@@ -16,6 +16,7 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.dom
 
+import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.xpath.ScopedXPathString
 import eu.cdevreeze.tqa2.common.xpath.TypedValue
 import eu.cdevreeze.tqa2.common.xpath.TypedValueExpr
@@ -78,6 +79,73 @@ object NonStandardTaxonomyElemSupport {
         .map(v => TypedValue(v))
         .orElse(qnameExpressionElemOption.map(_.expr).map(v => TypedValueExpr(classTag[EName], v)))
         .get
+    }
+  }
+
+  trait HasOptionalSource extends BackingElemApi {
+
+    /**
+     * Returns the optional source as EName. The default namespace is not used to resolve the QName.
+     * This may fail with an exception if the taxonomy is not schema-valid.
+     */
+    final def sourceOption: Option[EName] = {
+      attrAsQNameOption(ENames.SourceEName).map(qn => scope.withoutDefaultNamespace.resolveQName(qn))
+    }
+  }
+
+  trait HasTestExpr extends BackingElemApi {
+
+    /**
+     * Returns the mandatory test attribute as ScopedXPathString.
+     * This may fail with an exception if the taxonomy is not schema-valid.
+     */
+    final def testExpr: ScopedXPathString = {
+      ScopedXPathString(attr(ENames.TestEName), scope)
+    }
+  }
+
+  trait HasOptionalTestExpr extends BackingElemApi {
+
+    /**
+     * Returns the optional test attribute as optional ScopedXPathString.
+     * This may fail with an exception if the taxonomy is not schema-valid.
+     */
+    final def testExprOption: Option[ScopedXPathString] = {
+      attrOption(ENames.TestEName).map(v => ScopedXPathString(v, scope))
+    }
+  }
+
+  trait HasVariable extends BackingElemApi {
+
+    /**
+     * Returns the variable attribute, as expanded name. The default namespace is not used to resolve the QName as EName.
+     * This may fail with an exception if the taxonomy is not schema-valid.
+     */
+    final def variable: EName = {
+      val qn = attrAsQName(ENames.VariableEName)
+      scope.withoutDefaultNamespace.resolveQName(qn)
+    }
+  }
+
+  trait HasValueExpr extends BackingElemApi {
+
+    /**
+     * Returns the mandatory value attribute as ScopedXPathString.
+     * This may fail with an exception if the taxonomy is not schema-valid.
+     */
+    def valueExpr: ScopedXPathString = {
+      ScopedXPathString(attr(ENames.ValueEName), scope)
+    }
+  }
+
+  trait HasOptionalValueExpr extends BackingElemApi {
+
+    /**
+     * Returns the optional value attribute as optional ScopedXPathString.
+     * This may fail with an exception if the taxonomy is not schema-valid.
+     */
+    def valueExprOption: Option[ScopedXPathString] = {
+      attrOption(ENames.ValueEName).map(v => ScopedXPathString(v, scope))
     }
   }
 }

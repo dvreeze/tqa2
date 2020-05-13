@@ -232,22 +232,19 @@ sealed trait VariableSetAssertion extends VariableSet with Assertion
 /**
  * A va:valueAssertion.
  */
-final case class ValueAssertion(underlyingElem: BackingNodes.Elem) extends VariableSetAssertion {
+final case class ValueAssertion(underlyingElem: BackingNodes.Elem)
+    extends VariableSetAssertion
+    with NonStandardTaxonomyElemSupport.HasTestExpr {
   requireName(ENames.VaValueAssertionEName)
-
-  /**
-   * Returns the mandatory test attribute as ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def testExpr: ScopedXPathString = {
-    ScopedXPathString(attr(ENames.TestEName), scope)
-  }
 }
 
 /**
  * A formula:formula.
  */
-final case class Formula(underlyingElem: BackingNodes.Elem) extends VariableSet {
+final case class Formula(underlyingElem: BackingNodes.Elem)
+    extends VariableSet
+    with NonStandardTaxonomyElemSupport.HasOptionalSource
+    with NonStandardTaxonomyElemSupport.HasValueExpr {
   requireName(ENames.FormulaFormulaEName)
 
   def precisionElemOption: Option[PrecisionElem] = {
@@ -261,38 +258,15 @@ final case class Formula(underlyingElem: BackingNodes.Elem) extends VariableSet 
   def formulaAspectsElems: Seq[FormulaAspectsElem] = {
     findAllChildElemsOfType(classTag[FormulaAspectsElem])
   }
-
-  /**
-   * Returns the mandatory value attribute as ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def valueExpr: ScopedXPathString = {
-    ScopedXPathString(attr(ENames.ValueEName), scope)
-  }
-
-  /**
-   * Returns the source attribute as optional EName. The default namespace is not used to resolve the QName.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def sourceOption: Option[EName] = {
-    val qnameOption = attrAsQNameOption(ENames.SourceEName)
-    qnameOption.map(qn => scope.withoutDefaultNamespace.resolveQName(qn))
-  }
 }
 
 /**
  * An ea:existenceAssertion.
  */
-final case class ExistenceAssertion(underlyingElem: BackingNodes.Elem) extends VariableSetAssertion {
+final case class ExistenceAssertion(underlyingElem: BackingNodes.Elem)
+    extends VariableSetAssertion
+    with NonStandardTaxonomyElemSupport.HasOptionalTestExpr {
   requireName(ENames.EaExistenceAssertionEName)
-
-  /**
-   * Returns the optional test attribute as optional ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def testExprOption: Option[ScopedXPathString] = {
-    attrOption(ENames.TestEName).map(v => ScopedXPathString(v, scope))
-  }
 }
 
 /**
@@ -321,16 +295,8 @@ final case class ConsistencyAssertion(underlyingElem: BackingNodes.Elem) extends
 /**
  * A variable:precondition.
  */
-final case class Precondition(underlyingElem: BackingNodes.Elem) extends FormulaResource {
+final case class Precondition(underlyingElem: BackingNodes.Elem) extends FormulaResource with NonStandardTaxonomyElemSupport.HasTestExpr {
   requireName(ENames.VariablePreconditionEName)
-
-  /**
-   * Returns the mandatory test attribute as ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def testExpr: ScopedXPathString = {
-    ScopedXPathString(attr(ENames.TestEName), scope)
-  }
 }
 
 /**
@@ -461,16 +427,10 @@ final case class Function(underlyingElem: BackingNodes.Elem) extends FormulaReso
 /**
  * A variable:equalityDefinition.
  */
-final case class EqualityDefinition(underlyingElem: BackingNodes.Elem) extends FormulaResource {
+final case class EqualityDefinition(underlyingElem: BackingNodes.Elem)
+    extends FormulaResource
+    with NonStandardTaxonomyElemSupport.HasTestExpr {
   requireName(ENames.VariableEqualityDefinitionEName)
-
-  /**
-   * Returns the mandatory test attribute as ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def testExpr: ScopedXPathString = {
-    ScopedXPathString(attr(ENames.TestEName), scope)
-  }
 }
 
 /**
@@ -576,19 +536,13 @@ final case class ConceptBalanceFilter(underlyingElem: BackingNodes.Elem) extends
 /**
  * A cf:conceptCustomAttribute filter.
  */
-final case class ConceptCustomAttributeFilter(underlyingElem: BackingNodes.Elem) extends ConceptFilter {
+final case class ConceptCustomAttributeFilter(underlyingElem: BackingNodes.Elem)
+    extends ConceptFilter
+    with NonStandardTaxonomyElemSupport.HasOptionalValueExpr {
   requireName(ENames.CfConceptCustomAttributeEName)
 
   def customAttribute: ConceptFilterAttribute = {
     findFirstChildElemOfType(classTag[ConceptFilterAttribute]).get
-  }
-
-  /**
-   * Returns the optional value attribute as optional ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def valueExprOption: Option[ScopedXPathString] = {
-    attrOption(ENames.ValueEName).map(v => ScopedXPathString(v, scope))
   }
 }
 
@@ -665,16 +619,10 @@ final case class ExplicitDimensionFilter(underlyingElem: BackingNodes.Elem) exte
 /**
  * A df:typedDimension filter.
  */
-final case class TypedDimensionFilter(underlyingElem: BackingNodes.Elem) extends DimensionFilter {
+final case class TypedDimensionFilter(underlyingElem: BackingNodes.Elem)
+    extends DimensionFilter
+    with NonStandardTaxonomyElemSupport.HasOptionalTestExpr {
   requireName(ENames.DfTypedDimensionEName)
-
-  /**
-   * Returns the optional test attribute as optional ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def testExprOption: Option[ScopedXPathString] = {
-    attrOption(ENames.TestEName).map(v => ScopedXPathString(v, scope))
-  }
 }
 
 /**
@@ -685,16 +633,8 @@ sealed trait EntityFilter extends Filter
 /**
  * An ef:identifier filter.
  */
-final case class IdentifierFilter(underlyingElem: BackingNodes.Elem) extends EntityFilter {
+final case class IdentifierFilter(underlyingElem: BackingNodes.Elem) extends EntityFilter with NonStandardTaxonomyElemSupport.HasTestExpr {
   requireName(ENames.EfIdentifierEName)
-
-  /**
-   * Returns the mandatory test attribute as ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def testExpr: ScopedXPathString = {
-    ScopedXPathString(attr(ENames.TestEName), scope)
-  }
 }
 
 /**
@@ -726,7 +666,9 @@ final case class RegexpSchemeFilter(underlyingElem: BackingNodes.Elem) extends E
 /**
  * An ef:specificIdentifier filter.
  */
-final case class SpecificIdentifierFilter(underlyingElem: BackingNodes.Elem) extends EntityFilter {
+final case class SpecificIdentifierFilter(underlyingElem: BackingNodes.Elem)
+    extends EntityFilter
+    with NonStandardTaxonomyElemSupport.HasValueExpr {
   requireName(ENames.EfSpecificIdentifierEName)
 
   /**
@@ -735,14 +677,6 @@ final case class SpecificIdentifierFilter(underlyingElem: BackingNodes.Elem) ext
    */
   def schemeExpr: ScopedXPathString = {
     ScopedXPathString(attr(ENames.SchemeEName), scope)
-  }
-
-  /**
-   * Returns the mandatory value attribute as ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def valueExpr: ScopedXPathString = {
-    ScopedXPathString(attr(ENames.ValueEName), scope)
   }
 }
 
@@ -760,30 +694,14 @@ final case class RegexpIdentifierFilter(underlyingElem: BackingNodes.Elem) exten
 /**
  * A general filter (gf:general).
  */
-final case class GeneralFilter(underlyingElem: BackingNodes.Elem) extends Filter {
+final case class GeneralFilter(underlyingElem: BackingNodes.Elem) extends Filter with NonStandardTaxonomyElemSupport.HasOptionalTestExpr {
   requireName(ENames.GfGeneralEName)
-
-  /**
-   * Returns the optional test attribute as optional ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def testExprOption: Option[ScopedXPathString] = {
-    attrOption(ENames.TestEName).map(v => ScopedXPathString(v, scope))
-  }
 }
 
 /**
  * A match filter.
  */
-sealed trait MatchFilter extends Filter {
-
-  /**
-   * Returns the variable attribute, as expanded name.
-   */
-  final def variable: EName = {
-    val qn = attrAsQName(ENames.VariableEName)
-    scope.withoutDefaultNamespace.resolveQName(qn)
-  }
+sealed trait MatchFilter extends Filter with NonStandardTaxonomyElemSupport.HasVariable {
 
   final def matchAny: Boolean = {
     attrOption(ENames.MatchAnyEName).exists(s => XsBooleans.parseBoolean(s))
@@ -872,85 +790,50 @@ sealed trait PeriodAspectFilter extends Filter
 /**
  * A pf:period filter.
  */
-final case class PeriodFilter(underlyingElem: BackingNodes.Elem) extends PeriodAspectFilter {
+final case class PeriodFilter(underlyingElem: BackingNodes.Elem)
+    extends PeriodAspectFilter
+    with NonStandardTaxonomyElemSupport.HasTestExpr {
   requireName(ENames.PfPeriodEName)
+}
+
+sealed trait PeriodStartEndOrInstantFilter extends PeriodAspectFilter {
 
   /**
-   * Returns the mandatory test attribute as ScopedXPathString.
+   * Returns the mandatory date attribute as ScopedXPathString.
    * This may fail with an exception if the taxonomy is not schema-valid.
    */
-  def testExpr: ScopedXPathString = {
-    ScopedXPathString(attr(ENames.TestEName), scope)
+  final def dateExpr: ScopedXPathString = {
+    ScopedXPathString(attr(ENames.DateEName), scope)
+  }
+
+  /**
+   * Returns the optional time attribute as optional ScopedXPathString.
+   * This may fail with an exception if the taxonomy is not schema-valid.
+   */
+  final def timeExprOption: Option[ScopedXPathString] = {
+    attrOption(ENames.TimeEName).map(v => ScopedXPathString(v, scope))
   }
 }
 
 /**
  * A pf:periodStart filter.
  */
-final case class PeriodStartFilter(underlyingElem: BackingNodes.Elem) extends PeriodAspectFilter {
+final case class PeriodStartFilter(underlyingElem: BackingNodes.Elem) extends PeriodStartEndOrInstantFilter {
   requireName(ENames.PfPeriodStartEName)
-
-  /**
-   * Returns the mandatory date attribute as ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def dateExpr: ScopedXPathString = {
-    ScopedXPathString(attr(ENames.DateEName), scope)
-  }
-
-  /**
-   * Returns the optional time attribute as optional ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def timeExprOption: Option[ScopedXPathString] = {
-    attrOption(ENames.TimeEName).map(v => ScopedXPathString(v, scope))
-  }
 }
 
 /**
  * A pf:periodEnd filter.
  */
-final case class PeriodEndFilter(underlyingElem: BackingNodes.Elem) extends PeriodAspectFilter {
+final case class PeriodEndFilter(underlyingElem: BackingNodes.Elem) extends PeriodStartEndOrInstantFilter {
   requireName(ENames.PfPeriodEndEName)
-
-  /**
-   * Returns the mandatory date attribute as ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def dateExpr: ScopedXPathString = {
-    ScopedXPathString(attr(ENames.DateEName), scope)
-  }
-
-  /**
-   * Returns the optional time attribute as optional ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def timeExprOption: Option[ScopedXPathString] = {
-    attrOption(ENames.TimeEName).map(v => ScopedXPathString(v, scope))
-  }
 }
 
 /**
  * A pf:periodInstant filter.
  */
-final case class PeriodInstantFilter(underlyingElem: BackingNodes.Elem) extends PeriodAspectFilter {
+final case class PeriodInstantFilter(underlyingElem: BackingNodes.Elem) extends PeriodStartEndOrInstantFilter {
   requireName(ENames.PfPeriodInstantEName)
-
-  /**
-   * Returns the mandatory date attribute as ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def dateExpr: ScopedXPathString = {
-    ScopedXPathString(attr(ENames.DateEName), scope)
-  }
-
-  /**
-   * Returns the optional time attribute as optional ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def timeExprOption: Option[ScopedXPathString] = {
-    attrOption(ENames.TimeEName).map(v => ScopedXPathString(v, scope))
-  }
 }
 
 /**
@@ -963,16 +846,10 @@ final case class ForeverFilter(underlyingElem: BackingNodes.Elem) extends Period
 /**
  * A pf:instantDuration filter.
  */
-final case class InstantDurationFilter(underlyingElem: BackingNodes.Elem) extends PeriodAspectFilter {
+final case class InstantDurationFilter(underlyingElem: BackingNodes.Elem)
+    extends PeriodAspectFilter
+    with NonStandardTaxonomyElemSupport.HasVariable {
   requireName(ENames.PfInstantDurationEName)
-
-  /**
-   * Returns the variable attribute, as expanded name.
-   */
-  def variable: EName = {
-    val qn = attrAsQName(ENames.VariableEName)
-    scope.withoutDefaultNamespace.resolveQName(qn)
-  }
 
   def boundary: String = {
     attr(ENames.BoundaryEName)
@@ -982,31 +859,14 @@ final case class InstantDurationFilter(underlyingElem: BackingNodes.Elem) extend
 /**
  * A relative filter (rf:relativeFilter).
  */
-final case class RelativeFilter(underlyingElem: BackingNodes.Elem) extends Filter {
+final case class RelativeFilter(underlyingElem: BackingNodes.Elem) extends Filter with NonStandardTaxonomyElemSupport.HasVariable {
   requireName(ENames.RfRelativeFilterEName)
-
-  /**
-   * Returns the variable attribute, as expanded name.
-   */
-  def variable: EName = {
-    val qn = attrAsQName(ENames.VariableEName)
-    scope.withoutDefaultNamespace.resolveQName(qn)
-  }
 }
 
 /**
  * A segment scenario filter.
  */
-sealed trait SegmentScenarioFilter extends Filter {
-
-  /**
-   * Returns the optional test attribute as optional ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  final def testExprOption: Option[ScopedXPathString] = {
-    attrOption(ENames.TestEName).map(v => ScopedXPathString(v, scope))
-  }
-}
+sealed trait SegmentScenarioFilter extends Filter with NonStandardTaxonomyElemSupport.HasOptionalTestExpr
 
 /**
  * An ssf:segment filter.
@@ -1052,31 +912,15 @@ final case class AncestorFilter(underlyingElem: BackingNodes.Elem) extends Tuple
 /**
  * A tf:siblingFilter filter.
  */
-final case class SiblingFilter(underlyingElem: BackingNodes.Elem) extends TupleFilter {
+final case class SiblingFilter(underlyingElem: BackingNodes.Elem) extends TupleFilter with NonStandardTaxonomyElemSupport.HasVariable {
   requireName(ENames.TfSiblingFilterEName)
-
-  /**
-   * Returns the variable attribute, as expanded name.
-   */
-  def variable: EName = {
-    val qn = attrAsQName(ENames.VariableEName)
-    scope.withoutDefaultNamespace.resolveQName(qn)
-  }
 }
 
 /**
  * A tf:locationFilter filter.
  */
-final case class LocationFilter(underlyingElem: BackingNodes.Elem) extends TupleFilter {
+final case class LocationFilter(underlyingElem: BackingNodes.Elem) extends TupleFilter with NonStandardTaxonomyElemSupport.HasVariable {
   requireName(ENames.TfLocationFilterEName)
-
-  /**
-   * Returns the variable attribute, as expanded name.
-   */
-  def variable: EName = {
-    val qn = attrAsQName(ENames.VariableEName)
-    scope.withoutDefaultNamespace.resolveQName(qn)
-  }
 
   /**
    * Returns the mandatory location attribute as ScopedXPathString.
@@ -1106,16 +950,10 @@ final case class SingleMeasureFilter(underlyingElem: BackingNodes.Elem) extends 
 /**
  * An uf:generalMeasure filter.
  */
-final case class GeneralMeasureFilter(underlyingElem: BackingNodes.Elem) extends UnitFilter {
+final case class GeneralMeasureFilter(underlyingElem: BackingNodes.Elem)
+    extends UnitFilter
+    with NonStandardTaxonomyElemSupport.HasTestExpr {
   requireName(ENames.UfGeneralMeasuresEName)
-
-  /**
-   * Returns the mandatory test attribute as ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def testExpr: ScopedXPathString = {
-    ScopedXPathString(attr(ENames.TestEName), scope)
-  }
 }
 
 /**
@@ -1167,7 +1005,9 @@ final case class AspectCoverFilter(underlyingElem: BackingNodes.Elem) extends Fi
 /**
  * A concept relation filter (crf:conceptRelation).
  */
-final case class ConceptRelationFilter(underlyingElem: BackingNodes.Elem) extends Filter {
+final case class ConceptRelationFilter(underlyingElem: BackingNodes.Elem)
+    extends Filter
+    with NonStandardTaxonomyElemSupport.HasOptionalTestExpr {
   requireName(ENames.CrfConceptRelationEName)
 
   /**
@@ -1312,14 +1152,6 @@ final case class ConceptRelationFilter(underlyingElem: BackingNodes.Elem) extend
 
   def generationsOption: Option[ConceptRelationFilterGenerations] = {
     findFirstChildElemOfType(classTag[ConceptRelationFilterGenerations])
-  }
-
-  /**
-   * Returns the optional test attribute as optional ScopedXPathString.
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def testExprOption: Option[ScopedXPathString] = {
-    attrOption(ENames.TestEName).map(v => ScopedXPathString(v, scope))
   }
 }
 
@@ -1846,18 +1678,10 @@ sealed trait FormulaAspectOrAspectsElem extends FormulaNonXLinkElem
 /**
  * An aspects element.
  */
-final case class FormulaAspectsElem(underlyingElem: BackingNodes.Elem) extends FormulaAspectOrAspectsElem {
+final case class FormulaAspectsElem(underlyingElem: BackingNodes.Elem)
+    extends FormulaAspectOrAspectsElem
+    with NonStandardTaxonomyElemSupport.HasOptionalSource {
   requireName(ENames.FormulaAspectsEName)
-
-  /**
-   * Returns the optional source as EName. The default namespace is not used to resolve the QName.
-   *
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def sourceOption: Option[EName] = {
-    val sc = scope.withoutDefaultNamespace
-    attrAsQNameOption(ENames.SourceEName).map(qn => sc.resolveQName(qn))
-  }
 
   /**
    * Returns the aspects themselves.
@@ -1870,17 +1694,7 @@ final case class FormulaAspectsElem(underlyingElem: BackingNodes.Elem) extends F
 /**
  * An aspect.
  */
-sealed trait FormulaAspect extends FormulaAspectOrAspectsElem {
-
-  /**
-   * Returns the optional source as EName. The default namespace is not used to resolve the QName.
-   *
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  final def sourceOption: Option[EName] = {
-    val sc = scope.withoutDefaultNamespace
-    attrAsQNameOption(ENames.SourceEName).map(qn => sc.resolveQName(qn))
-  }
+sealed trait FormulaAspect extends FormulaAspectOrAspectsElem with NonStandardTaxonomyElemSupport.HasOptionalSource {
 
   /**
    * Returns the aspect value, depending on the aspect model used.
@@ -1902,17 +1716,15 @@ final case class ConceptAspect(underlyingElem: BackingNodes.Elem)
 /**
  * A formula:entityIdentifier.
  */
-final case class EntityIdentifierAspect(underlyingElem: BackingNodes.Elem) extends FormulaAspect {
+final case class EntityIdentifierAspect(underlyingElem: BackingNodes.Elem)
+    extends FormulaAspect
+    with NonStandardTaxonomyElemSupport.HasOptionalValueExpr {
   requireName(ENames.FormulaEntityIdentifierEName)
 
   def aspect(aspectModel: AspectModel): Aspect = Aspect.EntityIdentifierAspect
 
   def schemeExprOption: Option[ScopedXPathString] = {
     attrOption(ENames.SchemeEName).map(v => ScopedXPathString(v, scope))
-  }
-
-  def valueExprOption: Option[ScopedXPathString] = {
-    attrOption(ENames.ValueEName).map(v => ScopedXPathString(v, scope))
   }
 }
 
@@ -2097,12 +1909,10 @@ final case class ForeverElem(underlyingElem: BackingNodes.Elem) extends PeriodEl
 /**
  * A formula:instant.
  */
-final case class InstantElem(underlyingElem: BackingNodes.Elem) extends PeriodElem {
+final case class InstantElem(underlyingElem: BackingNodes.Elem)
+    extends PeriodElem
+    with NonStandardTaxonomyElemSupport.HasOptionalValueExpr {
   requireName(ENames.FormulaInstantEName)
-
-  def valueExprOption: Option[ScopedXPathString] = {
-    attrOption(ENames.ValueEName).map(v => ScopedXPathString(v, scope))
-  }
 
   def periodType: PeriodType = PeriodType.Instant
 }
@@ -2127,40 +1937,26 @@ final case class DurationElem(underlyingElem: BackingNodes.Elem) extends PeriodE
 /**
  * A formula:multiplyBy.
  */
-final case class MultiplyByElem(underlyingElem: BackingNodes.Elem) extends FormulaNonXLinkElem {
+final case class MultiplyByElem(underlyingElem: BackingNodes.Elem)
+    extends FormulaNonXLinkElem
+    with NonStandardTaxonomyElemSupport.HasOptionalSource {
   requireName(ENames.FormulaMultiplyByEName)
 
   def measureExprOption: Option[ScopedXPathString] = {
     attrOption(ENames.MeasureEName).map(v => ScopedXPathString(v, scope))
-  }
-
-  /**
-   * Returns the optional source as EName. The default namespace is not used to resolve the QName.
-   *
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def sourceOption: Option[EName] = {
-    attrAsQNameOption(ENames.SourceEName).map(qn => scope.withoutDefaultNamespace.resolveQName(qn))
   }
 }
 
 /**
  * A formula:divideBy.
  */
-final case class DivideByElem(underlyingElem: BackingNodes.Elem) extends FormulaNonXLinkElem {
+final case class DivideByElem(underlyingElem: BackingNodes.Elem)
+    extends FormulaNonXLinkElem
+    with NonStandardTaxonomyElemSupport.HasOptionalSource {
   requireName(ENames.FormulaDivideByEName)
 
   def measureExprOption: Option[ScopedXPathString] = {
     attrOption(ENames.MeasureEName).map(v => ScopedXPathString(v, scope))
-  }
-
-  /**
-   * Returns the optional source as EName. The default namespace is not used to resolve the QName.
-   *
-   * This may fail with an exception if the taxonomy is not schema-valid.
-   */
-  def sourceOption: Option[EName] = {
-    attrAsQNameOption(ENames.SourceEName).map(qn => scope.withoutDefaultNamespace.resolveQName(qn))
   }
 }
 
