@@ -2484,3 +2484,297 @@ final case class DecimalsElem(underlyingElem: BackingNodes.Elem) extends Formula
     ScopedXPathString(text, scope)
   }
 }
+
+// Table arcs
+
+/**
+ * A table:tableBreakdownArc.
+ */
+final case class TableBreakdownArc(underlyingElem: BackingNodes.Elem) extends TableArc {
+  requireName(ENames.TableTableBreakdownArcEName)
+}
+
+/**
+ * A table:breakdownTreeArc.
+ */
+final case class BreakdownTreeArc(underlyingElem: BackingNodes.Elem) extends TableArc {
+  requireName(ENames.TableBreakdownTreeArcEName)
+}
+
+/**
+ * A table:definitionNodeSubtreeArc.
+ */
+final case class DefinitionNodeSubtreeArc(underlyingElem: BackingNodes.Elem) extends TableArc {
+  requireName(ENames.TableDefinitionNodeSubtreeArcEName)
+}
+
+/**
+ * A table:tableFilterArc.
+ */
+final case class TableFilterArc(underlyingElem: BackingNodes.Elem) extends TableArc {
+  requireName(ENames.TableTableFilterArcEName)
+}
+
+/**
+ * A table:tableParameterArc.
+ */
+final case class TableParameterArc(underlyingElem: BackingNodes.Elem) extends TableArc {
+  requireName(ENames.TableTableParameterArcEName)
+}
+
+/**
+ * A table:aspectNodeFilterArc.
+ */
+final case class AspectNodeFilterArc(underlyingElem: BackingNodes.Elem) extends TableArc {
+  requireName(ENames.TableAspectNodeFilterArcEName)
+}
+
+// Table resources
+
+/**
+ * A table:table.
+ */
+final case class Table(underlyingElem: BackingNodes.Elem) extends TableResource {
+  requireName(ENames.TableTableEName)
+}
+
+/**
+ * A table:breakdown.
+ */
+final case class TableBreakdown(underlyingElem: BackingNodes.Elem) extends TableResource {
+  requireName(ENames.TableBreakdownEName)
+}
+
+/**
+ * A definition node.
+ */
+sealed trait DefinitionNode extends TableResource
+
+/**
+ * A closed definition node.
+ */
+sealed trait ClosedDefinitionNode extends DefinitionNode
+
+/**
+ * An open definition node.
+ */
+sealed trait OpenDefinitionNode extends DefinitionNode
+
+/**
+ * A table:ruleNode.
+ */
+final case class RuleNode(underlyingElem: BackingNodes.Elem) extends ClosedDefinitionNode {
+  requireName(ENames.TableRuleNodeEName)
+}
+
+/**
+ * A relationship node.
+ */
+sealed trait RelationshipNode extends ClosedDefinitionNode
+
+/**
+ * A table:conceptRelationshipNode.
+ */
+final case class ConceptRelationshipNode(underlyingElem: BackingNodes.Elem) extends RelationshipNode {
+  requireName(ENames.TableConceptRelationshipNodeEName)
+}
+
+/**
+ * A table:dimensionRelationshipNode.
+ */
+final case class DimensionRelationshipNode(underlyingElem: BackingNodes.Elem) extends RelationshipNode {
+  requireName(ENames.TableDimensionRelationshipNodeEName)
+}
+
+/**
+ * A table:aspectNode.
+ */
+final case class AspectNode(underlyingElem: BackingNodes.Elem) extends OpenDefinitionNode {
+  requireName(ENames.TableAspectNodeEName)
+}
+
+// Table non-XLink elements
+
+/**
+ * An aspect spec.
+ */
+sealed trait AspectSpec extends TableNonXLinkElem {
+
+  /**
+   * Returns the aspect, using the dimensional aspect model.
+   */
+  def aspect: Aspect
+}
+
+/**
+ * A table:conceptAspect.
+ */
+final case class ConceptAspectSpec(underlyingElem: BackingNodes.Elem) extends AspectSpec {
+  requireName(ENames.TableConceptAspectEName)
+
+  def aspect: Aspect = Aspect.ConceptAspect
+}
+
+/**
+ * A table:unitAspect.
+ */
+final case class UnitAspectSpec(underlyingElem: BackingNodes.Elem) extends AspectSpec {
+  requireName(ENames.TableUnitAspectEName)
+
+  def aspect: Aspect = Aspect.UnitAspect
+}
+
+/**
+ * A table:entityIdentifierAspect.
+ */
+final case class EntityIdentifierAspectSpec(underlyingElem: BackingNodes.Elem) extends AspectSpec {
+  requireName(ENames.TableEntityIdentifierAspectEName)
+
+  def aspect: Aspect = Aspect.EntityIdentifierAspect
+}
+
+/**
+ * A table:periodAspect.
+ */
+final case class PeriodAspectSpec(underlyingElem: BackingNodes.Elem) extends AspectSpec {
+  requireName(ENames.TablePeriodAspectEName)
+
+  def aspect: Aspect = Aspect.PeriodAspect
+}
+
+/**
+ * A table:dimensionAspect.
+ */
+final case class DimensionAspectSpec(underlyingElem: BackingNodes.Elem) extends AspectSpec {
+  requireName(ENames.TableDimensionAspectEName)
+
+  def aspect: Aspect = Aspect.DimensionAspect(dimension)
+
+  def dimension: EName = textAsResolvedQName
+}
+
+/**
+ * A table:ruleSet.
+ */
+final case class RuleSet(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableRuleSetEName)
+}
+
+/**
+ * A table:relationshipSource.
+ */
+final case class RelationshipSource(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableRelationshipSourceEName)
+}
+
+/**
+ * A table:relationshipSourceExpression.
+ */
+final case class RelationshipSourceExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableRelationshipSourceExpressionEName)
+}
+
+/**
+ * A table:linkrole.
+ */
+final case class Linkrole(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableLinkroleEName)
+}
+
+/**
+ * A table:linkroleExpression.
+ */
+final case class LinkroleExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableLinkroleExpressionEName)
+}
+
+/**
+ * A table:arcrole.
+ */
+final case class Arcrole(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableArcroleEName)
+}
+
+/**
+ * A table:arcroleExpression.
+ */
+final case class ArcroleExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableArcroleExpressionEName)
+}
+
+/**
+ * A table:formulaAxis in a table:conceptRelationshipNode.
+ */
+final case class ConceptRelationshipNodeFormulaAxis(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableFormulaAxisEName)
+}
+
+/**
+ * A table:formulaAxisExpression in a table:conceptRelationshipNode.
+ */
+final case class ConceptRelationshipNodeFormulaAxisExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableFormulaAxisExpressionEName)
+}
+
+/**
+ * A table:formulaAxis in a table:dimensionRelationshipNode.
+ */
+final case class DimensionRelationshipNodeFormulaAxis(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableFormulaAxisEName)
+}
+
+/**
+ * A table:formulaAxisExpression in a table:dimensionRelationshipNode.
+ */
+final case class DimensionRelationshipNodeFormulaAxisExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableFormulaAxisExpressionEName)
+}
+
+/**
+ * A table:generations.
+ */
+final case class Generations(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableGenerationsEName)
+}
+
+/**
+ * A table:generationsExpression.
+ */
+final case class GenerationsExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableGenerationsExpressionEName)
+}
+
+/**
+ * A table:linkname.
+ */
+final case class Linkname(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableLinknameEName)
+}
+
+/**
+ * A table:linknameExpression.
+ */
+final case class LinknameExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableLinknameExpressionEName)
+}
+
+/**
+ * A table:arcname.
+ */
+final case class Arcname(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableArcnameEName)
+}
+
+/**
+ * A table:arcnameExpression.
+ */
+final case class ArcnameExpression(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableArcnameExpressionEName)
+}
+
+/**
+ * A table:dimension.
+ */
+final case class TableDimension(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+  requireName(ENames.TableDimensionEName)
+}
