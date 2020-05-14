@@ -899,9 +899,19 @@ final case class OtherNonXLinkElem(underlyingElem: BackingNodes.Elem) extends An
 
 object TaxonomyNode {
 
+  /**
+   * Returns `opt(underlyingNode, _ => None)`.
+   */
   def opt(underlyingNode: BackingNodes.Node): Option[TaxonomyNode] = {
+    opt(underlyingNode, _ => None)
+  }
+
+  /**
+   * Returns an optiona TaxonomyNode from the given underlying node. For element nodes, see method TaxonomyElem.of.
+   */
+  def opt(underlyingNode: BackingNodes.Node, customElemFactory: BackingNodes.Elem => Option[TaxonomyElem]): Option[TaxonomyNode] = {
     underlyingNode match {
-      case e: BackingNodes.Elem                   => Some(TaxonomyElem(e))
+      case e: BackingNodes.Elem                   => Some(TaxonomyElem.of(e, customElemFactory))
       case t: BackingNodes.Text                   => Some(TaxonomyTextNode(t.text))
       case c: BackingNodes.Comment                => Some(TaxonomyCommentNode(c.text))
       case pi: BackingNodes.ProcessingInstruction => Some(TaxonomyProcessingInstructionNode(pi.target, pi.data))
@@ -911,13 +921,34 @@ object TaxonomyNode {
 
 object TaxonomyElem {
 
+  /**
+   * Returns `of(underlyingElem, _ => None)`. That means that the returned TaxonomyElem is not known to be formula or table
+   * content, from the specific TaxonomyElem sub-type.
+   */
   def apply(underlyingElem: BackingNodes.Elem): TaxonomyElem = {
+    of(underlyingElem, _ => None)
+  }
+
+  /**
+   * Creates a TaxonomyElem from the given underlying element. For well-known element name namespaces like the "xs",
+   * "clink", "link", "cgen", "gen" and "ckey" namespaces, a fixed choice is made to turn the element into a TaxonomyElem
+   * (wrapping it). Otherwise, the provided custom element factory is used to try to create a TaxonomyElem. Only when
+   * this custom element factory ignores the element, a fallback TaxonomyElem like a NonStandardArc or NonStandardResource
+   * is created.
+   *
+   * Typically a custom element factory is used for formula/table taxonomy content.
+   *
+   * This method should be fast, not resorting to any recursive scheme to create any TaxonomyElem. That also means that
+   * the provided custom element factory should be fast.
+   */
+  def of(underlyingElem: BackingNodes.Elem, customElemFactory: BackingNodes.Elem => Option[TaxonomyElem]): TaxonomyElem = {
     val name = underlyingElem.name
 
     elemFactoryMap
       .get(name.namespaceUriOption.getOrElse(""))
       .map(_.forName(name))
       .map(f => f(underlyingElem))
+      .orElse(customElemFactory(underlyingElem))
       .getOrElse(fallbackElem(underlyingElem))
   }
 
