@@ -21,7 +21,7 @@ import java.net.URI
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.docbuilder.DocumentBuilder
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyDocument
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElems
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XLinkArc
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.DefaultRelationshipFactory
@@ -54,7 +54,7 @@ final class DefaultTaxonomyBuilder(
    */
   def build(entrypoint: Set[URI]): BasicTaxonomy = {
     val dtsDocUris = dtsUriCollector.findAllDtsUris(entrypoint, { uri =>
-      TaxonomyElem(documentBuilder.build(uri).documentElement)
+      TaxonomyElems.of(documentBuilder.build(uri).documentElement)
     })
 
     val documents: Seq[TaxonomyDocument] =

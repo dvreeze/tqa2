@@ -58,7 +58,7 @@ object TaxonomyDocument extends BackingDocumentFactory {
   def from(document: BackingDocumentApi): TaxonomyDocument = {
     val targetChildren: Seq[CanBeTaxonomyDocumentChild] = document.children
       .map {
-        case e: BackingNodes.Elem                   => TaxonomyElem(e)
+        case e: BackingNodes.Elem                   => TaxonomyElem.of(e, StandardizedNonStandardTaxonomyElem.DefaultElemFactory)
         case c: BackingNodes.Comment                => TaxonomyCommentNode(c.text)
         case pi: BackingNodes.ProcessingInstruction => TaxonomyProcessingInstructionNode(pi.target, pi.data)
       }

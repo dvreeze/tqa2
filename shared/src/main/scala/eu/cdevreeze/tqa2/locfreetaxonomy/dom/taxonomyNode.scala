@@ -74,12 +74,17 @@ sealed trait TaxonomyElem extends AbstractDialectBackingElem with AbstractSubtyp
 
   type ThisNode = TaxonomyNode
 
-  final def wrapElem(underlyingElem: BackingNodes.Elem): ThisElem = TaxonomyElem(underlyingElem)
+  /**
+   * Customizable factory function of TaxonomyElem objects. Must be fast. It is called by method wrapElem.
+   */
+  def taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem
+
+  final def wrapElem(underlyingElem: BackingNodes.Elem): ThisElem = taxonomyElemFactory(underlyingElem)
 
   // ClarkNodes.Elem
 
   final def children: ArraySeq[TaxonomyNode] = {
-    underlyingElem.children.flatMap(TaxonomyNode.opt).to(ArraySeq)
+    underlyingElem.children.flatMap(ch => TaxonomyNode.opt(ch, taxonomyElemFactory)).to(ArraySeq)
   }
 
   final def select(step: ElemStep[TaxonomyElem]): Seq[TaxonomyElem] = {
@@ -303,7 +308,10 @@ sealed trait NamedGlobalSchemaComponent extends ElemInXsNamespace with XmlSchema
 
 // Schema root element
 
-final case class XsSchema(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.XsSchema with RootElement {
+final case class XsSchema(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInXsNamespace
+    with XmlSchemaDialect.XsSchema
+    with RootElement {
   requireName(ENames.XsSchemaEName)
 
   def isSchema: Boolean = true
@@ -341,7 +349,10 @@ final case class XsSchema(underlyingElem: BackingNodes.Elem) extends ElemInXsNam
 
 // Linkbase root element
 
-final case class Linkbase(underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace with CLinkDialect.Linkbase with RootElement {
+final case class Linkbase(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInCLinkNamespace
+    with CLinkDialect.Linkbase
+    with RootElement {
   requireName(ENames.CLinkLinkbaseEName)
 
   def isSchema: Boolean = false
@@ -374,7 +385,7 @@ sealed trait ElementDeclaration extends ElementDeclarationOrReference with XmlSc
  * Global element declaration. Often a concept declaration, although in general the DOM element has not enough context
  * to determine that in isolation.
  */
-final case class GlobalElementDeclaration(underlyingElem: BackingNodes.Elem)
+final case class GlobalElementDeclaration(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends NamedGlobalSchemaComponent
     with ElementDeclaration
     with XmlSchemaDialect.GlobalElementDeclaration {
@@ -417,7 +428,7 @@ final case class GlobalElementDeclaration(underlyingElem: BackingNodes.Elem)
   }
 }
 
-final case class LocalElementDeclaration(underlyingElem: BackingNodes.Elem)
+final case class LocalElementDeclaration(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInXsNamespace
     with ElementDeclaration
     with XmlSchemaDialect.LocalElementDeclaration {
@@ -425,7 +436,7 @@ final case class LocalElementDeclaration(underlyingElem: BackingNodes.Elem)
   requireName(ENames.XsElementEName)
 }
 
-final case class ElementReference(underlyingElem: BackingNodes.Elem)
+final case class ElementReference(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInXsNamespace
     with ElementDeclarationOrReference
     with XmlSchemaDialect.ElementReference {
@@ -437,7 +448,7 @@ sealed trait AttributeDeclarationOrReference extends ElemInXsNamespace with XmlS
 
 sealed trait AttributeDeclaration extends AttributeDeclarationOrReference with XmlSchemaDialect.AttributeDeclaration
 
-final case class GlobalAttributeDeclaration(underlyingElem: BackingNodes.Elem)
+final case class GlobalAttributeDeclaration(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends NamedGlobalSchemaComponent
     with AttributeDeclaration
     with XmlSchemaDialect.GlobalAttributeDeclaration {
@@ -445,7 +456,7 @@ final case class GlobalAttributeDeclaration(underlyingElem: BackingNodes.Elem)
   requireName(ENames.XsAttributeEName)
 }
 
-final case class LocalAttributeDeclaration(underlyingElem: BackingNodes.Elem)
+final case class LocalAttributeDeclaration(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInXsNamespace
     with AttributeDeclaration
     with XmlSchemaDialect.LocalAttributeDeclaration {
@@ -453,7 +464,7 @@ final case class LocalAttributeDeclaration(underlyingElem: BackingNodes.Elem)
   requireName(ENames.XsAttributeEName)
 }
 
-final case class AttributeReference(underlyingElem: BackingNodes.Elem)
+final case class AttributeReference(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInXsNamespace
     with AttributeDeclarationOrReference
     with XmlSchemaDialect.AttributeReference {
@@ -500,9 +511,9 @@ sealed trait ComplexTypeDefinition extends TypeDefinition with XmlSchemaDialect.
     val isMixed: Boolean = attrOption(ENames.MixedEName).exists(v => XsBooleans.parseBoolean(v))
 
     contentElemOption match {
-      case Some(ComplexContent(_)) =>
+      case Some(ComplexContent(_, _)) =>
         if (isMixed) ContentType.Mixed else ContentType.ElementOnly
-      case Some(SimpleContent(_)) =>
+      case Some(SimpleContent(_, _)) =>
         ContentType.Simple
       case _ =>
         if (findFirstChildElemOfType(classTag[ModelGroup]).isDefined) {
@@ -516,7 +527,7 @@ sealed trait ComplexTypeDefinition extends TypeDefinition with XmlSchemaDialect.
   }
 }
 
-final case class NamedSimpleTypeDefinition(underlyingElem: BackingNodes.Elem)
+final case class NamedSimpleTypeDefinition(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInXsNamespace
     with NamedTypeDefinition
     with SimpleTypeDefinition
@@ -525,7 +536,7 @@ final case class NamedSimpleTypeDefinition(underlyingElem: BackingNodes.Elem)
   requireName(ENames.XsSimpleTypeEName)
 }
 
-final case class AnonymousSimpleTypeDefinition(underlyingElem: BackingNodes.Elem)
+final case class AnonymousSimpleTypeDefinition(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInXsNamespace
     with AnonymousTypeDefinition
     with SimpleTypeDefinition
@@ -534,7 +545,7 @@ final case class AnonymousSimpleTypeDefinition(underlyingElem: BackingNodes.Elem
   requireName(ENames.XsSimpleTypeEName)
 }
 
-final case class NamedComplexTypeDefinition(underlyingElem: BackingNodes.Elem)
+final case class NamedComplexTypeDefinition(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInXsNamespace
     with NamedTypeDefinition
     with ComplexTypeDefinition
@@ -543,7 +554,7 @@ final case class NamedComplexTypeDefinition(underlyingElem: BackingNodes.Elem)
   requireName(ENames.XsComplexTypeEName)
 }
 
-final case class AnonymousComplexTypeDefinition(underlyingElem: BackingNodes.Elem)
+final case class AnonymousComplexTypeDefinition(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInXsNamespace
     with AnonymousTypeDefinition
     with ComplexTypeDefinition
@@ -552,28 +563,28 @@ final case class AnonymousComplexTypeDefinition(underlyingElem: BackingNodes.Ele
   requireName(ENames.XsComplexTypeEName)
 }
 
-final case class AttributeGroupDefinition(underlyingElem: BackingNodes.Elem)
+final case class AttributeGroupDefinition(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInXsNamespace
     with XmlSchemaDialect.AttributeGroupDefinition {
 
   requireName(ENames.XsAttributeGroupEName)
 }
 
-final case class AttributeGroupReference(underlyingElem: BackingNodes.Elem)
+final case class AttributeGroupReference(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInXsNamespace
     with XmlSchemaDialect.AttributeGroupReference {
 
   requireName(ENames.XsAttributeGroupEName)
 }
 
-final case class ModelGroupDefinition(underlyingElem: BackingNodes.Elem)
+final case class ModelGroupDefinition(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInXsNamespace
     with XmlSchemaDialect.ModelGroupDefinition {
 
   requireName(ENames.XsGroupEName)
 }
 
-final case class ModelGroupReference(underlyingElem: BackingNodes.Elem)
+final case class ModelGroupReference(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInXsNamespace
     with XmlSchemaDialect.ModelGroupReference {
 
@@ -582,7 +593,7 @@ final case class ModelGroupReference(underlyingElem: BackingNodes.Elem)
 
 sealed trait ModelGroup extends ElemInXsNamespace with XmlSchemaDialect.ModelGroup
 
-final case class SequenceModelGroup(underlyingElem: BackingNodes.Elem)
+final case class SequenceModelGroup(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInXsNamespace
     with ModelGroup
     with XmlSchemaDialect.SequenceModelGroup {
@@ -590,7 +601,7 @@ final case class SequenceModelGroup(underlyingElem: BackingNodes.Elem)
   requireName(ENames.XsSequenceEName)
 }
 
-final case class ChoiceModelGroup(underlyingElem: BackingNodes.Elem)
+final case class ChoiceModelGroup(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInXsNamespace
     with ModelGroup
     with XmlSchemaDialect.ChoiceModelGroup {
@@ -598,7 +609,7 @@ final case class ChoiceModelGroup(underlyingElem: BackingNodes.Elem)
   requireName(ENames.XsChoiceEName)
 }
 
-final case class AllModelGroup(underlyingElem: BackingNodes.Elem)
+final case class AllModelGroup(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInXsNamespace
     with ModelGroup
     with XmlSchemaDialect.AllModelGroup {
@@ -606,31 +617,45 @@ final case class AllModelGroup(underlyingElem: BackingNodes.Elem)
   requireName(ENames.XsAllEName)
 }
 
-final case class Restriction(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.Restriction {
+final case class Restriction(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInXsNamespace
+    with XmlSchemaDialect.Restriction {
   requireName(ENames.XsRestrictionEName)
 }
 
-final case class Extension(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.Extension {
+final case class Extension(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInXsNamespace
+    with XmlSchemaDialect.Extension {
   requireName(ENames.XsExtensionEName)
 }
 
-final case class SimpleContent(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.SimpleContent {
+final case class SimpleContent(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInXsNamespace
+    with XmlSchemaDialect.SimpleContent {
   requireName(ENames.XsSimpleContentEName)
 }
 
-final case class ComplexContent(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.ComplexContent {
+final case class ComplexContent(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInXsNamespace
+    with XmlSchemaDialect.ComplexContent {
   requireName(ENames.XsComplexContentEName)
 }
 
-final case class Annotation(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.Annotation {
+final case class Annotation(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInXsNamespace
+    with XmlSchemaDialect.Annotation {
   requireName(ENames.XsAnnotationEName)
 }
 
-final case class Appinfo(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.Appinfo {
+final case class Appinfo(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInXsNamespace
+    with XmlSchemaDialect.Appinfo {
   requireName(ENames.XsAppinfoEName)
 }
 
-final case class Import(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace with XmlSchemaDialect.Import {
+final case class Import(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInXsNamespace
+    with XmlSchemaDialect.Import {
   requireName(ENames.XsImportEName)
 }
 
@@ -638,13 +663,14 @@ final case class Import(underlyingElem: BackingNodes.Elem) extends ElemInXsNames
  * Other element in the XML Schema namespace. Either valid other schema content, or invalid content, such as an xs:element
  * that has both a name and a ref attribute.
  */
-final case class OtherElemInXsNamespace(underlyingElem: BackingNodes.Elem) extends ElemInXsNamespace
+final case class OtherElemInXsNamespace(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInXsNamespace
 
 // Linkbase content.
 
 sealed trait StandardLink extends ElemInCLinkNamespace with ExtendedLink with CLinkDialect.StandardLink
 
-final case class DefinitionLink(underlyingElem: BackingNodes.Elem)
+final case class DefinitionLink(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInCLinkNamespace
     with StandardLink
     with CLinkDialect.DefinitionLink {
@@ -652,7 +678,7 @@ final case class DefinitionLink(underlyingElem: BackingNodes.Elem)
   requireName(ENames.CLinkDefinitionLinkEName)
 }
 
-final case class PresentationLink(underlyingElem: BackingNodes.Elem)
+final case class PresentationLink(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInCLinkNamespace
     with StandardLink
     with CLinkDialect.PresentationLink {
@@ -660,7 +686,7 @@ final case class PresentationLink(underlyingElem: BackingNodes.Elem)
   requireName(ENames.CLinkPresentationLinkEName)
 }
 
-final case class CalculationLink(underlyingElem: BackingNodes.Elem)
+final case class CalculationLink(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInCLinkNamespace
     with StandardLink
     with CLinkDialect.CalculationLink {
@@ -668,11 +694,14 @@ final case class CalculationLink(underlyingElem: BackingNodes.Elem)
   requireName(ENames.CLinkCalculationLinkEName)
 }
 
-final case class LabelLink(underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace with StandardLink with CLinkDialect.LabelLink {
+final case class LabelLink(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInCLinkNamespace
+    with StandardLink
+    with CLinkDialect.LabelLink {
   requireName(ENames.CLinkLabelLinkEName)
 }
 
-final case class ReferenceLink(underlyingElem: BackingNodes.Elem)
+final case class ReferenceLink(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInCLinkNamespace
     with StandardLink
     with CLinkDialect.ReferenceLink {
@@ -686,7 +715,7 @@ sealed trait InterConceptArc extends StandardArc with CLinkDialect.InterConceptA
 
 sealed trait ConceptResourceArc extends StandardArc with CLinkDialect.ConceptResourceArc
 
-final case class DefinitionArc(underlyingElem: BackingNodes.Elem)
+final case class DefinitionArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInCLinkNamespace
     with InterConceptArc
     with CLinkDialect.DefinitionArc {
@@ -694,7 +723,7 @@ final case class DefinitionArc(underlyingElem: BackingNodes.Elem)
   requireName(ENames.CLinkDefinitionArcEName)
 }
 
-final case class PresentationArc(underlyingElem: BackingNodes.Elem)
+final case class PresentationArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInCLinkNamespace
     with InterConceptArc
     with CLinkDialect.PresentationArc {
@@ -702,7 +731,7 @@ final case class PresentationArc(underlyingElem: BackingNodes.Elem)
   requireName(ENames.CLinkPresentationArcEName)
 }
 
-final case class CalculationArc(underlyingElem: BackingNodes.Elem)
+final case class CalculationArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInCLinkNamespace
     with InterConceptArc
     with CLinkDialect.CalculationArc {
@@ -714,7 +743,7 @@ final case class CalculationArc(underlyingElem: BackingNodes.Elem)
   }
 }
 
-final case class LabelArc(underlyingElem: BackingNodes.Elem)
+final case class LabelArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInCLinkNamespace
     with ConceptResourceArc
     with CLinkDialect.LabelArc {
@@ -722,7 +751,7 @@ final case class LabelArc(underlyingElem: BackingNodes.Elem)
   requireName(ENames.CLinkLabelArcEName)
 }
 
-final case class ReferenceArc(underlyingElem: BackingNodes.Elem)
+final case class ReferenceArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInCLinkNamespace
     with ConceptResourceArc
     with CLinkDialect.ReferenceArc {
@@ -737,7 +766,7 @@ sealed trait NonKeyResource extends XLinkResource
 
 sealed trait StandardResource extends ElemInCLinkNamespace with NonKeyResource with CLinkDialect.StandardResource
 
-final case class ConceptLabelResource(underlyingElem: BackingNodes.Elem)
+final case class ConceptLabelResource(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInCLinkNamespace
     with StandardResource
     with CLinkDialect.ConceptLabelResource {
@@ -745,7 +774,7 @@ final case class ConceptLabelResource(underlyingElem: BackingNodes.Elem)
   requireName(ENames.CLinkLabelEName)
 }
 
-final case class ConceptReferenceResource(underlyingElem: BackingNodes.Elem)
+final case class ConceptReferenceResource(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ElemInCLinkNamespace
     with StandardResource
     with CLinkDialect.ConceptReferenceResource {
@@ -753,19 +782,25 @@ final case class ConceptReferenceResource(underlyingElem: BackingNodes.Elem)
   requireName(ENames.CLinkReferenceEName)
 }
 
-final case class RoleRef(underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace with CLinkDialect.RoleRef {
+final case class RoleRef(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInCLinkNamespace
+    with CLinkDialect.RoleRef {
 
   requireName(ENames.CLinkRoleRefEName)
 }
 
-final case class ArcroleRef(underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace with CLinkDialect.ArcroleRef {
+final case class ArcroleRef(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInCLinkNamespace
+    with CLinkDialect.ArcroleRef {
 
   requireName(ENames.CLinkArcroleRefEName)
 }
 
 // In entrypoint schemas
 
-final case class LinkbaseRef(underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace with CLinkDialect.LinkbaseRef {
+final case class LinkbaseRef(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInCLinkNamespace
+    with CLinkDialect.LinkbaseRef {
 
   requireName(ENames.CLinkLinkbaseRefEName)
 }
@@ -773,9 +808,12 @@ final case class LinkbaseRef(underlyingElem: BackingNodes.Elem) extends ElemInCL
 /**
  * Other element in the CLink namespace. Either valid other CLink content, or invalid content.
  */
-final case class OtherElemInCLinkNamespace(underlyingElem: BackingNodes.Elem) extends ElemInCLinkNamespace
+final case class OtherElemInCLinkNamespace(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInCLinkNamespace
 
-final case class RoleType(underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace with LinkDialect.RoleType {
+final case class RoleType(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInLinkNamespace
+    with LinkDialect.RoleType {
   requireName(ENames.LinkRoleTypeEName)
 
   def definitionOption: Option[Definition] = {
@@ -787,7 +825,9 @@ final case class RoleType(underlyingElem: BackingNodes.Elem) extends ElemInLinkN
   }
 }
 
-final case class ArcroleType(underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace with LinkDialect.ArcroleType {
+final case class ArcroleType(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInLinkNamespace
+    with LinkDialect.ArcroleType {
   requireName(ENames.LinkArcroleTypeEName)
 
   /**
@@ -806,42 +846,59 @@ final case class ArcroleType(underlyingElem: BackingNodes.Elem) extends ElemInLi
   }
 }
 
-final case class Definition(underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace with LinkDialect.Definition {
+final case class Definition(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInLinkNamespace
+    with LinkDialect.Definition {
   requireName(ENames.LinkDefinitionEName)
 }
 
-final case class UsedOn(underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace with LinkDialect.UsedOn {
+final case class UsedOn(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInLinkNamespace
+    with LinkDialect.UsedOn {
   requireName(ENames.LinkUsedOnEName)
 }
 
 /**
  * Other element in the Link namespace. Either valid other Link content, or invalid content.
  */
-final case class OtherElemInLinkNamespace(underlyingElem: BackingNodes.Elem) extends ElemInLinkNamespace
+final case class OtherElemInLinkNamespace(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ElemInLinkNamespace
 
 sealed trait TaxonomyElemKey extends TaxonomyElem with XLinkResource with TaxonomyElemKeyDialect.TaxonomyElemKey
 
-final case class ConceptKey(underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey with TaxonomyElemKeyDialect.ConceptKey {
+final case class ConceptKey(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TaxonomyElemKey
+    with TaxonomyElemKeyDialect.ConceptKey {
   requireName(ENames.CKeyConceptKeyEName)
 }
 
-final case class ElementKey(underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey with TaxonomyElemKeyDialect.ElementKey {
+final case class ElementKey(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TaxonomyElemKey
+    with TaxonomyElemKeyDialect.ElementKey {
   requireName(ENames.CKeyElementKeyEName)
 }
 
-final case class TypeKey(underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey with TaxonomyElemKeyDialect.TypeKey {
+final case class TypeKey(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TaxonomyElemKey
+    with TaxonomyElemKeyDialect.TypeKey {
   requireName(ENames.CKeyTypeKeyEName)
 }
 
-final case class RoleKey(underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey with TaxonomyElemKeyDialect.RoleKey {
+final case class RoleKey(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TaxonomyElemKey
+    with TaxonomyElemKeyDialect.RoleKey {
   requireName(ENames.CKeyRoleKeyEName)
 }
 
-final case class ArcroleKey(underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey with TaxonomyElemKeyDialect.ArcroleKey {
+final case class ArcroleKey(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TaxonomyElemKey
+    with TaxonomyElemKeyDialect.ArcroleKey {
   requireName(ENames.CKeyArcroleKeyEName)
 }
 
-final case class AnyElementKey(underlyingElem: BackingNodes.Elem) extends TaxonomyElemKey with TaxonomyElemKeyDialect.AnyElementKey {
+final case class AnyElementKey(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TaxonomyElemKey
+    with TaxonomyElemKeyDialect.AnyElementKey {
   requireName(ENames.CKeyAnyElemKeyEName)
 }
 
@@ -858,7 +915,8 @@ trait AnyNonStandardLink extends AnyNonStandardElem with ExtendedLink
 /**
  * Non-standard extended link
  */
-final case class NonStandardLink(underlyingElem: BackingNodes.Elem) extends AnyNonStandardLink
+final case class NonStandardLink(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends AnyNonStandardLink
 
 /**
  * Non-standard arc, as extensible non-sealed trait. This enables us to "replace" a NonStandardArc
@@ -869,7 +927,8 @@ trait AnyNonStandardArc extends AnyNonStandardElem with XLinkArc
 /**
  * Non-standard arc
  */
-final case class NonStandardArc(underlyingElem: BackingNodes.Elem) extends AnyNonStandardArc
+final case class NonStandardArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends AnyNonStandardArc
 
 /**
  * Non-standard resource, which is also not a taxonomy element key, as extensible non-sealed trait.
@@ -881,7 +940,8 @@ trait AnyNonStandardResource extends AnyNonStandardElem with NonKeyResource
 /**
  * Non-standard resource, which is also not a taxonomy element key
  */
-final case class NonStandardResource(underlyingElem: BackingNodes.Elem) extends AnyNonStandardResource
+final case class NonStandardResource(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends AnyNonStandardResource
 
 /**
  * Any other non-XLink element, not in the "xs", "clink" or "link" namespaces, as extensible non-sealed trait.
@@ -893,25 +953,19 @@ trait AnyOtherNonXLinkElem extends AnyNonStandardElem
 /**
  * Any other non-XLink element, not in the "xs", "clink" or "link" namespaces.
  */
-final case class OtherNonXLinkElem(underlyingElem: BackingNodes.Elem) extends AnyOtherNonXLinkElem
+final case class OtherNonXLinkElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends AnyOtherNonXLinkElem
 
 // Companion objects
 
 object TaxonomyNode {
 
   /**
-   * Returns `opt(underlyingNode, _ => None)`.
+   * Returns an optiona TaxonomyNode from the given underlying node and TaxonomyElem factory.
    */
-  def opt(underlyingNode: BackingNodes.Node): Option[TaxonomyNode] = {
-    opt(underlyingNode, _ => None)
-  }
-
-  /**
-   * Returns an optiona TaxonomyNode from the given underlying node. For element nodes, see method TaxonomyElem.of.
-   */
-  def opt(underlyingNode: BackingNodes.Node, customElemFactory: BackingNodes.Elem => Option[TaxonomyElem]): Option[TaxonomyNode] = {
+  def opt(underlyingNode: BackingNodes.Node, elemFactory: BackingNodes.Elem => TaxonomyElem): Option[TaxonomyNode] = {
     underlyingNode match {
-      case e: BackingNodes.Elem                   => Some(TaxonomyElem.of(e, customElemFactory))
+      case e: BackingNodes.Elem                   => Some(elemFactory(e))
       case t: BackingNodes.Text                   => Some(TaxonomyTextNode(t.text))
       case c: BackingNodes.Comment                => Some(TaxonomyCommentNode(c.text))
       case pi: BackingNodes.ProcessingInstruction => Some(TaxonomyProcessingInstructionNode(pi.target, pi.data))
@@ -922,209 +976,299 @@ object TaxonomyNode {
 object TaxonomyElem {
 
   /**
-   * Returns `of(underlyingElem, _ => None)`. That means that the returned TaxonomyElem is not known to be formula or table
+   * Returns `of(underlyingElem, DefaultElemFactory)`. That means that the returned TaxonomyElem is not known to be formula or table
    * content, from the specific TaxonomyElem sub-type.
    */
   def apply(underlyingElem: BackingNodes.Elem): TaxonomyElem = {
-    of(underlyingElem, _ => None)
+    of(underlyingElem, DefaultElemFactory)
   }
 
   /**
-   * Creates a TaxonomyElem from the given underlying element. For well-known element name namespaces like the "xs",
-   * "clink", "link", "cgen", "gen" and "ckey" namespaces, a fixed choice is made to turn the element into a TaxonomyElem
-   * (wrapping it). Otherwise, the provided custom element factory is used to try to create a TaxonomyElem. Only when
-   * this custom element factory ignores the element, a fallback TaxonomyElem like a NonStandardArc or NonStandardResource
-   * is created.
-   *
-   * Typically a custom element factory is used for formula/table taxonomy content.
-   *
-   * This method should be fast, not resorting to any recursive scheme to create any TaxonomyElem. That also means that
-   * the provided custom element factory should be fast.
+   * Creates a TaxonomyElem from the given underlying element, using the given ElemFactory.
+   * That is, returns `elemFactory(underlyingElem)`.
    */
-  def of(underlyingElem: BackingNodes.Elem, customElemFactory: BackingNodes.Elem => Option[TaxonomyElem]): TaxonomyElem = {
-    val name = underlyingElem.name
-
-    elemFactoryMap
-      .get(name.namespaceUriOption.getOrElse(""))
-      .map(_.forName(name))
-      .map(f => f(underlyingElem))
-      .orElse(customElemFactory(underlyingElem))
-      .getOrElse(fallbackElem(underlyingElem))
+  def of(underlyingElem: BackingNodes.Elem, elemFactory: ElemFactory): TaxonomyElem = {
+    elemFactory(underlyingElem)
   }
 
-  private def optElementDeclarationOrReference(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
+  /**
+   * Factory turning a "backing element" into a TaxonomyElem that wraps it.
+   */
+  type ElemFactory = BackingNodes.Elem => TaxonomyElem
+
+  /**
+   * API for constructors of TaxonomyElem instances, taking a "backing element" and ElemFactory as input parameters.
+   */
+  type ElemConstructor = (BackingNodes.Elem, ElemFactory) => TaxonomyElem
+
+  /**
+   * API for optional constructors of TaxonomyElem instances, taking a "backing element" and ElemFactory as input parameters.
+   */
+  type OptionalElemConstructor = (BackingNodes.Elem, ElemFactory) => Option[TaxonomyElem]
+
+  /**
+   * Functions from element ENames to the corresponding ElemConstructors.
+   */
+  type ElemConstructorGetterByEName = EName => ElemConstructor
+
+  /**
+   * Functions from element ENames to the corresponding optional ElemConstructors.
+   */
+  type ElemConstructorFinderByEName = EName => Option[ElemConstructor]
+
+  /**
+   * The default ElemConstructorGetterByEName.
+   */
+  final class DefaultElemConstructorGetter(
+      val elemConstructorMap: Map[EName, ElemConstructor],
+      val fallbackElemConstructor: ElemConstructor)
+      extends ElemConstructorGetterByEName {
+
+    def apply(name: EName): ElemConstructor = {
+      elemConstructorMap.getOrElse(name, fallbackElemConstructor)
+    }
+  }
+
+  private def optElementDeclarationOrReference(
+      underlyingElem: BackingNodes.Elem,
+      taxonomyElemFactory: ElemFactory): Option[TaxonomyElem] = {
     val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
     val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
     val hasRef = underlyingElem.attrOption(ENames.RefEName).nonEmpty
 
     if (parentIsSchema && hasName && !hasRef) {
-      Some(GlobalElementDeclaration(underlyingElem))
+      Some(GlobalElementDeclaration(underlyingElem, taxonomyElemFactory))
     } else if (!parentIsSchema && hasName && !hasRef) {
-      Some(LocalElementDeclaration(underlyingElem))
+      Some(LocalElementDeclaration(underlyingElem, taxonomyElemFactory))
     } else if (!parentIsSchema && !hasName && hasRef) {
-      Some(ElementReference(underlyingElem))
+      Some(ElementReference(underlyingElem, taxonomyElemFactory))
     } else {
       None
     }
   }
 
-  private def optAttributeDeclarationOrReference(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
+  private def optAttributeDeclarationOrReference(
+      underlyingElem: BackingNodes.Elem,
+      taxonomyElemFactory: ElemFactory): Option[TaxonomyElem] = {
     val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
     val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
     val hasRef = underlyingElem.attrOption(ENames.RefEName).nonEmpty
 
     if (parentIsSchema && hasName && !hasRef) {
-      Some(GlobalAttributeDeclaration(underlyingElem))
+      Some(GlobalAttributeDeclaration(underlyingElem, taxonomyElemFactory))
     } else if (!parentIsSchema && hasName && !hasRef) {
-      Some(LocalAttributeDeclaration(underlyingElem))
+      Some(LocalAttributeDeclaration(underlyingElem, taxonomyElemFactory))
     } else if (!parentIsSchema && !hasName && hasRef) {
-      Some(AttributeReference(underlyingElem))
+      Some(AttributeReference(underlyingElem, taxonomyElemFactory))
     } else {
       None
     }
   }
 
-  private def optSimpleTypeDefinition(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
+  private def optSimpleTypeDefinition(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: ElemFactory): Option[TaxonomyElem] = {
     val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
     val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
 
     if (parentIsSchema && hasName) {
-      Some(NamedSimpleTypeDefinition(underlyingElem))
+      Some(NamedSimpleTypeDefinition(underlyingElem, taxonomyElemFactory))
     } else if (!parentIsSchema && !hasName) {
-      Some(AnonymousSimpleTypeDefinition(underlyingElem))
+      Some(AnonymousSimpleTypeDefinition(underlyingElem, taxonomyElemFactory))
     } else {
       None
     }
   }
 
-  private def optComplexTypeDefinition(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
+  private def optComplexTypeDefinition(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: ElemFactory): Option[TaxonomyElem] = {
     val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
     val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
 
     if (parentIsSchema && hasName) {
-      Some(NamedComplexTypeDefinition(underlyingElem))
+      Some(NamedComplexTypeDefinition(underlyingElem, taxonomyElemFactory))
     } else if (!parentIsSchema && !hasName) {
-      Some(AnonymousComplexTypeDefinition(underlyingElem))
+      Some(AnonymousComplexTypeDefinition(underlyingElem, taxonomyElemFactory))
     } else {
       None
     }
   }
 
-  private def optAttributeGroupDefinitionOrReference(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
+  private def optAttributeGroupDefinitionOrReference(
+      underlyingElem: BackingNodes.Elem,
+      taxonomyElemFactory: ElemFactory): Option[TaxonomyElem] = {
     val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
     val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
     val hasRef = underlyingElem.attrOption(ENames.RefEName).nonEmpty
 
     if (parentIsSchema && hasName && !hasRef) {
-      Some(AttributeGroupDefinition(underlyingElem))
+      Some(AttributeGroupDefinition(underlyingElem, taxonomyElemFactory))
     } else if (!parentIsSchema && !hasName && hasRef) {
-      Some(AttributeGroupReference(underlyingElem))
+      Some(AttributeGroupReference(underlyingElem, taxonomyElemFactory))
     } else {
       None
     }
   }
 
-  private def optModelGroupDefinitionOrReference(underlyingElem: BackingNodes.Elem): Option[TaxonomyElem] = {
+  private def optModelGroupDefinitionOrReference(
+      underlyingElem: BackingNodes.Elem,
+      taxonomyElemFactory: ElemFactory): Option[TaxonomyElem] = {
     val parentIsSchema = underlyingElem.findParentElem.exists(_.name == ENames.XsSchemaEName)
     val hasName = underlyingElem.attrOption(ENames.NameEName).nonEmpty
     val hasRef = underlyingElem.attrOption(ENames.RefEName).nonEmpty
 
     if (parentIsSchema && hasName && !hasRef) {
-      Some(ModelGroupDefinition(underlyingElem))
+      Some(ModelGroupDefinition(underlyingElem, taxonomyElemFactory))
     } else if (!parentIsSchema && !hasName && hasRef) {
-      Some(ModelGroupReference(underlyingElem))
+      Some(ModelGroupReference(underlyingElem, taxonomyElemFactory))
     } else {
       None
     }
   }
 
-  private def fallbackElem(underlyingElem: BackingNodes.Elem): TaxonomyElem = {
+  def fallbackElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: ElemFactory): TaxonomyElem = {
     // Not an OtherElemInXsNamespace, OtherElemInCLinkNamespace or OtherElemInLinkNamespace.
     underlyingElem.attrOption(ENames.XLinkTypeEName) match {
-      case Some("extended") => NonStandardLink(underlyingElem)
-      case Some("arc")      => NonStandardArc(underlyingElem)
-      case Some("resource") => NonStandardResource(underlyingElem)
-      case _                => OtherNonXLinkElem(underlyingElem)
+      case Some("extended") => NonStandardLink(underlyingElem, taxonomyElemFactory)
+      case Some("arc")      => NonStandardArc(underlyingElem, taxonomyElemFactory)
+      case Some("resource") => NonStandardResource(underlyingElem, taxonomyElemFactory)
+      case _                => OtherNonXLinkElem(underlyingElem, taxonomyElemFactory)
     }
   }
 
-  private val elemFactoryMap: Map[String, ElemFactoryWithFallback] =
+  private val namespaceToElemConstructorGetterMap: Map[String, ElemConstructorGetterByEName] = {
     Map(
-      Namespaces.XsNamespace -> new ElemFactoryWithFallback(
-        Map(
-          ENames.XsSchemaEName -> (e => XsSchema(e)),
-          ENames.XsElementEName -> (e => optElementDeclarationOrReference(e).getOrElse(OtherElemInXsNamespace(e))),
-          ENames.XsAttributeEName -> (e => optAttributeDeclarationOrReference(e).getOrElse(OtherElemInXsNamespace(e))),
-          ENames.XsSimpleTypeEName -> (e => optSimpleTypeDefinition(e).getOrElse(OtherElemInXsNamespace(e))),
-          ENames.XsComplexTypeEName -> (e => optComplexTypeDefinition(e).getOrElse(OtherElemInXsNamespace(e))),
-          ENames.XsAttributeGroupEName -> (e => optAttributeGroupDefinitionOrReference(e).getOrElse(OtherElemInXsNamespace(e))),
-          ENames.XsGroupEName -> (e => optModelGroupDefinitionOrReference(e).getOrElse(OtherElemInXsNamespace(e))),
-          ENames.XsSequenceEName -> (e => SequenceModelGroup(e)),
-          ENames.XsChoiceEName -> (e => ChoiceModelGroup(e)),
-          ENames.XsAllEName -> (e => AllModelGroup(e)),
-          ENames.XsRestrictionEName -> (e => Restriction(e)),
-          ENames.XsExtensionEName -> (e => Extension(e)),
-          ENames.XsSimpleContentEName -> (e => SimpleContent(e)),
-          ENames.XsComplexContentEName -> (e => ComplexContent(e)),
-          ENames.XsAnnotationEName -> (e => Annotation(e)),
-          ENames.XsAppinfoEName -> (e => Appinfo(e)),
-          ENames.XsImportEName -> (e => Import(e))
+      Namespaces.XsNamespace -> new DefaultElemConstructorGetter(
+        Map[EName, ElemConstructor](
+          ENames.XsSchemaEName -> XsSchema.apply,
+          ENames.XsElementEName -> { (e, ef) =>
+            optElementDeclarationOrReference(e, ef).getOrElse(OtherElemInXsNamespace(e, ef))
+          },
+          ENames.XsAttributeEName -> { (e, ef) =>
+            optAttributeDeclarationOrReference(e, ef).getOrElse(OtherElemInXsNamespace(e, ef))
+          },
+          ENames.XsSimpleTypeEName -> { (e, ef) =>
+            optSimpleTypeDefinition(e, ef).getOrElse(OtherElemInXsNamespace(e, ef))
+          },
+          ENames.XsComplexTypeEName -> { (e, ef) =>
+            optComplexTypeDefinition(e, ef).getOrElse(OtherElemInXsNamespace(e, ef))
+          },
+          ENames.XsAttributeGroupEName -> { (e, ef) =>
+            optAttributeGroupDefinitionOrReference(e, ef).getOrElse(OtherElemInXsNamespace(e, ef))
+          },
+          ENames.XsGroupEName -> { (e, ef) =>
+            optModelGroupDefinitionOrReference(e, ef).getOrElse(OtherElemInXsNamespace(e, ef))
+          },
+          ENames.XsSequenceEName -> SequenceModelGroup.apply,
+          ENames.XsChoiceEName -> ChoiceModelGroup.apply,
+          ENames.XsAllEName -> AllModelGroup.apply,
+          ENames.XsRestrictionEName -> Restriction.apply,
+          ENames.XsExtensionEName -> Extension.apply,
+          ENames.XsSimpleContentEName -> SimpleContent.apply,
+          ENames.XsComplexContentEName -> ComplexContent.apply,
+          ENames.XsAnnotationEName -> Annotation.apply,
+          ENames.XsAppinfoEName -> Appinfo.apply,
+          ENames.XsImportEName -> Import.apply
         ),
-        e => OtherElemInXsNamespace(e)
+        OtherElemInXsNamespace.apply
       ),
-      Namespaces.CLinkNamespace -> new ElemFactoryWithFallback(
-        Map(
-          ENames.CLinkLinkbaseEName -> (e => Linkbase(e)),
-          ENames.CLinkDefinitionLinkEName -> (e => DefinitionLink(e)),
-          ENames.CLinkPresentationLinkEName -> (e => PresentationLink(e)),
-          ENames.CLinkCalculationLinkEName -> (e => CalculationLink(e)),
-          ENames.CLinkLabelLinkEName -> (e => LabelLink(e)),
-          ENames.CLinkReferenceLinkEName -> (e => ReferenceLink(e)),
-          ENames.CLinkDefinitionArcEName -> (e => DefinitionArc(e)),
-          ENames.CLinkPresentationArcEName -> (e => PresentationArc(e)),
-          ENames.CLinkCalculationArcEName -> (e => CalculationArc(e)),
-          ENames.CLinkLabelArcEName -> (e => LabelArc(e)),
-          ENames.CLinkReferenceArcEName -> (e => ReferenceArc(e)),
-          ENames.CLinkLabelEName -> (e => ConceptLabelResource(e)),
-          ENames.CLinkReferenceEName -> (e => ConceptReferenceResource(e)),
-          ENames.CLinkRoleRefEName -> (e => RoleRef(e)),
-          ENames.CLinkArcroleRefEName -> (e => ArcroleRef(e)),
-          ENames.CLinkLinkbaseRefEName -> (e => LinkbaseRef(e))
+      Namespaces.CLinkNamespace -> new DefaultElemConstructorGetter(
+        Map[EName, ElemConstructor](
+          ENames.CLinkLinkbaseEName -> Linkbase.apply,
+          ENames.CLinkDefinitionLinkEName -> DefinitionLink.apply,
+          ENames.CLinkPresentationLinkEName -> PresentationLink.apply,
+          ENames.CLinkCalculationLinkEName -> CalculationLink.apply,
+          ENames.CLinkLabelLinkEName -> LabelLink.apply,
+          ENames.CLinkReferenceLinkEName -> ReferenceLink.apply,
+          ENames.CLinkDefinitionArcEName -> DefinitionArc.apply,
+          ENames.CLinkPresentationArcEName -> PresentationArc.apply,
+          ENames.CLinkCalculationArcEName -> CalculationArc.apply,
+          ENames.CLinkLabelArcEName -> LabelArc.apply,
+          ENames.CLinkReferenceArcEName -> ReferenceArc.apply,
+          ENames.CLinkLabelEName -> ConceptLabelResource.apply,
+          ENames.CLinkReferenceEName -> ConceptReferenceResource.apply,
+          ENames.CLinkRoleRefEName -> RoleRef.apply,
+          ENames.CLinkArcroleRefEName -> ArcroleRef.apply,
+          ENames.CLinkLinkbaseRefEName -> LinkbaseRef.apply,
         ),
-        e => OtherElemInCLinkNamespace(e)
+        OtherElemInCLinkNamespace.apply
       ),
-      Namespaces.LinkNamespace -> new ElemFactoryWithFallback(
-        Map(
-          ENames.LinkRoleTypeEName -> (e => RoleType(e)),
-          ENames.LinkArcroleTypeEName -> (e => ArcroleType(e)),
-          ENames.LinkDefinitionEName -> (e => Definition(e)),
-          ENames.LinkUsedOnEName -> (e => UsedOn(e))
+      Namespaces.LinkNamespace -> new DefaultElemConstructorGetter(
+        Map[EName, ElemConstructor](
+          ENames.LinkRoleTypeEName -> RoleType.apply,
+          ENames.LinkArcroleTypeEName -> ArcroleType.apply,
+          ENames.LinkDefinitionEName -> Definition.apply,
+          ENames.LinkUsedOnEName -> UsedOn.apply,
         ),
-        e => OtherElemInLinkNamespace(e)
+        OtherElemInLinkNamespace.apply
       ),
-      Namespaces.CKeyNamespace -> new ElemFactoryWithFallback(
-        Map(
-          ENames.CKeyConceptKeyEName -> (e => ConceptKey(e)),
-          ENames.CKeyElementKeyEName -> (e => ElementKey(e)),
-          ENames.CKeyTypeKeyEName -> (e => TypeKey(e)),
-          ENames.CKeyRoleKeyEName -> (e => RoleKey(e)),
-          ENames.CKeyArcroleKeyEName -> (e => ArcroleKey(e)),
-          ENames.CKeyAnyElemKeyEName -> (e => AnyElementKey(e))
+      Namespaces.CKeyNamespace -> new DefaultElemConstructorGetter(
+        Map[EName, ElemConstructor](
+          ENames.CKeyConceptKeyEName -> ConceptKey.apply,
+          ENames.CKeyElementKeyEName -> ElementKey.apply,
+          ENames.CKeyTypeKeyEName -> TypeKey.apply,
+          ENames.CKeyRoleKeyEName -> RoleKey.apply,
+          ENames.CKeyArcroleKeyEName -> ArcroleKey.apply,
+          ENames.CKeyAnyElemKeyEName -> AnyElementKey.apply,
         ),
         fallbackElem
       ),
-      Namespaces.CGenNamespace -> new ElemFactoryWithFallback(fallbackElem),
-      Namespaces.GenNamespace -> new ElemFactoryWithFallback(fallbackElem)
+      Namespaces.CGenNamespace -> new DefaultElemConstructorGetter(Map.empty, fallbackElem),
+      Namespaces.GenNamespace -> new DefaultElemConstructorGetter(Map.empty, fallbackElem),
     )
+  }
 
-  private[TaxonomyElem] final class ElemFactoryWithFallback(
-      val elemFactory: Map[EName, BackingNodes.Elem => TaxonomyElem],
-      val fallback: BackingNodes.Elem => TaxonomyElem) {
+  /**
+   * The default ElemFactory implementation. It returns TaxonomyElem instances whose types do not know about formula or
+   * table content.
+   */
+  object DefaultElemFactory extends ElemFactory {
 
-    def this(fallback: BackingNodes.Elem => TaxonomyElem) = this(Map.empty, fallback)
-
-    def forName(name: EName): BackingNodes.Elem => TaxonomyElem = {
-      elemFactory.getOrElse(name, fallback)
+    def apply(underlyingElem: BackingNodes.Elem): TaxonomyElem = {
+      of(underlyingElem, DefaultElemFactory)
     }
+
+    def of(underlyingElem: BackingNodes.Elem, elemFactory: ElemFactory): TaxonomyElem = {
+      val name = underlyingElem.name
+
+      namespaceToElemConstructorGetterMap
+        .get(name.namespaceUriOption.getOrElse(""))
+        .map(_.apply(name))
+        .map(f => f(underlyingElem, elemFactory))
+        .getOrElse(fallbackElem(underlyingElem, elemFactory))
+    }
+  }
+}
+
+object XsSchema {
+
+  /**
+   * Returns `of(underlyingElem, DefaultElemFactory)`.
+   */
+  def apply(underlyingElem: BackingNodes.Elem): XsSchema = {
+    of(underlyingElem, TaxonomyElem.DefaultElemFactory)
+  }
+
+  /**
+   * Creates an XsSchema from the given underlying element, using the given ElemFactory.
+   * That is, returns `XsSchema(underlyingElem, elemFactory)`.
+   */
+  def of(underlyingElem: BackingNodes.Elem, elemFactory: TaxonomyElem.ElemFactory): XsSchema = {
+    XsSchema(underlyingElem, elemFactory)
+  }
+}
+
+object Linkbase {
+
+  /**
+   * Returns `of(underlyingElem, DefaultElemFactory)`.
+   */
+  def apply(underlyingElem: BackingNodes.Elem): Linkbase = {
+    of(underlyingElem, TaxonomyElem.DefaultElemFactory)
+  }
+
+  /**
+   * Creates a Linkbase from the given underlying element, using the given ElemFactory.
+   * That is, returns `Linkbase(underlyingElem, elemFactory)`.
+   */
+  def of(underlyingElem: BackingNodes.Elem, elemFactory: TaxonomyElem.ElemFactory): Linkbase = {
+    Linkbase(underlyingElem, elemFactory)
   }
 }

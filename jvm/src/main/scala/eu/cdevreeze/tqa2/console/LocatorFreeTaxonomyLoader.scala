@@ -88,6 +88,15 @@ object LocatorFreeTaxonomyLoader {
 
     println(s"Number of dimensional concepts that are not items in the taxo: ${dimensionalConcepts.diff(items).size}")
     println(s"Number of items in the taxo that are not dimensional concepts: ${items.diff(dimensionalConcepts).size}")
+
+    val domTypeCounts: Map[Class[_], Int] =
+      taxo.rootElems.flatMap(_.findAllDescendantElemsOrSelf).groupBy(_.getClass).view.mapValues(_.size).toMap
+
+    println()
+    domTypeCounts.toSeq.sortBy(_._2).reverse.take(50).foreach {
+      case (cls, cnt) =>
+        println(s"Element class ${cls.getName}, count $cnt")
+    }
   }
 
   // scalastyle:off

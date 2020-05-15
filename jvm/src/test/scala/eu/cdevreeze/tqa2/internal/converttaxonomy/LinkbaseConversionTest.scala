@@ -24,10 +24,7 @@ import eu.cdevreeze.tqa2.common.namespaceutils.XbrlDocumentENameExtractor
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
 import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.ConceptKey
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Linkbase
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.RoleKey
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom._
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.core.PrefixedScope
@@ -655,6 +652,6 @@ class LinkbaseConversionTest extends AnyFunSuite {
   private def getLocatorFreeTaxonomyElement(relativeFilePath: URI): TaxonomyElem = {
     val doc: saxon.Document = TestResourceUtil.buildSaxonDocumentFromClasspathResource(relativeFilePath, processor)
 
-    TaxonomyElem(doc.documentElement)
+    TaxonomyElems.of(doc.documentElement)
   }
 }

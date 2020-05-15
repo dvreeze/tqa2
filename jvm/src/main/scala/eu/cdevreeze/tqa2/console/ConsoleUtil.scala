@@ -26,7 +26,7 @@ import eu.cdevreeze.tqa2.docbuilder.jvm.SaxUriResolvers
 import eu.cdevreeze.tqa2.docbuilder.jvm.SimpleCatalogs
 import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyDocument
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElems
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyBase
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder.DefaultDtsUriCollector
@@ -69,7 +69,8 @@ private[console] object ConsoleUtil {
 
     val docBuilder: SaxonDocumentBuilder = getDocumentBuilder(taxoRootDir, processor)
 
-    val dtsDocUris: Set[URI] = dtsUriCollector.findAllDtsUris(entrypointUris, uri => TaxonomyElem(docBuilder.build(uri).documentElement))
+    val dtsDocUris: Set[URI] =
+      dtsUriCollector.findAllDtsUris(entrypointUris, uri => TaxonomyElems.of(docBuilder.build(uri).documentElement))
 
     println(s"Parsing DTS documents ...") // scalastyle:off
 

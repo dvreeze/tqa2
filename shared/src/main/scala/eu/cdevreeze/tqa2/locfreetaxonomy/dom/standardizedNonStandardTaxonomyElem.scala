@@ -17,6 +17,7 @@
 package eu.cdevreeze.tqa2.locfreetaxonomy.dom
 
 import eu.cdevreeze.tqa2.ENames
+import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.tqa2.aspect.Aspect
 import eu.cdevreeze.tqa2.aspect.AspectModel
 import eu.cdevreeze.tqa2.common.datatypes.XsBooleans
@@ -25,6 +26,7 @@ import eu.cdevreeze.tqa2.common.xpath.TypedValue
 import eu.cdevreeze.tqa2.common.xpath.TypedValueExpr
 import eu.cdevreeze.tqa2.common.xpath.TypedValueProvider
 import eu.cdevreeze.tqa2.locfreetaxonomy.common._
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem.ElemConstructorGetterByEName
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.queryapi.BackingNodes
 
@@ -106,7 +108,7 @@ sealed trait TableNonXLinkElem extends StandardizedOtherNonXLinkElem
 /**
  * A variable:variableArc
  */
-final case class VariableArc(underlyingElem: BackingNodes.Elem) extends FormulaArc {
+final case class VariableArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem) extends FormulaArc {
   requireName(ENames.VariableVariableArcEName)
 
   /**
@@ -122,7 +124,8 @@ final case class VariableArc(underlyingElem: BackingNodes.Elem) extends FormulaA
 /**
  * A variable:variableFilterArc
  */
-final case class VariableFilterArc(underlyingElem: BackingNodes.Elem) extends FormulaArc {
+final case class VariableFilterArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends FormulaArc {
   requireName(ENames.VariableVariableFilterArcEName)
 
   /**
@@ -145,7 +148,8 @@ final case class VariableFilterArc(underlyingElem: BackingNodes.Elem) extends Fo
 /**
  * A variable:variableSetFilterArc
  */
-final case class VariableSetFilterArc(underlyingElem: BackingNodes.Elem) extends FormulaArc {
+final case class VariableSetFilterArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends FormulaArc {
   requireName(ENames.VariableVariableSetFilterArcEName)
 
   /**
@@ -160,7 +164,8 @@ final case class VariableSetFilterArc(underlyingElem: BackingNodes.Elem) extends
 /**
  * Another FormulaArc, with unknown arc name but with a known formula-related arcrole.
  */
-final case class OtherFormulaArc(underlyingElem: BackingNodes.Elem) extends FormulaArc
+final case class OtherFormulaArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends FormulaArc
 
 // Formula resources
 
@@ -219,7 +224,8 @@ sealed trait Assertion extends FormulaResource
 /**
  * A validation:assertionSet.
  */
-final case class AssertionSet(underlyingElem: BackingNodes.Elem) extends FormulaResource {
+final case class AssertionSet(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends FormulaResource {
   requireName(ENames.ValidationAssertionSetEName)
 }
 
@@ -231,7 +237,7 @@ sealed trait VariableSetAssertion extends VariableSet with Assertion
 /**
  * A va:valueAssertion.
  */
-final case class ValueAssertion(underlyingElem: BackingNodes.Elem)
+final case class ValueAssertion(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends VariableSetAssertion
     with NonStandardTaxonomyElemSupport.HasTestExpr {
   requireName(ENames.VaValueAssertionEName)
@@ -240,7 +246,7 @@ final case class ValueAssertion(underlyingElem: BackingNodes.Elem)
 /**
  * A formula:formula.
  */
-final case class Formula(underlyingElem: BackingNodes.Elem)
+final case class Formula(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends VariableSet
     with NonStandardTaxonomyElemSupport.HasOptionalSource
     with NonStandardTaxonomyElemSupport.HasValueExpr {
@@ -262,7 +268,7 @@ final case class Formula(underlyingElem: BackingNodes.Elem)
 /**
  * An ea:existenceAssertion.
  */
-final case class ExistenceAssertion(underlyingElem: BackingNodes.Elem)
+final case class ExistenceAssertion(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends VariableSetAssertion
     with NonStandardTaxonomyElemSupport.HasOptionalTestExpr {
   requireName(ENames.EaExistenceAssertionEName)
@@ -271,7 +277,8 @@ final case class ExistenceAssertion(underlyingElem: BackingNodes.Elem)
 /**
  * A ca:consistencyAssertion.
  */
-final case class ConsistencyAssertion(underlyingElem: BackingNodes.Elem) extends Assertion {
+final case class ConsistencyAssertion(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends Assertion {
   requireName(ENames.CaConsistencyAssertionEName)
 
   /**
@@ -294,7 +301,9 @@ final case class ConsistencyAssertion(underlyingElem: BackingNodes.Elem) extends
 /**
  * A variable:precondition.
  */
-final case class Precondition(underlyingElem: BackingNodes.Elem) extends FormulaResource with NonStandardTaxonomyElemSupport.HasTestExpr {
+final case class Precondition(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends FormulaResource
+    with NonStandardTaxonomyElemSupport.HasTestExpr {
   requireName(ENames.VariablePreconditionEName)
 }
 
@@ -339,14 +348,15 @@ sealed trait Parameter extends VariableOrParameter {
 /**
  * A variable:parameter, that is not of a sub-type.
  */
-final case class RegularParameter(underlyingElem: BackingNodes.Elem) extends Parameter {
+final case class RegularParameter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends Parameter {
   requireName(ENames.VariableParameterEName)
 }
 
 /**
  * A variable:factVariable.
  */
-final case class FactVariable(underlyingElem: BackingNodes.Elem) extends Variable {
+final case class FactVariable(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem) extends Variable {
   requireName(ENames.VariableFactVariableEName)
 
   /**
@@ -377,7 +387,8 @@ final case class FactVariable(underlyingElem: BackingNodes.Elem) extends Variabl
 /**
  * A variable:generalVariable.
  */
-final case class GeneralVariable(underlyingElem: BackingNodes.Elem) extends Variable {
+final case class GeneralVariable(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends Variable {
   requireName(ENames.VariableGeneralVariableEName)
 
   /**
@@ -392,14 +403,15 @@ final case class GeneralVariable(underlyingElem: BackingNodes.Elem) extends Vari
 /**
  * An instance:instance.
  */
-final case class Instance(underlyingElem: BackingNodes.Elem) extends Parameter {
+final case class Instance(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem) extends Parameter {
   requireName(ENames.InstancesInstanceEName)
 }
 
 /**
  * A variable:function.
  */
-final case class Function(underlyingElem: BackingNodes.Elem) extends FormulaResource {
+final case class Function(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends FormulaResource {
   requireName(ENames.VariableFunctionEName)
 
   /**
@@ -426,7 +438,7 @@ final case class Function(underlyingElem: BackingNodes.Elem) extends FormulaReso
 /**
  * A variable:equalityDefinition.
  */
-final case class EqualityDefinition(underlyingElem: BackingNodes.Elem)
+final case class EqualityDefinition(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends FormulaResource
     with NonStandardTaxonomyElemSupport.HasTestExpr {
   requireName(ENames.VariableEqualityDefinitionEName)
@@ -435,7 +447,8 @@ final case class EqualityDefinition(underlyingElem: BackingNodes.Elem)
 /**
  * A cfi:implementation.
  */
-final case class FunctionImplementation(underlyingElem: BackingNodes.Elem) extends FormulaResource {
+final case class FunctionImplementation(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends FormulaResource {
   requireName(ENames.CfiImplementationEName)
 
   def inputs: Seq[FunctionImplementationInput] = {
@@ -454,7 +467,8 @@ final case class FunctionImplementation(underlyingElem: BackingNodes.Elem) exten
 /**
  * A msg:message, as used in a formula-related context.
  */
-final case class Message(underlyingElem: BackingNodes.Elem) extends FormulaResource {
+final case class Message(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends FormulaResource {
   requireName(ENames.MsgMessageEName)
 
   /**
@@ -471,21 +485,22 @@ sealed trait Severity extends FormulaResource
 /**
  * A sev:ok.
  */
-final case class OkSeverity(underlyingElem: BackingNodes.Elem) extends Severity {
+final case class OkSeverity(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem) extends Severity {
   requireName(ENames.SevOkEName)
 }
 
 /**
  * A sev:warning.
  */
-final case class WarningSeverity(underlyingElem: BackingNodes.Elem) extends Severity {
+final case class WarningSeverity(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends Severity {
   requireName(ENames.SevWarningEName)
 }
 
 /**
  * A sev:error.
  */
-final case class ErrorSeverity(underlyingElem: BackingNodes.Elem) extends Severity {
+final case class ErrorSeverity(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem) extends Severity {
   requireName(ENames.SevErrorEName)
 }
 
@@ -502,7 +517,8 @@ sealed trait ConceptFilter extends Filter
 /**
  * A cf:conceptName filter.
  */
-final case class ConceptNameFilter(underlyingElem: BackingNodes.Elem) extends ConceptFilter {
+final case class ConceptNameFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ConceptFilter {
   requireName(ENames.CfConceptNameEName)
 
   def concepts: Seq[ConceptFilterConcept] = {
@@ -513,7 +529,8 @@ final case class ConceptNameFilter(underlyingElem: BackingNodes.Elem) extends Co
 /**
  * A cf:conceptPeriodType filter.
  */
-final case class ConceptPeriodTypeFilter(underlyingElem: BackingNodes.Elem) extends ConceptFilter {
+final case class ConceptPeriodTypeFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ConceptFilter {
   requireName(ENames.CfConceptPeriodTypeEName)
 
   def periodType: String = {
@@ -524,7 +541,8 @@ final case class ConceptPeriodTypeFilter(underlyingElem: BackingNodes.Elem) exte
 /**
  * A cf:conceptBalance filter.
  */
-final case class ConceptBalanceFilter(underlyingElem: BackingNodes.Elem) extends ConceptFilter {
+final case class ConceptBalanceFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ConceptFilter {
   requireName(ENames.CfConceptBalanceEName)
 
   def balance: String = {
@@ -535,7 +553,7 @@ final case class ConceptBalanceFilter(underlyingElem: BackingNodes.Elem) extends
 /**
  * A cf:conceptCustomAttribute filter.
  */
-final case class ConceptCustomAttributeFilter(underlyingElem: BackingNodes.Elem)
+final case class ConceptCustomAttributeFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ConceptFilter
     with NonStandardTaxonomyElemSupport.HasOptionalValueExpr {
   requireName(ENames.CfConceptCustomAttributeEName)
@@ -548,7 +566,8 @@ final case class ConceptCustomAttributeFilter(underlyingElem: BackingNodes.Elem)
 /**
  * A cf:conceptDataType filter.
  */
-final case class ConceptDataTypeFilter(underlyingElem: BackingNodes.Elem) extends ConceptFilter {
+final case class ConceptDataTypeFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ConceptFilter {
   requireName(ENames.CfConceptDataTypeEName)
 
   def conceptDataType: ConceptFilterType = {
@@ -563,7 +582,8 @@ final case class ConceptDataTypeFilter(underlyingElem: BackingNodes.Elem) extend
 /**
  * A cf:conceptSubstitutionGroup filter.
  */
-final case class ConceptSubstitutionGroupFilter(underlyingElem: BackingNodes.Elem) extends ConceptFilter {
+final case class ConceptSubstitutionGroupFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ConceptFilter {
   requireName(ENames.CfConceptSubstitutionGroupEName)
 
   def conceptSubstitutionGroup: ConceptFilterSubstitutionGroup = {
@@ -583,14 +603,15 @@ sealed trait BooleanFilter extends Filter
 /**
  * A bf:andFilter filter.
  */
-final case class AndFilter(underlyingElem: BackingNodes.Elem) extends BooleanFilter {
+final case class AndFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends BooleanFilter {
   requireName(ENames.BfAndFilterEName)
 }
 
 /**
  * A bf:orFilter filter.
  */
-final case class OrFilter(underlyingElem: BackingNodes.Elem) extends BooleanFilter {
+final case class OrFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem) extends BooleanFilter {
   requireName(ENames.BfOrFilterEName)
 }
 
@@ -607,7 +628,8 @@ sealed trait DimensionFilter extends Filter {
 /**
  * A df:explicitDimension filter.
  */
-final case class ExplicitDimensionFilter(underlyingElem: BackingNodes.Elem) extends DimensionFilter {
+final case class ExplicitDimensionFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends DimensionFilter {
   requireName(ENames.DfExplicitDimensionEName)
 
   def members: Seq[DimensionFilterMember] = {
@@ -618,7 +640,7 @@ final case class ExplicitDimensionFilter(underlyingElem: BackingNodes.Elem) exte
 /**
  * A df:typedDimension filter.
  */
-final case class TypedDimensionFilter(underlyingElem: BackingNodes.Elem)
+final case class TypedDimensionFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends DimensionFilter
     with NonStandardTaxonomyElemSupport.HasOptionalTestExpr {
   requireName(ENames.DfTypedDimensionEName)
@@ -632,14 +654,17 @@ sealed trait EntityFilter extends Filter
 /**
  * An ef:identifier filter.
  */
-final case class IdentifierFilter(underlyingElem: BackingNodes.Elem) extends EntityFilter with NonStandardTaxonomyElemSupport.HasTestExpr {
+final case class IdentifierFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends EntityFilter
+    with NonStandardTaxonomyElemSupport.HasTestExpr {
   requireName(ENames.EfIdentifierEName)
 }
 
 /**
  * An ef:specificScheme filter.
  */
-final case class SpecificSchemeFilter(underlyingElem: BackingNodes.Elem) extends EntityFilter {
+final case class SpecificSchemeFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends EntityFilter {
   requireName(ENames.EfSpecificSchemeEName)
 
   /**
@@ -654,7 +679,8 @@ final case class SpecificSchemeFilter(underlyingElem: BackingNodes.Elem) extends
 /**
  * An ef:regexpScheme filter.
  */
-final case class RegexpSchemeFilter(underlyingElem: BackingNodes.Elem) extends EntityFilter {
+final case class RegexpSchemeFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends EntityFilter {
   requireName(ENames.EfRegexpSchemeEName)
 
   def pattern: String = {
@@ -665,7 +691,7 @@ final case class RegexpSchemeFilter(underlyingElem: BackingNodes.Elem) extends E
 /**
  * An ef:specificIdentifier filter.
  */
-final case class SpecificIdentifierFilter(underlyingElem: BackingNodes.Elem)
+final case class SpecificIdentifierFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends EntityFilter
     with NonStandardTaxonomyElemSupport.HasValueExpr {
   requireName(ENames.EfSpecificIdentifierEName)
@@ -682,7 +708,8 @@ final case class SpecificIdentifierFilter(underlyingElem: BackingNodes.Elem)
 /**
  * An ef:regexpIdentifier filter.
  */
-final case class RegexpIdentifierFilter(underlyingElem: BackingNodes.Elem) extends EntityFilter {
+final case class RegexpIdentifierFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends EntityFilter {
   requireName(ENames.EfRegexpIdentifierEName)
 
   def pattern: String = {
@@ -693,7 +720,9 @@ final case class RegexpIdentifierFilter(underlyingElem: BackingNodes.Elem) exten
 /**
  * A general filter (gf:general).
  */
-final case class GeneralFilter(underlyingElem: BackingNodes.Elem) extends Filter with NonStandardTaxonomyElemSupport.HasOptionalTestExpr {
+final case class GeneralFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends Filter
+    with NonStandardTaxonomyElemSupport.HasOptionalTestExpr {
   requireName(ENames.GfGeneralEName)
 }
 
@@ -710,70 +739,80 @@ sealed trait MatchFilter extends Filter with NonStandardTaxonomyElemSupport.HasV
 /**
  * An mf:matchConcept filter.
  */
-final case class MatchConceptFilter(underlyingElem: BackingNodes.Elem) extends MatchFilter {
+final case class MatchConceptFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends MatchFilter {
   requireName(ENames.MfMatchConceptEName)
 }
 
 /**
  * An mf:matchLocation filter.
  */
-final case class MatchLocationFilter(underlyingElem: BackingNodes.Elem) extends MatchFilter {
+final case class MatchLocationFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends MatchFilter {
   requireName(ENames.MfMatchLocationEName)
 }
 
 /**
  * An mf:matchUnit filter.
  */
-final case class MatchUnitFilter(underlyingElem: BackingNodes.Elem) extends MatchFilter {
+final case class MatchUnitFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends MatchFilter {
   requireName(ENames.MfMatchUnitEName)
 }
 
 /**
  * An mf:matchEntityIdentifier filter.
  */
-final case class MatchEntityIdentifierFilter(underlyingElem: BackingNodes.Elem) extends MatchFilter {
+final case class MatchEntityIdentifierFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends MatchFilter {
   requireName(ENames.MfMatchEntityIdentifierEName)
 }
 
 /**
  * An mf:matchPeriod filter.
  */
-final case class MatchPeriodFilter(underlyingElem: BackingNodes.Elem) extends MatchFilter {
+final case class MatchPeriodFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends MatchFilter {
   requireName(ENames.MfMatchPeriodEName)
 }
 
 /**
  * An mf:matchSegment filter.
  */
-final case class MatchSegmentFilter(underlyingElem: BackingNodes.Elem) extends MatchFilter {
+final case class MatchSegmentFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends MatchFilter {
   requireName(ENames.MfMatchSegmentEName)
 }
 
 /**
  * An mf:matchScenario filter.
  */
-final case class MatchScenarioFilter(underlyingElem: BackingNodes.Elem) extends MatchFilter {
+final case class MatchScenarioFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends MatchFilter {
   requireName(ENames.MfMatchScenarioEName)
 }
 
 /**
  * An mf:matchNonXDTSegment filter.
  */
-final case class MatchNonXDTSegmentFilter(underlyingElem: BackingNodes.Elem) extends MatchFilter {
+final case class MatchNonXDTSegmentFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends MatchFilter {
   requireName(ENames.MfMatchNonXDTSegmentEName)
 }
 
 /**
  * An mf:matchNonXDTScenario filter.
  */
-final case class MatchNonXDTScenarioFilter(underlyingElem: BackingNodes.Elem) extends MatchFilter {
+final case class MatchNonXDTScenarioFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends MatchFilter {
   requireName(ENames.MfMatchNonXDTScenarioEName)
 }
 
 /**
  * An mf:matchDimension filter.
  */
-final case class MatchDimensionFilter(underlyingElem: BackingNodes.Elem) extends MatchFilter {
+final case class MatchDimensionFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends MatchFilter {
   requireName(ENames.MfMatchDimensionEName)
 
   def dimension: EName = {
@@ -789,7 +828,7 @@ sealed trait PeriodAspectFilter extends Filter
 /**
  * A pf:period filter.
  */
-final case class PeriodFilter(underlyingElem: BackingNodes.Elem)
+final case class PeriodFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends PeriodAspectFilter
     with NonStandardTaxonomyElemSupport.HasTestExpr {
   requireName(ENames.PfPeriodEName)
@@ -817,35 +856,39 @@ sealed trait PeriodStartEndOrInstantFilter extends PeriodAspectFilter {
 /**
  * A pf:periodStart filter.
  */
-final case class PeriodStartFilter(underlyingElem: BackingNodes.Elem) extends PeriodStartEndOrInstantFilter {
+final case class PeriodStartFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends PeriodStartEndOrInstantFilter {
   requireName(ENames.PfPeriodStartEName)
 }
 
 /**
  * A pf:periodEnd filter.
  */
-final case class PeriodEndFilter(underlyingElem: BackingNodes.Elem) extends PeriodStartEndOrInstantFilter {
+final case class PeriodEndFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends PeriodStartEndOrInstantFilter {
   requireName(ENames.PfPeriodEndEName)
 }
 
 /**
  * A pf:periodInstant filter.
  */
-final case class PeriodInstantFilter(underlyingElem: BackingNodes.Elem) extends PeriodStartEndOrInstantFilter {
+final case class PeriodInstantFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends PeriodStartEndOrInstantFilter {
   requireName(ENames.PfPeriodInstantEName)
 }
 
 /**
  * A pf:forever filter.
  */
-final case class ForeverFilter(underlyingElem: BackingNodes.Elem) extends PeriodAspectFilter {
+final case class ForeverFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends PeriodAspectFilter {
   requireName(ENames.PfForeverEName)
 }
 
 /**
  * A pf:instantDuration filter.
  */
-final case class InstantDurationFilter(underlyingElem: BackingNodes.Elem)
+final case class InstantDurationFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends PeriodAspectFilter
     with NonStandardTaxonomyElemSupport.HasVariable {
   requireName(ENames.PfInstantDurationEName)
@@ -858,7 +901,9 @@ final case class InstantDurationFilter(underlyingElem: BackingNodes.Elem)
 /**
  * A relative filter (rf:relativeFilter).
  */
-final case class RelativeFilter(underlyingElem: BackingNodes.Elem) extends Filter with NonStandardTaxonomyElemSupport.HasVariable {
+final case class RelativeFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends Filter
+    with NonStandardTaxonomyElemSupport.HasVariable {
   requireName(ENames.RfRelativeFilterEName)
 }
 
@@ -870,14 +915,16 @@ sealed trait SegmentScenarioFilter extends Filter with NonStandardTaxonomyElemSu
 /**
  * An ssf:segment filter.
  */
-final case class SegmentFilter(underlyingElem: BackingNodes.Elem) extends SegmentScenarioFilter {
+final case class SegmentFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends SegmentScenarioFilter {
   requireName(ENames.SsfSegmentEName)
 }
 
 /**
  * An ssf:scenario filter.
  */
-final case class ScenarioFilter(underlyingElem: BackingNodes.Elem) extends SegmentScenarioFilter {
+final case class ScenarioFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends SegmentScenarioFilter {
   requireName(ENames.SsfScenarioEName)
 }
 
@@ -889,7 +936,8 @@ sealed trait TupleFilter extends Filter
 /**
  * A tf:parentFilter filter.
  */
-final case class ParentFilter(underlyingElem: BackingNodes.Elem) extends TupleFilter {
+final case class ParentFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TupleFilter {
   requireName(ENames.TfParentFilterEName)
 
   def parent: TupleFilterParent = {
@@ -900,7 +948,8 @@ final case class ParentFilter(underlyingElem: BackingNodes.Elem) extends TupleFi
 /**
  * A tf:ancestorFilter filter.
  */
-final case class AncestorFilter(underlyingElem: BackingNodes.Elem) extends TupleFilter {
+final case class AncestorFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TupleFilter {
   requireName(ENames.TfAncestorFilterEName)
 
   def ancestor: TupleFilterAncestor = {
@@ -911,14 +960,18 @@ final case class AncestorFilter(underlyingElem: BackingNodes.Elem) extends Tuple
 /**
  * A tf:siblingFilter filter.
  */
-final case class SiblingFilter(underlyingElem: BackingNodes.Elem) extends TupleFilter with NonStandardTaxonomyElemSupport.HasVariable {
+final case class SiblingFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TupleFilter
+    with NonStandardTaxonomyElemSupport.HasVariable {
   requireName(ENames.TfSiblingFilterEName)
 }
 
 /**
  * A tf:locationFilter filter.
  */
-final case class LocationFilter(underlyingElem: BackingNodes.Elem) extends TupleFilter with NonStandardTaxonomyElemSupport.HasVariable {
+final case class LocationFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TupleFilter
+    with NonStandardTaxonomyElemSupport.HasVariable {
   requireName(ENames.TfLocationFilterEName)
 
   /**
@@ -938,7 +991,8 @@ sealed trait UnitFilter extends Filter
 /**
  * An uf:singleMeasure filter.
  */
-final case class SingleMeasureFilter(underlyingElem: BackingNodes.Elem) extends UnitFilter {
+final case class SingleMeasureFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends UnitFilter {
   requireName(ENames.UfSingleMeasureEName)
 
   def measure: UnitFilterMeasure = {
@@ -949,7 +1003,7 @@ final case class SingleMeasureFilter(underlyingElem: BackingNodes.Elem) extends 
 /**
  * An uf:generalMeasure filter.
  */
-final case class GeneralMeasureFilter(underlyingElem: BackingNodes.Elem)
+final case class GeneralMeasureFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends UnitFilter
     with NonStandardTaxonomyElemSupport.HasTestExpr {
   requireName(ENames.UfGeneralMeasuresEName)
@@ -963,14 +1017,15 @@ sealed trait ValueFilter extends Filter
 /**
  * A vf:nil filter.
  */
-final case class NilFilter(underlyingElem: BackingNodes.Elem) extends ValueFilter {
+final case class NilFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem) extends ValueFilter {
   requireName(ENames.VfNilEName)
 }
 
 /**
  * A vf:precision filter.
  */
-final case class PrecisionFilter(underlyingElem: BackingNodes.Elem) extends ValueFilter {
+final case class PrecisionFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ValueFilter {
   requireName(ENames.VfPrecisionEName)
 
   /**
@@ -985,7 +1040,8 @@ final case class PrecisionFilter(underlyingElem: BackingNodes.Elem) extends Valu
 /**
  * An aspect cover filter (acf:aspectCover).
  */
-final case class AspectCoverFilter(underlyingElem: BackingNodes.Elem) extends Filter {
+final case class AspectCoverFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends Filter {
   requireName(ENames.AcfAspectCoverEName)
 
   def aspects: Seq[AspectCoverFilterAspect] = {
@@ -1004,7 +1060,7 @@ final case class AspectCoverFilter(underlyingElem: BackingNodes.Elem) extends Fi
 /**
  * A concept relation filter (crf:conceptRelation).
  */
-final case class ConceptRelationFilter(underlyingElem: BackingNodes.Elem)
+final case class ConceptRelationFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends Filter
     with NonStandardTaxonomyElemSupport.HasOptionalTestExpr {
   requireName(ENames.CrfConceptRelationEName)
@@ -1164,7 +1220,8 @@ sealed trait FunctionContentElem extends FormulaNonXLinkElem
 /**
  * A variable:input child element of a variable:function.
  */
-final case class FunctionInput(underlyingElem: BackingNodes.Elem) extends FunctionContentElem {
+final case class FunctionInput(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends FunctionContentElem {
   requireName(ENames.VariableInputEName)
 
   /**
@@ -1181,7 +1238,8 @@ sealed trait FunctionImplementationContentElem extends FormulaNonXLinkElem
 /**
  * A cfi:input child element of a cfi:implementation.
  */
-final case class FunctionImplementationInput(underlyingElem: BackingNodes.Elem) extends FunctionImplementationContentElem {
+final case class FunctionImplementationInput(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends FunctionImplementationContentElem {
   requireName(ENames.CfiInputEName)
 
   /**
@@ -1197,7 +1255,7 @@ final case class FunctionImplementationInput(underlyingElem: BackingNodes.Elem) 
 /**
  * A cfi:step child element of a cfi:implementation.
  */
-final case class FunctionImplementationStep(underlyingElem: BackingNodes.Elem)
+final case class FunctionImplementationStep(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends FunctionImplementationContentElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CfiStepEName)
@@ -1215,7 +1273,7 @@ final case class FunctionImplementationStep(underlyingElem: BackingNodes.Elem)
 /**
  * A cfi:output child element of a cfi:implementation.
  */
-final case class FunctionImplementationOutput(underlyingElem: BackingNodes.Elem)
+final case class FunctionImplementationOutput(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends FunctionImplementationContentElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CfiOutputEName)
@@ -1229,7 +1287,7 @@ sealed trait ConceptFilterContentElem extends FormulaNonXLinkElem
 /**
  * A cf:concept child element of a concept filter.
  */
-final case class ConceptFilterConcept(underlyingElem: BackingNodes.Elem)
+final case class ConceptFilterConcept(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ConceptFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[ConceptFilterQName, ConceptFilterQNameExpression] {
   requireName(ENames.CfConceptEName)
@@ -1238,7 +1296,7 @@ final case class ConceptFilterConcept(underlyingElem: BackingNodes.Elem)
 /**
  * A cf:attribute child element of a concept filter.
  */
-final case class ConceptFilterAttribute(underlyingElem: BackingNodes.Elem)
+final case class ConceptFilterAttribute(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ConceptFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[ConceptFilterQName, ConceptFilterQNameExpression] {
   requireName(ENames.CfAttributeEName)
@@ -1247,7 +1305,7 @@ final case class ConceptFilterAttribute(underlyingElem: BackingNodes.Elem)
 /**
  * A cf:type child element of a concept filter.
  */
-final case class ConceptFilterType(underlyingElem: BackingNodes.Elem)
+final case class ConceptFilterType(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ConceptFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[ConceptFilterQName, ConceptFilterQNameExpression] {
   requireName(ENames.CfTypeEName)
@@ -1256,7 +1314,7 @@ final case class ConceptFilterType(underlyingElem: BackingNodes.Elem)
 /**
  * A cf:substitutionGroup child element of a concept filter.
  */
-final case class ConceptFilterSubstitutionGroup(underlyingElem: BackingNodes.Elem)
+final case class ConceptFilterSubstitutionGroup(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ConceptFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[ConceptFilterQName, ConceptFilterQNameExpression] {
   requireName(ENames.CfSubstitutionGroupEName)
@@ -1265,7 +1323,7 @@ final case class ConceptFilterSubstitutionGroup(underlyingElem: BackingNodes.Ele
 /**
  * A cf:qname descendant element of a concept filter.
  */
-final case class ConceptFilterQName(underlyingElem: BackingNodes.Elem)
+final case class ConceptFilterQName(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ConceptFilterContentElem
     with NonStandardTaxonomyElemSupport.HasQNameValue {
   requireName(ENames.CfQnameEName)
@@ -1274,7 +1332,7 @@ final case class ConceptFilterQName(underlyingElem: BackingNodes.Elem)
 /**
  * A cf:qnameExpression descendant element of a concept filter.
  */
-final case class ConceptFilterQNameExpression(underlyingElem: BackingNodes.Elem)
+final case class ConceptFilterQNameExpression(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ConceptFilterContentElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CfQnameExpressionEName)
@@ -1288,7 +1346,7 @@ sealed trait TupleFilterContentElem extends FormulaNonXLinkElem
 /**
  * A tf:parent child element of a concept filter.
  */
-final case class TupleFilterParent(underlyingElem: BackingNodes.Elem)
+final case class TupleFilterParent(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends TupleFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[TupleFilterQName, TupleFilterQNameExpression] {
   requireName(ENames.TfParentEName)
@@ -1297,7 +1355,7 @@ final case class TupleFilterParent(underlyingElem: BackingNodes.Elem)
 /**
  * A tf:ancestor child element of a concept filter.
  */
-final case class TupleFilterAncestor(underlyingElem: BackingNodes.Elem)
+final case class TupleFilterAncestor(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends TupleFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[TupleFilterQName, TupleFilterQNameExpression] {
   requireName(ENames.TfAncestorEName)
@@ -1306,7 +1364,7 @@ final case class TupleFilterAncestor(underlyingElem: BackingNodes.Elem)
 /**
  * A tf:qname descendant element of a tuple filter.
  */
-final case class TupleFilterQName(underlyingElem: BackingNodes.Elem)
+final case class TupleFilterQName(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends TupleFilterContentElem
     with NonStandardTaxonomyElemSupport.HasQNameValue {
   requireName(ENames.TfQnameEName)
@@ -1315,7 +1373,7 @@ final case class TupleFilterQName(underlyingElem: BackingNodes.Elem)
 /**
  * A tf:qnameExpression descendant element of a tuple filter.
  */
-final case class TupleFilterQNameExpression(underlyingElem: BackingNodes.Elem)
+final case class TupleFilterQNameExpression(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends TupleFilterContentElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TfQnameExpressionEName)
@@ -1329,7 +1387,7 @@ sealed trait DimensionFilterContentElem extends FormulaNonXLinkElem
 /**
  * A df:dimension child element of a dimension filter.
  */
-final case class DimensionFilterDimension(underlyingElem: BackingNodes.Elem)
+final case class DimensionFilterDimension(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends DimensionFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[DimensionFilterQName, DimensionFilterQNameExpression] {
   requireName(ENames.DfDimensionEName)
@@ -1338,7 +1396,8 @@ final case class DimensionFilterDimension(underlyingElem: BackingNodes.Elem)
 /**
  * A df:member child element of a dimension filter.
  */
-final case class DimensionFilterMember(underlyingElem: BackingNodes.Elem) extends DimensionFilterContentElem {
+final case class DimensionFilterMember(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends DimensionFilterContentElem {
   requireName(ENames.DfMemberEName)
 
   def variableElemOption: Option[DimensionFilterVariable] = {
@@ -1384,7 +1443,8 @@ final case class DimensionFilterMember(underlyingElem: BackingNodes.Elem) extend
 /**
  * A df:variable descendant element of a dimension filter.
  */
-final case class DimensionFilterVariable(underlyingElem: BackingNodes.Elem) extends DimensionFilterContentElem {
+final case class DimensionFilterVariable(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends DimensionFilterContentElem {
   requireName(ENames.DfVariableEName)
 
   /**
@@ -1400,7 +1460,8 @@ final case class DimensionFilterVariable(underlyingElem: BackingNodes.Elem) exte
 /**
  * A df:linkrole descendant element of a dimension filter.
  */
-final case class DimensionFilterLinkrole(underlyingElem: BackingNodes.Elem) extends DimensionFilterContentElem {
+final case class DimensionFilterLinkrole(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends DimensionFilterContentElem {
   requireName(ENames.DfLinkroleEName)
 
   def linkrole: String = text
@@ -1409,7 +1470,8 @@ final case class DimensionFilterLinkrole(underlyingElem: BackingNodes.Elem) exte
 /**
  * A df:arcrole descendant element of a dimension filter.
  */
-final case class DimensionFilterArcrole(underlyingElem: BackingNodes.Elem) extends DimensionFilterContentElem {
+final case class DimensionFilterArcrole(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends DimensionFilterContentElem {
   requireName(ENames.DfArcroleEName)
 
   def arcrole: String = text
@@ -1418,7 +1480,8 @@ final case class DimensionFilterArcrole(underlyingElem: BackingNodes.Elem) exten
 /**
  * A df:axis descendant element of a dimension filter.
  */
-final case class DimensionFilterAxis(underlyingElem: BackingNodes.Elem) extends DimensionFilterContentElem {
+final case class DimensionFilterAxis(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends DimensionFilterContentElem {
   requireName(ENames.DfAxisEName)
 
   def axis: String = text
@@ -1427,7 +1490,7 @@ final case class DimensionFilterAxis(underlyingElem: BackingNodes.Elem) extends 
 /**
  * A df:qname descendant element of a dimension filter.
  */
-final case class DimensionFilterQName(underlyingElem: BackingNodes.Elem)
+final case class DimensionFilterQName(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends DimensionFilterContentElem
     with NonStandardTaxonomyElemSupport.HasQNameValue {
   requireName(ENames.DfQnameEName)
@@ -1436,7 +1499,7 @@ final case class DimensionFilterQName(underlyingElem: BackingNodes.Elem)
 /**
  * A df:qnameExpression descendant element of a dimension filter.
  */
-final case class DimensionFilterQNameExpression(underlyingElem: BackingNodes.Elem)
+final case class DimensionFilterQNameExpression(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends DimensionFilterContentElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.DfQnameExpressionEName)
@@ -1450,7 +1513,7 @@ sealed trait UnitFilterContentElem extends FormulaNonXLinkElem
 /**
  * A uf:measure child element of a dimension filter.
  */
-final case class UnitFilterMeasure(underlyingElem: BackingNodes.Elem)
+final case class UnitFilterMeasure(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends UnitFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[UnitFilterQName, UnitFilterQNameExpression] {
   requireName(ENames.UfMeasureEName)
@@ -1459,7 +1522,7 @@ final case class UnitFilterMeasure(underlyingElem: BackingNodes.Elem)
 /**
  * A uf:qname descendant element of a unit filter.
  */
-final case class UnitFilterQName(underlyingElem: BackingNodes.Elem)
+final case class UnitFilterQName(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends UnitFilterContentElem
     with NonStandardTaxonomyElemSupport.HasQNameValue {
   requireName(ENames.UfQnameEName)
@@ -1468,7 +1531,7 @@ final case class UnitFilterQName(underlyingElem: BackingNodes.Elem)
 /**
  * A uf:qnameExpression descendant element of a unit filter.
  */
-final case class UnitFilterQNameExpression(underlyingElem: BackingNodes.Elem)
+final case class UnitFilterQNameExpression(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends UnitFilterContentElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.UfQnameExpressionEName)
@@ -1482,7 +1545,8 @@ sealed trait AspectCoverFilterContentElem extends FormulaNonXLinkElem
 /**
  * An acf:aspect descendant element of a dimension filter.
  */
-final case class AspectCoverFilterAspect(underlyingElem: BackingNodes.Elem) extends AspectCoverFilterContentElem {
+final case class AspectCoverFilterAspect(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends AspectCoverFilterContentElem {
   requireName(ENames.AcfAspectEName)
 
   def aspectValue: AspectCoverFilters.Aspect = {
@@ -1493,7 +1557,7 @@ final case class AspectCoverFilterAspect(underlyingElem: BackingNodes.Elem) exte
 /**
  * An acf:dimension descendant element of a dimension filter.
  */
-final case class AspectCoverFilterDimension(underlyingElem: BackingNodes.Elem)
+final case class AspectCoverFilterDimension(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends AspectCoverFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[AspectCoverFilterQName, AspectCoverFilterQNameExpression] {
   requireName(ENames.AcfDimensionEName)
@@ -1502,7 +1566,9 @@ final case class AspectCoverFilterDimension(underlyingElem: BackingNodes.Elem)
 /**
  * An acf:excludeDimension descendant element of a dimension filter.
  */
-final case class AspectCoverFilterExcludeDimension(underlyingElem: BackingNodes.Elem)
+final case class AspectCoverFilterExcludeDimension(
+    underlyingElem: BackingNodes.Elem,
+    taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends AspectCoverFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[AspectCoverFilterQName, AspectCoverFilterQNameExpression] {
   requireName(ENames.AcfExcludeDimensionEName)
@@ -1511,7 +1577,7 @@ final case class AspectCoverFilterExcludeDimension(underlyingElem: BackingNodes.
 /**
  * An acf:qname descendant element of an aspect cover filter.
  */
-final case class AspectCoverFilterQName(underlyingElem: BackingNodes.Elem)
+final case class AspectCoverFilterQName(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends AspectCoverFilterContentElem
     with NonStandardTaxonomyElemSupport.HasQNameValue {
   requireName(ENames.AcfQnameEName)
@@ -1520,7 +1586,7 @@ final case class AspectCoverFilterQName(underlyingElem: BackingNodes.Elem)
 /**
  * An acf:qnameExpression descendant element of an aspect cover filter.
  */
-final case class AspectCoverFilterQNameExpression(underlyingElem: BackingNodes.Elem)
+final case class AspectCoverFilterQNameExpression(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends AspectCoverFilterContentElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.AcfQnameExpressionEName)
@@ -1534,7 +1600,8 @@ sealed trait ConceptRelationFilterContentElem extends FormulaNonXLinkElem
 /**
  * A crf:axis descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterAxis(underlyingElem: BackingNodes.Elem) extends ConceptRelationFilterContentElem {
+final case class ConceptRelationFilterAxis(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ConceptRelationFilterContentElem {
   requireName(ENames.CrfAxisEName)
 
   def axisValue: ConceptRelationFilters.Axis = {
@@ -1545,7 +1612,8 @@ final case class ConceptRelationFilterAxis(underlyingElem: BackingNodes.Elem) ex
 /**
  * A crf:generations descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterGenerations(underlyingElem: BackingNodes.Elem) extends ConceptRelationFilterContentElem {
+final case class ConceptRelationFilterGenerations(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ConceptRelationFilterContentElem {
   requireName(ENames.CrfGenerationsEName)
 
   def intValue: Int = {
@@ -1556,7 +1624,8 @@ final case class ConceptRelationFilterGenerations(underlyingElem: BackingNodes.E
 /**
  * A crf:variable descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterVariable(underlyingElem: BackingNodes.Elem) extends ConceptRelationFilterContentElem {
+final case class ConceptRelationFilterVariable(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ConceptRelationFilterContentElem {
   requireName(ENames.CrfVariableEName)
 
   /**
@@ -1572,7 +1641,8 @@ final case class ConceptRelationFilterVariable(underlyingElem: BackingNodes.Elem
 /**
  * A crf:linkrole descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterLinkrole(underlyingElem: BackingNodes.Elem) extends ConceptRelationFilterContentElem {
+final case class ConceptRelationFilterLinkrole(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ConceptRelationFilterContentElem {
   requireName(ENames.CrfLinkroleEName)
 
   def linkrole: String = text
@@ -1581,7 +1651,9 @@ final case class ConceptRelationFilterLinkrole(underlyingElem: BackingNodes.Elem
 /**
  * A crf:linkroleExpression descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterLinkroleExpression(underlyingElem: BackingNodes.Elem)
+final case class ConceptRelationFilterLinkroleExpression(
+    underlyingElem: BackingNodes.Elem,
+    taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ConceptRelationFilterContentElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CrfLinkroleExpressionEName)
@@ -1590,7 +1662,8 @@ final case class ConceptRelationFilterLinkroleExpression(underlyingElem: Backing
 /**
  * A crf:linkname descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterLinkname(underlyingElem: BackingNodes.Elem) extends ConceptRelationFilterContentElem {
+final case class ConceptRelationFilterLinkname(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ConceptRelationFilterContentElem {
   requireName(ENames.CrfLinknameEName)
 
   /**
@@ -1604,7 +1677,9 @@ final case class ConceptRelationFilterLinkname(underlyingElem: BackingNodes.Elem
 /**
  * A crf:linknameExpression descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterLinknameExpression(underlyingElem: BackingNodes.Elem)
+final case class ConceptRelationFilterLinknameExpression(
+    underlyingElem: BackingNodes.Elem,
+    taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ConceptRelationFilterContentElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CrfLinknameExpressionEName)
@@ -1613,7 +1688,8 @@ final case class ConceptRelationFilterLinknameExpression(underlyingElem: Backing
 /**
  * A crf:arcrole descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterArcrole(underlyingElem: BackingNodes.Elem) extends ConceptRelationFilterContentElem {
+final case class ConceptRelationFilterArcrole(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ConceptRelationFilterContentElem {
   requireName(ENames.CrfArcroleEName)
 
   def arcrole: String = text
@@ -1622,7 +1698,9 @@ final case class ConceptRelationFilterArcrole(underlyingElem: BackingNodes.Elem)
 /**
  * A crf:arcroleExpression descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterArcroleExpression(underlyingElem: BackingNodes.Elem)
+final case class ConceptRelationFilterArcroleExpression(
+    underlyingElem: BackingNodes.Elem,
+    taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ConceptRelationFilterContentElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CrfArcroleExpressionEName)
@@ -1631,7 +1709,8 @@ final case class ConceptRelationFilterArcroleExpression(underlyingElem: BackingN
 /**
  * A crf:arcname descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterArcname(underlyingElem: BackingNodes.Elem) extends ConceptRelationFilterContentElem {
+final case class ConceptRelationFilterArcname(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ConceptRelationFilterContentElem {
   requireName(ENames.CrfArcnameEName)
 
   /**
@@ -1645,7 +1724,9 @@ final case class ConceptRelationFilterArcname(underlyingElem: BackingNodes.Elem)
 /**
  * A crf:arcnameExpression descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterArcnameExpression(underlyingElem: BackingNodes.Elem)
+final case class ConceptRelationFilterArcnameExpression(
+    underlyingElem: BackingNodes.Elem,
+    taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ConceptRelationFilterContentElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CrfArcnameExpressionEName)
@@ -1654,7 +1735,7 @@ final case class ConceptRelationFilterArcnameExpression(underlyingElem: BackingN
 /**
  * A crf:qname descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterQName(underlyingElem: BackingNodes.Elem)
+final case class ConceptRelationFilterQName(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ConceptRelationFilterContentElem
     with NonStandardTaxonomyElemSupport.HasQNameValue {
   requireName(ENames.CrfQnameEName)
@@ -1663,7 +1744,9 @@ final case class ConceptRelationFilterQName(underlyingElem: BackingNodes.Elem)
 /**
  * A crf:qnameExpression descendant element of a concept relation filter.
  */
-final case class ConceptRelationFilterQNameExpression(underlyingElem: BackingNodes.Elem)
+final case class ConceptRelationFilterQNameExpression(
+    underlyingElem: BackingNodes.Elem,
+    taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends ConceptRelationFilterContentElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.CrfQnameExpressionEName)
@@ -1677,7 +1760,7 @@ sealed trait FormulaAspectOrAspectsElem extends FormulaNonXLinkElem
 /**
  * An aspects element.
  */
-final case class FormulaAspectsElem(underlyingElem: BackingNodes.Elem)
+final case class FormulaAspectsElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends FormulaAspectOrAspectsElem
     with NonStandardTaxonomyElemSupport.HasOptionalSource {
   requireName(ENames.FormulaAspectsEName)
@@ -1704,7 +1787,7 @@ sealed trait FormulaAspect extends FormulaAspectOrAspectsElem with NonStandardTa
 /**
  * A formula:concept.
  */
-final case class ConceptAspect(underlyingElem: BackingNodes.Elem)
+final case class ConceptAspect(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends FormulaAspect
     with NonStandardTaxonomyElemSupport.ProvidesQName[QNameElem, QNameExpressionElem] {
   requireName(ENames.FormulaConceptEName)
@@ -1715,7 +1798,7 @@ final case class ConceptAspect(underlyingElem: BackingNodes.Elem)
 /**
  * A formula:entityIdentifier.
  */
-final case class EntityIdentifierAspect(underlyingElem: BackingNodes.Elem)
+final case class EntityIdentifierAspect(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends FormulaAspect
     with NonStandardTaxonomyElemSupport.HasOptionalValueExpr {
   requireName(ENames.FormulaEntityIdentifierEName)
@@ -1730,7 +1813,8 @@ final case class EntityIdentifierAspect(underlyingElem: BackingNodes.Elem)
 /**
  * A formula:period.
  */
-final case class PeriodAspect(underlyingElem: BackingNodes.Elem) extends FormulaAspect {
+final case class PeriodAspect(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends FormulaAspect {
   requireName(ENames.FormulaPeriodEName)
 
   def aspect(aspectModel: AspectModel): Aspect = Aspect.PeriodAspect
@@ -1755,7 +1839,8 @@ final case class PeriodAspect(underlyingElem: BackingNodes.Elem) extends Formula
 /**
  * A formula:unit.
  */
-final case class UnitAspect(underlyingElem: BackingNodes.Elem) extends FormulaAspect {
+final case class UnitAspect(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends FormulaAspect {
   requireName(ENames.FormulaUnitEName)
 
   def aspect(aspectModel: AspectModel): Aspect = Aspect.UnitAspect
@@ -1799,21 +1884,24 @@ sealed trait OccAspect extends FormulaAspect {
 /**
  * A formula:occEmpty.
  */
-final case class OccEmptyAspect(underlyingElem: BackingNodes.Elem) extends OccAspect {
+final case class OccEmptyAspect(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends OccAspect {
   requireName(ENames.FormulaOccEmptyEName)
 }
 
 /**
  * A formula:occFragments.
  */
-final case class OccFragmentsAspect(underlyingElem: BackingNodes.Elem) extends OccAspect {
+final case class OccFragmentsAspect(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends OccAspect {
   requireName(ENames.FormulaOccFragmentsEName)
 }
 
 /**
  * A formula:occXpath.
  */
-final case class OccXpathAspect(underlyingElem: BackingNodes.Elem) extends OccAspect {
+final case class OccXpathAspect(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends OccAspect {
   requireName(ENames.FormulaOccXpathEName)
 
   def selectExprOption: Option[ScopedXPathString] = {
@@ -1847,7 +1935,8 @@ sealed trait DimensionAspect extends FormulaAspect {
 /**
  * A formula:explicitDimension.
  */
-final case class ExplicitDimensionAspect(underlyingElem: BackingNodes.Elem) extends DimensionAspect {
+final case class ExplicitDimensionAspect(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends DimensionAspect {
   requireName(ENames.FormulaExplicitDimensionEName)
 
   def memberElemOption: Option[MemberElem] = {
@@ -1858,7 +1947,8 @@ final case class ExplicitDimensionAspect(underlyingElem: BackingNodes.Elem) exte
 /**
  * A formula:typedDimension.
  */
-final case class TypedDimensionAspect(underlyingElem: BackingNodes.Elem) extends DimensionAspect {
+final case class TypedDimensionAspect(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends DimensionAspect {
   requireName(ENames.FormulaTypedDimensionEName)
 
   def xpathElemOption: Option[XpathElem] = {
@@ -1873,7 +1963,7 @@ final case class TypedDimensionAspect(underlyingElem: BackingNodes.Elem) extends
 /**
  * A formula:qname.
  */
-final case class QNameElem(underlyingElem: BackingNodes.Elem)
+final case class QNameElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends FormulaNonXLinkElem
     with NonStandardTaxonomyElemSupport.HasQNameValue {
   requireName(ENames.FormulaQNameEName)
@@ -1882,7 +1972,7 @@ final case class QNameElem(underlyingElem: BackingNodes.Elem)
 /**
  * A formula:qnameExpression.
  */
-final case class QNameExpressionElem(underlyingElem: BackingNodes.Elem)
+final case class QNameExpressionElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends FormulaNonXLinkElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.FormulaQNameExpressionEName)
@@ -1899,7 +1989,7 @@ sealed trait PeriodElem extends FormulaNonXLinkElem {
 /**
  * A formula:forever.
  */
-final case class ForeverElem(underlyingElem: BackingNodes.Elem) extends PeriodElem {
+final case class ForeverElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem) extends PeriodElem {
   requireName(ENames.FormulaForeverEName)
 
   def periodType: PeriodType = PeriodType.Duration
@@ -1908,7 +1998,7 @@ final case class ForeverElem(underlyingElem: BackingNodes.Elem) extends PeriodEl
 /**
  * A formula:instant.
  */
-final case class InstantElem(underlyingElem: BackingNodes.Elem)
+final case class InstantElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends PeriodElem
     with NonStandardTaxonomyElemSupport.HasOptionalValueExpr {
   requireName(ENames.FormulaInstantEName)
@@ -1919,7 +2009,8 @@ final case class InstantElem(underlyingElem: BackingNodes.Elem)
 /**
  * A formula:duration.
  */
-final case class DurationElem(underlyingElem: BackingNodes.Elem) extends PeriodElem {
+final case class DurationElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends PeriodElem {
   requireName(ENames.FormulaDurationEName)
 
   def startExprOption: Option[ScopedXPathString] = {
@@ -1936,7 +2027,7 @@ final case class DurationElem(underlyingElem: BackingNodes.Elem) extends PeriodE
 /**
  * A formula:multiplyBy.
  */
-final case class MultiplyByElem(underlyingElem: BackingNodes.Elem)
+final case class MultiplyByElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends FormulaNonXLinkElem
     with NonStandardTaxonomyElemSupport.HasOptionalSource {
   requireName(ENames.FormulaMultiplyByEName)
@@ -1949,7 +2040,7 @@ final case class MultiplyByElem(underlyingElem: BackingNodes.Elem)
 /**
  * A formula:divideBy.
  */
-final case class DivideByElem(underlyingElem: BackingNodes.Elem)
+final case class DivideByElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends FormulaNonXLinkElem
     with NonStandardTaxonomyElemSupport.HasOptionalSource {
   requireName(ENames.FormulaDivideByEName)
@@ -1962,7 +2053,7 @@ final case class DivideByElem(underlyingElem: BackingNodes.Elem)
 /**
  * A formula:member.
  */
-final case class MemberElem(underlyingElem: BackingNodes.Elem)
+final case class MemberElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends FormulaNonXLinkElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[QNameElem, QNameExpressionElem] {
   requireName(ENames.FormulaMemberEName)
@@ -1971,28 +2062,32 @@ final case class MemberElem(underlyingElem: BackingNodes.Elem)
 /**
  * A formula:omit.
  */
-final case class OmitElem(underlyingElem: BackingNodes.Elem) extends FormulaNonXLinkElem {
+final case class OmitElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends FormulaNonXLinkElem {
   requireName(ENames.FormulaOmitEName)
 }
 
 /**
  * A formula:xpath.
  */
-final case class XpathElem(underlyingElem: BackingNodes.Elem) extends FormulaNonXLinkElem with NonStandardTaxonomyElemSupport.HasExprText {
+final case class XpathElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends FormulaNonXLinkElem
+    with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.FormulaXpathEName)
 }
 
 /**
  * A formula:value.
  */
-final case class ValueElem(underlyingElem: BackingNodes.Elem) extends FormulaNonXLinkElem {
+final case class ValueElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends FormulaNonXLinkElem {
   requireName(ENames.FormulaValueEName)
 }
 
 /**
  * A formula:precision.
  */
-final case class PrecisionElem(underlyingElem: BackingNodes.Elem)
+final case class PrecisionElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends FormulaNonXLinkElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.FormulaPrecisionEName)
@@ -2001,7 +2096,7 @@ final case class PrecisionElem(underlyingElem: BackingNodes.Elem)
 /**
  * A formula:decimals.
  */
-final case class DecimalsElem(underlyingElem: BackingNodes.Elem)
+final case class DecimalsElem(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends FormulaNonXLinkElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.FormulaDecimalsEName)
@@ -2012,7 +2107,8 @@ final case class DecimalsElem(underlyingElem: BackingNodes.Elem)
 /**
  * A table:tableBreakdownArc.
  */
-final case class TableBreakdownArc(underlyingElem: BackingNodes.Elem) extends TableArc {
+final case class TableBreakdownArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableArc {
   requireName(ENames.TableTableBreakdownArcEName)
 
   /**
@@ -2027,21 +2123,24 @@ final case class TableBreakdownArc(underlyingElem: BackingNodes.Elem) extends Ta
 /**
  * A table:breakdownTreeArc.
  */
-final case class BreakdownTreeArc(underlyingElem: BackingNodes.Elem) extends TableArc {
+final case class BreakdownTreeArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableArc {
   requireName(ENames.TableBreakdownTreeArcEName)
 }
 
 /**
  * A table:definitionNodeSubtreeArc.
  */
-final case class DefinitionNodeSubtreeArc(underlyingElem: BackingNodes.Elem) extends TableArc {
+final case class DefinitionNodeSubtreeArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableArc {
   requireName(ENames.TableDefinitionNodeSubtreeArcEName)
 }
 
 /**
  * A table:tableFilterArc.
  */
-final case class TableFilterArc(underlyingElem: BackingNodes.Elem) extends TableArc {
+final case class TableFilterArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableArc {
   requireName(ENames.TableTableFilterArcEName)
 
   /**
@@ -2058,7 +2157,8 @@ final case class TableFilterArc(underlyingElem: BackingNodes.Elem) extends Table
 /**
  * A table:tableParameterArc.
  */
-final case class TableParameterArc(underlyingElem: BackingNodes.Elem) extends TableArc {
+final case class TableParameterArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableArc {
   requireName(ENames.TableTableParameterArcEName)
 
   /**
@@ -2074,7 +2174,8 @@ final case class TableParameterArc(underlyingElem: BackingNodes.Elem) extends Ta
 /**
  * A table:aspectNodeFilterArc.
  */
-final case class AspectNodeFilterArc(underlyingElem: BackingNodes.Elem) extends TableArc {
+final case class AspectNodeFilterArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableArc {
   requireName(ENames.TableAspectNodeFilterArcEName)
 
   /**
@@ -2091,7 +2192,7 @@ final case class AspectNodeFilterArc(underlyingElem: BackingNodes.Elem) extends 
 /**
  * A table:table.
  */
-final case class Table(underlyingElem: BackingNodes.Elem) extends TableResource {
+final case class Table(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem) extends TableResource {
   requireName(ENames.TableTableEName)
 
   /**
@@ -2106,7 +2207,8 @@ final case class Table(underlyingElem: BackingNodes.Elem) extends TableResource 
 /**
  * A table:breakdown.
  */
-final case class TableBreakdown(underlyingElem: BackingNodes.Elem) extends TableResource {
+final case class TableBreakdown(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableResource {
   requireName(ENames.TableBreakdownEName)
 
   /**
@@ -2150,7 +2252,8 @@ sealed trait OpenDefinitionNode extends DefinitionNode
 /**
  * A table:ruleNode.
  */
-final case class RuleNode(underlyingElem: BackingNodes.Elem) extends ClosedDefinitionNode {
+final case class RuleNode(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends ClosedDefinitionNode {
   requireName(ENames.TableRuleNodeEName)
 
   def untaggedAspects: Seq[FormulaAspect] = {
@@ -2201,7 +2304,8 @@ sealed trait RelationshipNode extends ClosedDefinitionNode
 /**
  * A table:conceptRelationshipNode.
  */
-final case class ConceptRelationshipNode(underlyingElem: BackingNodes.Elem) extends RelationshipNode {
+final case class ConceptRelationshipNode(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends RelationshipNode {
   requireName(ENames.TableConceptRelationshipNodeEName)
 
   def relationshipSources: Seq[RelationshipSource] = {
@@ -2333,7 +2437,8 @@ final case class ConceptRelationshipNode(underlyingElem: BackingNodes.Elem) exte
 /**
  * A table:dimensionRelationshipNode.
  */
-final case class DimensionRelationshipNode(underlyingElem: BackingNodes.Elem) extends RelationshipNode {
+final case class DimensionRelationshipNode(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends RelationshipNode {
   requireName(ENames.TableDimensionRelationshipNodeEName)
 
   /**
@@ -2422,7 +2527,8 @@ final case class DimensionRelationshipNode(underlyingElem: BackingNodes.Elem) ex
 /**
  * A table:aspectNode.
  */
-final case class AspectNode(underlyingElem: BackingNodes.Elem) extends OpenDefinitionNode {
+final case class AspectNode(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends OpenDefinitionNode {
   requireName(ENames.TableAspectNodeEName)
 
   def aspectSpec: AspectSpec = {
@@ -2446,7 +2552,8 @@ sealed trait AspectSpec extends TableNonXLinkElem {
 /**
  * A table:conceptAspect.
  */
-final case class ConceptAspectSpec(underlyingElem: BackingNodes.Elem) extends AspectSpec {
+final case class ConceptAspectSpec(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends AspectSpec {
   requireName(ENames.TableConceptAspectEName)
 
   def aspect: Aspect = Aspect.ConceptAspect
@@ -2455,7 +2562,8 @@ final case class ConceptAspectSpec(underlyingElem: BackingNodes.Elem) extends As
 /**
  * A table:unitAspect.
  */
-final case class UnitAspectSpec(underlyingElem: BackingNodes.Elem) extends AspectSpec {
+final case class UnitAspectSpec(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends AspectSpec {
   requireName(ENames.TableUnitAspectEName)
 
   def aspect: Aspect = Aspect.UnitAspect
@@ -2464,7 +2572,8 @@ final case class UnitAspectSpec(underlyingElem: BackingNodes.Elem) extends Aspec
 /**
  * A table:entityIdentifierAspect.
  */
-final case class EntityIdentifierAspectSpec(underlyingElem: BackingNodes.Elem) extends AspectSpec {
+final case class EntityIdentifierAspectSpec(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends AspectSpec {
   requireName(ENames.TableEntityIdentifierAspectEName)
 
   def aspect: Aspect = Aspect.EntityIdentifierAspect
@@ -2473,7 +2582,8 @@ final case class EntityIdentifierAspectSpec(underlyingElem: BackingNodes.Elem) e
 /**
  * A table:periodAspect.
  */
-final case class PeriodAspectSpec(underlyingElem: BackingNodes.Elem) extends AspectSpec {
+final case class PeriodAspectSpec(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends AspectSpec {
   requireName(ENames.TablePeriodAspectEName)
 
   def aspect: Aspect = Aspect.PeriodAspect
@@ -2482,7 +2592,8 @@ final case class PeriodAspectSpec(underlyingElem: BackingNodes.Elem) extends Asp
 /**
  * A table:dimensionAspect.
  */
-final case class DimensionAspectSpec(underlyingElem: BackingNodes.Elem) extends AspectSpec {
+final case class DimensionAspectSpec(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends AspectSpec {
   requireName(ENames.TableDimensionAspectEName)
 
   def aspect: Aspect = Aspect.DimensionAspect(dimension)
@@ -2501,7 +2612,8 @@ final case class DimensionAspectSpec(underlyingElem: BackingNodes.Elem) extends 
 /**
  * A table:ruleSet.
  */
-final case class RuleSet(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class RuleSet(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableNonXLinkElem {
   requireName(ENames.TableRuleSetEName)
 
   def aspects: Seq[FormulaAspect] = {
@@ -2524,7 +2636,8 @@ final case class RuleSet(underlyingElem: BackingNodes.Elem) extends TableNonXLin
 /**
  * A table:relationshipSource.
  */
-final case class RelationshipSource(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class RelationshipSource(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableNonXLinkElem {
   requireName(ENames.TableRelationshipSourceEName)
 
   /**
@@ -2538,7 +2651,7 @@ final case class RelationshipSource(underlyingElem: BackingNodes.Elem) extends T
 /**
  * A table:relationshipSourceExpression.
  */
-final case class RelationshipSourceExpression(underlyingElem: BackingNodes.Elem)
+final case class RelationshipSourceExpression(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends TableNonXLinkElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableRelationshipSourceExpressionEName)
@@ -2547,7 +2660,8 @@ final case class RelationshipSourceExpression(underlyingElem: BackingNodes.Elem)
 /**
  * A table:linkrole.
  */
-final case class Linkrole(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class Linkrole(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableNonXLinkElem {
   requireName(ENames.TableLinkroleEName)
 
   def linkrole: String = text
@@ -2556,7 +2670,7 @@ final case class Linkrole(underlyingElem: BackingNodes.Elem) extends TableNonXLi
 /**
  * A table:linkroleExpression.
  */
-final case class LinkroleExpression(underlyingElem: BackingNodes.Elem)
+final case class LinkroleExpression(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends TableNonXLinkElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableLinkroleExpressionEName)
@@ -2565,7 +2679,8 @@ final case class LinkroleExpression(underlyingElem: BackingNodes.Elem)
 /**
  * A table:arcrole.
  */
-final case class Arcrole(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class Arcrole(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableNonXLinkElem {
   requireName(ENames.TableArcroleEName)
 
   def arcrole: String = text
@@ -2574,7 +2689,7 @@ final case class Arcrole(underlyingElem: BackingNodes.Elem) extends TableNonXLin
 /**
  * A table:arcroleExpression.
  */
-final case class ArcroleExpression(underlyingElem: BackingNodes.Elem)
+final case class ArcroleExpression(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends TableNonXLinkElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableArcroleExpressionEName)
@@ -2583,7 +2698,10 @@ final case class ArcroleExpression(underlyingElem: BackingNodes.Elem)
 /**
  * A table:formulaAxis in a table:conceptRelationshipNode.
  */
-final case class ConceptRelationshipNodeFormulaAxis(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class ConceptRelationshipNodeFormulaAxis(
+    underlyingElem: BackingNodes.Elem,
+    taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableNonXLinkElem {
   requireName(ENames.TableFormulaAxisEName)
 
   /**
@@ -2597,7 +2715,9 @@ final case class ConceptRelationshipNodeFormulaAxis(underlyingElem: BackingNodes
 /**
  * A table:formulaAxisExpression in a table:conceptRelationshipNode.
  */
-final case class ConceptRelationshipNodeFormulaAxisExpression(underlyingElem: BackingNodes.Elem)
+final case class ConceptRelationshipNodeFormulaAxisExpression(
+    underlyingElem: BackingNodes.Elem,
+    taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends TableNonXLinkElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableFormulaAxisExpressionEName)
@@ -2606,7 +2726,10 @@ final case class ConceptRelationshipNodeFormulaAxisExpression(underlyingElem: Ba
 /**
  * A table:formulaAxis in a table:dimensionRelationshipNode.
  */
-final case class DimensionRelationshipNodeFormulaAxis(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class DimensionRelationshipNodeFormulaAxis(
+    underlyingElem: BackingNodes.Elem,
+    taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableNonXLinkElem {
   requireName(ENames.TableFormulaAxisEName)
 
   /**
@@ -2620,7 +2743,9 @@ final case class DimensionRelationshipNodeFormulaAxis(underlyingElem: BackingNod
 /**
  * A table:formulaAxisExpression in a table:dimensionRelationshipNode.
  */
-final case class DimensionRelationshipNodeFormulaAxisExpression(underlyingElem: BackingNodes.Elem)
+final case class DimensionRelationshipNodeFormulaAxisExpression(
+    underlyingElem: BackingNodes.Elem,
+    taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends TableNonXLinkElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableFormulaAxisExpressionEName)
@@ -2629,7 +2754,8 @@ final case class DimensionRelationshipNodeFormulaAxisExpression(underlyingElem: 
 /**
  * A table:generations.
  */
-final case class Generations(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class Generations(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableNonXLinkElem {
   requireName(ENames.TableGenerationsEName)
 
   /**
@@ -2641,7 +2767,7 @@ final case class Generations(underlyingElem: BackingNodes.Elem) extends TableNon
 /**
  * A table:generationsExpression.
  */
-final case class GenerationsExpression(underlyingElem: BackingNodes.Elem)
+final case class GenerationsExpression(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends TableNonXLinkElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableGenerationsExpressionEName)
@@ -2650,7 +2776,8 @@ final case class GenerationsExpression(underlyingElem: BackingNodes.Elem)
 /**
  * A table:linkname.
  */
-final case class Linkname(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class Linkname(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableNonXLinkElem {
   requireName(ENames.TableLinknameEName)
 
   /**
@@ -2662,7 +2789,7 @@ final case class Linkname(underlyingElem: BackingNodes.Elem) extends TableNonXLi
 /**
  * A table:linknameExpression.
  */
-final case class LinknameExpression(underlyingElem: BackingNodes.Elem)
+final case class LinknameExpression(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends TableNonXLinkElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableLinknameExpressionEName)
@@ -2671,7 +2798,8 @@ final case class LinknameExpression(underlyingElem: BackingNodes.Elem)
 /**
  * A table:arcname.
  */
-final case class Arcname(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class Arcname(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableNonXLinkElem {
   requireName(ENames.TableArcnameEName)
 
   /**
@@ -2683,7 +2811,7 @@ final case class Arcname(underlyingElem: BackingNodes.Elem) extends TableNonXLin
 /**
  * A table:arcnameExpression.
  */
-final case class ArcnameExpression(underlyingElem: BackingNodes.Elem)
+final case class ArcnameExpression(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends TableNonXLinkElem
     with NonStandardTaxonomyElemSupport.HasExprText {
   requireName(ENames.TableArcnameExpressionEName)
@@ -2692,7 +2820,8 @@ final case class ArcnameExpression(underlyingElem: BackingNodes.Elem)
 /**
  * A table:dimension.
  */
-final case class TableDimension(underlyingElem: BackingNodes.Elem) extends TableNonXLinkElem {
+final case class TableDimension(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+    extends TableNonXLinkElem {
   requireName(ENames.TableDimensionEName)
 
   /**
@@ -2700,5 +2829,47 @@ final case class TableDimension(underlyingElem: BackingNodes.Elem) extends Table
    */
   def dimension: EName = {
     textAsResolvedQName
+  }
+}
+
+// Companion objects
+
+object StandardizedNonStandardTaxonomyElem {
+
+  // TODO Complete!
+
+  private val namespaceToElemConstructorGetterMap: Map[String, ElemConstructorGetterByEName] = {
+    Map(
+      Namespaces.VariableNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.VariableVariableArcEName -> VariableArc.apply,
+          ENames.VariableVariableFilterArcEName -> VariableFilterArc.apply,
+          ENames.VariableVariableSetFilterArcEName -> VariableSetFilterArc.apply,
+          ENames.VariableParameterEName -> RegularParameter.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      )
+    )
+  }
+
+  /**
+   * The default ElemFactory implementation. It returns TaxonomyElem instances whose types do not know about formula or
+   * table content.
+   */
+  object DefaultElemFactory extends TaxonomyElem.ElemFactory {
+
+    def apply(underlyingElem: BackingNodes.Elem): TaxonomyElem = {
+      of(underlyingElem, DefaultElemFactory)
+    }
+
+    def of(underlyingElem: BackingNodes.Elem, elemFactory: TaxonomyElem.ElemFactory): TaxonomyElem = {
+      val name = underlyingElem.name
+
+      namespaceToElemConstructorGetterMap
+        .get(name.namespaceUriOption.getOrElse(""))
+        .map(_.apply(name))
+        .map(f => f(underlyingElem, elemFactory))
+        .getOrElse(TaxonomyElem.DefaultElemFactory.of(underlyingElem, elemFactory))
+    }
   }
 }

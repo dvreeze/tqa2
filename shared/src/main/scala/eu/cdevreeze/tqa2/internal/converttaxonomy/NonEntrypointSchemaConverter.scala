@@ -23,7 +23,7 @@ import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
 import eu.cdevreeze.tqa2.internal.xmlutil.NodeBuilderUtil
 import eu.cdevreeze.tqa2.internal.xmlutil.SimpleElemUtil
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElems
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
@@ -235,7 +235,7 @@ final class NonEntrypointSchemaConverter(
 
   private def makeSchema(docUriOption: Option[URI], schemaRootElem: simple.Elem): XsSchema = {
     // Indexed elements not efficient, but great for debugging
-    TaxonomyElem(indexed.Elem.ofRoot(docUriOption, schemaRootElem)).asInstanceOf[XsSchema]
+    TaxonomyElems.of(indexed.Elem.ofRoot(docUriOption, schemaRootElem)).asInstanceOf[XsSchema]
   }
 
   private def makeStandardSchema(docUriOption: Option[URI], schemaRootElem: simple.Elem): standardtaxonomy.dom.XsSchema = {

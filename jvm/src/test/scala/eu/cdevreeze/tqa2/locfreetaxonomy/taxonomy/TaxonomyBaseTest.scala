@@ -23,6 +23,7 @@ import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyDocument
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElems
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
 import eu.cdevreeze.yaidom2.node.saxon
 import net.sf.saxon.s9api.Processor
@@ -64,6 +65,6 @@ class TaxonomyBaseTest extends AnyFunSuite {
   private def getTaxonomyElement(relativeFilePath: URI): TaxonomyElem = {
     val doc: saxon.Document = TestResourceUtil.buildSaxonDocumentFromClasspathResource(relativeFilePath, processor)
 
-    TaxonomyElem(doc.documentElement)
+    TaxonomyElems.of(doc.documentElement)
   }
 }

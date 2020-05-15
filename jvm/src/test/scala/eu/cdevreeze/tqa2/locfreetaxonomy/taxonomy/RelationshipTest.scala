@@ -23,6 +23,7 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Linkbase
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyDocument
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElems
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ConceptLabelRelationship
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.node.saxon
@@ -62,6 +63,6 @@ class RelationshipTest extends AnyFunSuite {
   private def getTaxonomyElement(relativeFilePath: URI): TaxonomyElem = {
     val doc: saxon.Document = TestResourceUtil.buildSaxonDocumentFromClasspathResource(relativeFilePath, processor)
 
-    TaxonomyElem(doc.documentElement)
+    TaxonomyElems.of(doc.documentElement)
   }
 }

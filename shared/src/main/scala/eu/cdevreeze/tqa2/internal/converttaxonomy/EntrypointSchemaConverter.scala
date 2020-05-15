@@ -22,7 +22,7 @@ import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
 import eu.cdevreeze.tqa2.internal.xmlutil.NodeBuilderUtil
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElems
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
 import eu.cdevreeze.yaidom2.core.PrefixedScope
@@ -150,7 +150,7 @@ final class EntrypointSchemaConverter(
 
   private def makeSchema(docUriOption: Option[URI], schemaRootElem: nodebuilder.Elem): XsSchema = {
     // Indexed elements not efficient, but great for debugging
-    TaxonomyElem(indexed.Elem.ofRoot(docUriOption, simple.Elem.from(schemaRootElem))).asInstanceOf[XsSchema]
+    TaxonomyElems.of(indexed.Elem.ofRoot(docUriOption, simple.Elem.from(schemaRootElem))).asInstanceOf[XsSchema]
   }
 
   private def removeIfEmptyAnnotation(elem: nodebuilder.Elem): Option[nodebuilder.Elem] = {

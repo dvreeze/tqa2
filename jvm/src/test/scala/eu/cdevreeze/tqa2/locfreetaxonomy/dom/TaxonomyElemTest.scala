@@ -99,6 +99,6 @@ class TaxonomyElemTest extends AnyFunSuite {
   private def getTaxonomyElement(relativeFilePath: URI): TaxonomyElem = {
     val doc: saxon.Document = TestResourceUtil.buildSaxonDocumentFromClasspathResource(relativeFilePath, processor)
 
-    TaxonomyElem(doc.documentElement)
+    TaxonomyElems.of(doc.documentElement)
   }
 }

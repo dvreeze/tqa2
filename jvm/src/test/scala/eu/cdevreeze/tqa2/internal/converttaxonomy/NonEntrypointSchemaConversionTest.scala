@@ -25,6 +25,7 @@ import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
 import eu.cdevreeze.tqa2.locfreetaxonomy.TestResourceUtil
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElems
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.XsSchema
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.core.NamespacePrefixMapper
@@ -125,6 +126,6 @@ class NonEntrypointSchemaConversionTest extends AnyFunSuite {
   private def getLocatorFreeTaxonomyElement(relativeFilePath: URI): TaxonomyElem = {
     val doc: saxon.Document = TestResourceUtil.buildSaxonDocumentFromClasspathResource(relativeFilePath, processor)
 
-    TaxonomyElem(doc.documentElement)
+    TaxonomyElems.of(doc.documentElement)
   }
 }
