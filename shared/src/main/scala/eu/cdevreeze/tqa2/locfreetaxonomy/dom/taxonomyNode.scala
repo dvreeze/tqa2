@@ -1221,10 +1221,21 @@ object TaxonomyElem {
    */
   object DefaultElemFactory extends ElemFactory {
 
+    /**
+     * Returns `of(underlyingElem, DefaultElemFactory)`. That is, creates a TaxonomyElem using this element factory, which
+     * is used for this element and all its descendants.
+     */
     def apply(underlyingElem: BackingNodes.Elem): TaxonomyElem = {
       of(underlyingElem, DefaultElemFactory)
     }
 
+    /**
+     * Creates a TaxonomyElem wrapping the parameter underlying element. This DefaultElemFactory determines the type of
+     * taxonomy element wrapping the underlying element, whereas the parameter element factory is used to create descendant
+     * taxonomy elements (when querying for them). The parameter eleemnt factory could be this DefaultElemFactory, or
+     * it could typically be StandardizedNonStandardTaxonomyElem.DefaultElemFactory, which adds formula/table knowledge
+     * to the taxonomy DOM.
+     */
     def of(underlyingElem: BackingNodes.Elem, elemFactory: ElemFactory): TaxonomyElem = {
       val name = underlyingElem.name
 

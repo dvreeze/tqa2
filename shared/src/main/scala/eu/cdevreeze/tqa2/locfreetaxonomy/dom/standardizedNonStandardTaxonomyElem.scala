@@ -1001,9 +1001,9 @@ final case class SingleMeasureFilter(underlyingElem: BackingNodes.Elem, taxonomy
 }
 
 /**
- * An uf:generalMeasure filter.
+ * An uf:generalMeasures filter.
  */
-final case class GeneralMeasureFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
+final case class GeneralMeasuresFilter(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
     extends UnitFilter
     with NonStandardTaxonomyElemSupport.HasTestExpr {
   requireName(ENames.UfGeneralMeasuresEName)
@@ -2836,7 +2836,7 @@ final case class TableDimension(underlyingElem: BackingNodes.Elem, taxonomyElemF
 
 object StandardizedNonStandardTaxonomyElem {
 
-  // TODO Complete!
+  // TODO Complete! Also the fallbacks.
 
   private val namespaceToElemConstructorGetterMap: Map[String, ElemConstructorGetterByEName] = {
     Map(
@@ -2845,10 +2845,292 @@ object StandardizedNonStandardTaxonomyElem {
           ENames.VariableVariableArcEName -> VariableArc.apply,
           ENames.VariableVariableFilterArcEName -> VariableFilterArc.apply,
           ENames.VariableVariableSetFilterArcEName -> VariableSetFilterArc.apply,
+          ENames.VariablePreconditionEName -> Precondition.apply,
           ENames.VariableParameterEName -> RegularParameter.apply,
+          ENames.VariableFactVariableEName -> FactVariable.apply,
+          ENames.VariableGeneralVariableEName -> GeneralVariable.apply,
+          ENames.VariableFunctionEName -> Function.apply,
+          ENames.VariableEqualityDefinitionEName -> EqualityDefinition.apply,
+          ENames.VariableInputEName -> FunctionInput.apply,
         ),
         TaxonomyElem.fallbackElem
-      )
+      ),
+      Namespaces.ValidationNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.ValidationAssertionSetEName -> AssertionSet.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.VaNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.VaValueAssertionEName -> ValueAssertion.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.EaNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.EaExistenceAssertionEName -> ExistenceAssertion.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.CaNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.CaConsistencyAssertionEName -> ConsistencyAssertion.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.FormulaNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.FormulaFormulaEName -> Formula.apply,
+          ENames.FormulaAspectsEName -> FormulaAspectsElem.apply,
+          ENames.FormulaConceptEName -> ConceptAspect.apply,
+          ENames.FormulaEntityIdentifierEName -> EntityIdentifierAspect.apply,
+          ENames.FormulaPeriodEName -> PeriodAspect.apply,
+          ENames.FormulaUnitEName -> UnitAspect.apply,
+          ENames.FormulaOccEmptyEName -> OccEmptyAspect.apply,
+          ENames.FormulaOccFragmentsEName -> OccFragmentsAspect.apply,
+          ENames.FormulaOccXpathEName -> OccXpathAspect.apply,
+          ENames.FormulaExplicitDimensionEName -> ExplicitDimensionAspect.apply,
+          ENames.FormulaTypedDimensionEName -> TypedDimensionAspect.apply,
+          ENames.FormulaQNameEName -> QNameElem.apply,
+          ENames.FormulaQNameExpressionEName -> QNameExpressionElem.apply,
+          ENames.FormulaForeverEName -> ForeverElem.apply,
+          ENames.FormulaInstantEName -> InstantElem.apply,
+          ENames.FormulaDurationEName -> DurationElem.apply,
+          ENames.FormulaMultiplyByEName -> MultiplyByElem.apply,
+          ENames.FormulaDivideByEName -> DivideByElem.apply,
+          ENames.FormulaMemberEName -> MemberElem.apply,
+          ENames.FormulaOmitEName -> OmitElem.apply,
+          ENames.FormulaXpathEName -> XpathElem.apply,
+          ENames.FormulaValueEName -> ValueElem.apply,
+          ENames.FormulaPrecisionEName -> PrecisionElem.apply,
+          ENames.FormulaDecimalsEName -> DecimalsElem.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.InstancesNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.InstancesInstanceEName -> Instance.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.CfiNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.CfiImplementationEName -> FunctionImplementation.apply,
+          ENames.CfiInputEName -> FunctionImplementationInput.apply,
+          ENames.CfiStepEName -> FunctionImplementationStep.apply,
+          ENames.CfiOutputEName -> FunctionImplementationOutput.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.MsgNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.MsgMessageEName -> Message.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.SevNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.SevOkEName -> OkSeverity.apply,
+          ENames.SevWarningEName -> WarningSeverity.apply,
+          ENames.SevErrorEName -> ErrorSeverity.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.CfNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.CfConceptNameEName -> ConceptNameFilter.apply,
+          ENames.CfConceptPeriodTypeEName -> ConceptPeriodTypeFilter.apply,
+          ENames.CfConceptBalanceEName -> ConceptBalanceFilter.apply,
+          ENames.CfConceptCustomAttributeEName -> ConceptCustomAttributeFilter.apply,
+          ENames.CfConceptDataTypeEName -> ConceptDataTypeFilter.apply,
+          ENames.CfConceptSubstitutionGroupEName -> ConceptSubstitutionGroupFilter.apply,
+          ENames.CfConceptEName -> ConceptFilterConcept.apply,
+          ENames.CfAttributeEName -> ConceptFilterAttribute.apply,
+          ENames.CfTypeEName -> ConceptFilterType.apply,
+          ENames.CfSubstitutionGroupEName -> ConceptFilterSubstitutionGroup.apply,
+          ENames.CfQnameEName -> ConceptFilterQName.apply,
+          ENames.CfQnameExpressionEName -> ConceptFilterQNameExpression.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.BfNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.BfAndFilterEName -> AndFilter.apply,
+          ENames.BfOrFilterEName -> OrFilter.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.DfNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.DfExplicitDimensionEName -> ExplicitDimensionFilter.apply,
+          ENames.DfTypedDimensionEName -> TypedDimensionFilter.apply,
+          ENames.DfDimensionEName -> DimensionFilterDimension.apply,
+          ENames.DfMemberEName -> DimensionFilterMember.apply,
+          ENames.DfVariableEName -> DimensionFilterVariable.apply,
+          ENames.DfLinkroleEName -> DimensionFilterLinkrole.apply,
+          ENames.DfArcroleEName -> DimensionFilterArcrole.apply,
+          ENames.DfAxisEName -> DimensionFilterAxis.apply,
+          ENames.DfQnameEName -> DimensionFilterQName.apply,
+          ENames.DfQnameExpressionEName -> DimensionFilterQNameExpression.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.EfNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.EfIdentifierEName -> IdentifierFilter.apply,
+          ENames.EfSpecificSchemeEName -> SpecificSchemeFilter.apply,
+          ENames.EfRegexpSchemeEName -> RegexpSchemeFilter.apply,
+          ENames.EfSpecificIdentifierEName -> SpecificIdentifierFilter.apply,
+          ENames.EfRegexpIdentifierEName -> RegexpIdentifierFilter.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.GfNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.GfGeneralEName -> GeneralFilter.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.MfNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.MfMatchConceptEName -> MatchConceptFilter.apply,
+          ENames.MfMatchLocationEName -> MatchLocationFilter.apply,
+          ENames.MfMatchUnitEName -> MatchUnitFilter.apply,
+          ENames.MfMatchEntityIdentifierEName -> MatchEntityIdentifierFilter.apply,
+          ENames.MfMatchPeriodEName -> MatchPeriodFilter.apply,
+          ENames.MfMatchSegmentEName -> MatchSegmentFilter.apply,
+          ENames.MfMatchScenarioEName -> MatchScenarioFilter.apply,
+          ENames.MfMatchNonXDTSegmentEName -> MatchNonXDTSegmentFilter.apply,
+          ENames.MfMatchNonXDTScenarioEName -> MatchNonXDTScenarioFilter.apply,
+          ENames.MfMatchDimensionEName -> MatchDimensionFilter.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.PfNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.PfPeriodEName -> PeriodFilter.apply,
+          ENames.PfPeriodStartEName -> PeriodStartFilter.apply,
+          ENames.PfPeriodEndEName -> PeriodEndFilter.apply,
+          ENames.PfPeriodInstantEName -> PeriodInstantFilter.apply,
+          ENames.PfForeverEName -> ForeverFilter.apply,
+          ENames.PfInstantDurationEName -> InstantDurationFilter.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.RfNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.RfRelativeFilterEName -> RelativeFilter.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.SsfNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.SsfSegmentEName -> SegmentFilter.apply,
+          ENames.SsfScenarioEName -> ScenarioFilter.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.TfNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.TfParentFilterEName -> ParentFilter.apply,
+          ENames.TfAncestorFilterEName -> AncestorFilter.apply,
+          ENames.TfSiblingFilterEName -> SiblingFilter.apply,
+          ENames.TfLocationFilterEName -> LocationFilter.apply,
+          ENames.TfParentEName -> TupleFilterParent.apply,
+          ENames.TfAncestorEName -> TupleFilterAncestor.apply,
+          ENames.TfQnameEName -> TupleFilterQName.apply,
+          ENames.TfQnameExpressionEName -> TupleFilterQNameExpression.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.UfNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.UfSingleMeasureEName -> SingleMeasureFilter.apply,
+          ENames.UfGeneralMeasuresEName -> GeneralMeasuresFilter.apply,
+          ENames.UfMeasureEName -> UnitFilterMeasure.apply,
+          ENames.UfQnameEName -> UnitFilterQName.apply,
+          ENames.UfQnameExpressionEName -> UnitFilterQNameExpression.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.VfNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.VfNilEName -> NilFilter.apply,
+          ENames.VfPrecisionEName -> PrecisionFilter.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.AcfNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.AcfAspectCoverEName -> AspectCoverFilter.apply,
+          ENames.AcfAspectEName -> AspectCoverFilterAspect.apply,
+          ENames.AcfDimensionEName -> AspectCoverFilterDimension.apply,
+          ENames.AcfExcludeDimensionEName -> AspectCoverFilterExcludeDimension.apply,
+          ENames.AcfQnameEName -> AspectCoverFilterQName.apply,
+          ENames.AcfQnameExpressionEName -> AspectCoverFilterQNameExpression.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.CrfNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.CrfConceptRelationEName -> ConceptRelationFilter.apply,
+          ENames.CrfAxisEName -> ConceptRelationFilterAxis.apply,
+          ENames.CrfGenerationsEName -> ConceptRelationFilterGenerations.apply,
+          ENames.CrfVariableEName -> ConceptRelationFilterVariable.apply,
+          ENames.CrfLinkroleEName -> ConceptRelationFilterLinkrole.apply,
+          ENames.CrfLinkroleExpressionEName -> ConceptRelationFilterLinkroleExpression.apply,
+          ENames.CrfLinknameEName -> ConceptRelationFilterLinkname.apply,
+          ENames.CrfLinknameExpressionEName -> ConceptRelationFilterLinknameExpression.apply,
+          ENames.CrfArcroleEName -> ConceptRelationFilterArcrole.apply,
+          ENames.CrfArcroleExpressionEName -> ConceptRelationFilterArcroleExpression.apply,
+          ENames.CrfArcnameEName -> ConceptRelationFilterArcname.apply,
+          ENames.CrfArcnameExpressionEName -> ConceptRelationFilterArcnameExpression.apply,
+          ENames.CrfQnameEName -> ConceptRelationFilterQName.apply,
+          ENames.CrfQnameExpressionEName -> ConceptRelationFilterQNameExpression.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
+      Namespaces.TableNamespace -> new TaxonomyElem.DefaultElemConstructorGetter(
+        Map[EName, TaxonomyElem.ElemConstructor](
+          ENames.TableTableBreakdownArcEName -> TableBreakdownArc.apply,
+          ENames.TableBreakdownTreeArcEName -> BreakdownTreeArc.apply,
+          ENames.TableDefinitionNodeSubtreeArcEName -> DefinitionNodeSubtreeArc.apply,
+          ENames.TableTableFilterArcEName -> TableFilterArc.apply,
+          ENames.TableTableParameterArcEName -> TableParameterArc.apply,
+          ENames.TableAspectNodeFilterArcEName -> AspectNodeFilterArc.apply,
+          ENames.TableTableEName -> Table.apply,
+          ENames.TableBreakdownEName -> TableBreakdown.apply,
+          ENames.TableRuleNodeEName -> RuleNode.apply,
+          ENames.TableConceptRelationshipNodeEName -> ConceptRelationshipNode.apply,
+          ENames.TableDimensionRelationshipNodeEName -> DimensionRelationshipNode.apply,
+          ENames.TableAspectNodeEName -> AspectNode.apply,
+          ENames.TableConceptAspectEName -> ConceptAspectSpec.apply,
+          ENames.TableUnitAspectEName -> UnitAspectSpec.apply,
+          ENames.TableEntityIdentifierAspectEName -> EntityIdentifierAspectSpec.apply,
+          ENames.TablePeriodAspectEName -> PeriodAspectSpec.apply,
+          ENames.TableDimensionAspectEName -> DimensionAspectSpec.apply,
+          ENames.TableRuleSetEName -> RuleSet.apply,
+          ENames.TableRelationshipSourceEName -> RelationshipSource.apply,
+          ENames.TableRelationshipSourceExpressionEName -> RelationshipSourceExpression.apply,
+          ENames.TableLinkroleEName -> Linkrole.apply,
+          ENames.TableLinkroleExpressionEName -> LinkroleExpression.apply,
+          ENames.TableArcroleEName -> Arcrole.apply,
+          ENames.TableArcroleExpressionEName -> ArcroleExpression.apply,
+          ENames.TableFormulaAxisEName -> ConceptRelationshipNodeFormulaAxis.apply,
+          ENames.TableFormulaAxisExpressionEName -> ConceptRelationshipNodeFormulaAxisExpression.apply,
+          ENames.TableFormulaAxisEName -> DimensionRelationshipNodeFormulaAxis.apply,
+          ENames.TableFormulaAxisExpressionEName -> DimensionRelationshipNodeFormulaAxisExpression.apply,
+          ENames.TableGenerationsEName -> Generations.apply,
+          ENames.TableGenerationsExpressionEName -> GenerationsExpression.apply,
+          ENames.TableLinknameEName -> Linkname.apply,
+          ENames.TableLinknameExpressionEName -> LinknameExpression.apply,
+          ENames.TableArcnameEName -> Arcname.apply,
+          ENames.TableArcnameExpressionEName -> ArcnameExpression.apply,
+          ENames.TableDimensionEName -> TableDimension.apply,
+        ),
+        TaxonomyElem.fallbackElem
+      ),
     )
   }
 

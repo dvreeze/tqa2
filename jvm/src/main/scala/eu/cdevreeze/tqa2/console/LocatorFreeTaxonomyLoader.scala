@@ -19,6 +19,7 @@ package eu.cdevreeze.tqa2.console
 import java.io.File
 import java.net.URI
 
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.HasHypercubeRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ParentChildRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
@@ -89,13 +90,18 @@ object LocatorFreeTaxonomyLoader {
     println(s"Number of dimensional concepts that are not items in the taxo: ${dimensionalConcepts.diff(items).size}")
     println(s"Number of items in the taxo that are not dimensional concepts: ${items.diff(dimensionalConcepts).size}")
 
-    val domTypeCounts: Map[Class[_], Int] =
-      taxo.rootElems.flatMap(_.findAllDescendantElemsOrSelf).groupBy(_.getClass).view.mapValues(_.size).toMap
+    val allElems: Seq[TaxonomyElem] = taxo.rootElems.flatMap(_.findAllDescendantElemsOrSelf)
+
+    val domTypeCounts: Map[Class[_], Int] = allElems.groupBy(_.getClass).view.mapValues(_.size).toMap
+    val domTypeElemNames: Map[Class[_], Set[EName]] = allElems.groupMap(_.getClass)(_.name).view.mapValues(_.toSet).toMap
 
     println()
-    domTypeCounts.toSeq.sortBy(_._2).reverse.take(50).foreach {
+    println(s"There are ${allElems.size} XML elements in the taxonomy (in ${taxo.rootElems.size} documents)")
+    println()
+    domTypeCounts.toSeq.sortBy(_._2).reverse.foreach {
       case (cls, cnt) =>
-        println(s"Element class ${cls.getName}, count $cnt")
+        val elemNames: Set[EName] = domTypeElemNames.getOrElse(cls, Set.empty)
+        println(s"Element class ${cls.getSimpleName}, count $cnt (element names: ${elemNames.toSeq.sortBy(_.toString).mkString(", ")})")
     }
   }
 
