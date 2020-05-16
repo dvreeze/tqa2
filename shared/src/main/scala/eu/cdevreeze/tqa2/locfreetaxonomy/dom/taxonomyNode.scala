@@ -1232,7 +1232,7 @@ object TaxonomyElem {
     /**
      * Creates a TaxonomyElem wrapping the parameter underlying element. This DefaultElemFactory determines the type of
      * taxonomy element wrapping the underlying element, whereas the parameter element factory is used to create descendant
-     * taxonomy elements (when querying for them). The parameter eleemnt factory could be this DefaultElemFactory, or
+     * taxonomy elements (when querying for them). The parameter element factory could be this DefaultElemFactory, or
      * it could typically be StandardizedNonStandardTaxonomyElem.DefaultElemFactory, which adds formula/table knowledge
      * to the taxonomy DOM.
      */
