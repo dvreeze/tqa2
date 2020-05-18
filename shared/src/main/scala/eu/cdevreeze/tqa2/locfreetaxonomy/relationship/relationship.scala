@@ -20,14 +20,10 @@ import java.net.URI
 
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.datatypes.XsBooleans
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.BaseSetKey
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.ContextElement
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.StandardLabelRoles
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.StandardReferenceRoles
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.Use
+import eu.cdevreeze.tqa2.locfreetaxonomy.common._
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom
-import eu.cdevreeze.tqa2.locfreetaxonomy.dom.NonStandardResource
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint.{ConceptKeyEndpoint, RegularResource}
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint.ConceptKeyEndpoint
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint.RegularResource
 import eu.cdevreeze.yaidom2.core.EName
 
 /**
@@ -71,6 +67,8 @@ sealed trait Relationship {
 
   final def elr: String = arc.elr
 
+  final def arcName: EName = arc.name
+
   final def arcrole: String = arc.arcrole
 
   final def baseSetKey: BaseSetKey = arc.baseSetKey
@@ -89,6 +87,10 @@ sealed trait Relationship {
   final def genericPreferredLabelOption: Option[String] = {
     arc.attrOption(ENames.GplPreferredLabelEName)
   }
+
+  protected[relationship] def requireArcrole(requiredArcrole: String): Unit = {
+    require(arcrole == requiredArcrole, s"Required arcrole: $requiredArcrole. Found arcrole $arcrole instead, in document $docUri")
+  }
 }
 
 /**
@@ -105,10 +107,11 @@ sealed trait StandardRelationship extends Relationship {
 
 /**
  * Non-standard relationship in the locator-free model, so typically a generic relationship.
+ * This trait is not sealed, so may be extended for custom taxonomy "dialects".
  */
-sealed trait NonStandardRelationship extends Relationship {
+trait NonStandardRelationship extends Relationship {
 
-  def arc: dom.NonStandardArc
+  def arc: dom.AnyNonStandardArc
 }
 
 /**
@@ -116,50 +119,83 @@ sealed trait NonStandardRelationship extends Relationship {
  */
 sealed trait ElementResourceRelationship extends NonStandardRelationship {
 
-  def target: RegularResource[NonStandardResource]
+  def target: RegularResource[dom.NonStandardResource]
 }
 
 /**
  * Element-label relationship, with arcrole "http://xbrl.org/arcrole/2008/element-label".
  */
-final case class ElementLabelRelationship(
-  arc: dom.NonStandardArc,
-  source: Endpoint,
-  target: RegularResource[NonStandardResource]) extends ElementResourceRelationship
+final case class ElementLabelRelationship(arc: dom.AnyNonStandardArc, source: Endpoint, target: RegularResource[dom.NonStandardResource])
+    extends ElementResourceRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2008/element-label")
+}
 
 /**
  * Element-reference relationship, with arcrole "http://xbrl.org/arcrole/2008/element-reference".
  */
 final case class ElementReferenceRelationship(
-  arc: dom.NonStandardArc,
-  source: Endpoint,
-  target: RegularResource[NonStandardResource]) extends ElementResourceRelationship
+    arc: dom.AnyNonStandardArc,
+    source: Endpoint,
+    target: RegularResource[dom.NonStandardResource])
+    extends ElementResourceRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2008/element-reference")
+}
 
 /**
  * Element-message relationship, with a msg:message as target.
  */
-final case class ElementMessageRelationship(
-  arc: dom.NonStandardArc,
-  source: Endpoint,
-  target: Endpoint) extends NonStandardRelationship
+sealed trait ElementMessageRelationship extends NonStandardRelationship {
+
+  def target: RegularResource[_ <: dom.Message]
+
+  final def message: dom.Message = target.resource
+}
+
+sealed trait AssertionMessageRelationship extends ElementMessageRelationship {
+
+  def source: RegularResource[_ <: dom.Assertion]
+
+  def assertion: dom.Assertion = source.resource
+}
 
 /**
- * Other non-standard relationship in the locator-free model, so typically some generic relationship.
- *
- * TODO Open up this class for extension
+ * An assertion-satisfied-message relationship.
  */
-final case class OtherNonStandardRelationship(
-  arc: dom.NonStandardArc,
-  source: Endpoint,
-  target: Endpoint) extends NonStandardRelationship
+final case class AssertionSatisfiedMessageRelationship(
+    arc: dom.AnyNonStandardArc,
+    source: RegularResource[_ <: dom.Assertion],
+    target: RegularResource[_ <: dom.Message])
+    extends AssertionMessageRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2010/assertion-satisfied-message")
+}
+
+/**
+ * An assertion-unsatisfied-message relationship.
+ */
+final case class AssertionUnsatisfiedMessageRelationship(
+    arc: dom.AnyNonStandardArc,
+    source: RegularResource[_ <: dom.Assertion],
+    target: RegularResource[_ <: dom.Message])
+    extends AssertionMessageRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2010/assertion-unsatisfied-message")
+}
+
+/**
+ * Other (typically custom) element-message relationship in the locator-free model.
+ */
+final case class OtherElementMessageRelationship(arc: dom.AnyNonStandardArc, source: Endpoint, target: RegularResource[_ <: dom.Message])
+    extends ElementMessageRelationship
+
+/**
+ * Other (typically custom) non-standard relationship in the locator-free model, so typically some generic relationship.
+ */
+final case class OtherNonStandardRelationship(arc: dom.AnyNonStandardArc, source: Endpoint, target: Endpoint)
+    extends NonStandardRelationship
 
 /**
  * Unknown relationship. Possibly an invalid relationship.
  */
-final case class UnknownRelationship(
-  arc: dom.XLinkArc,
-  source: Endpoint,
-  target: Endpoint) extends Relationship
+final case class UnknownRelationship(arc: dom.XLinkArc, source: Endpoint, target: Endpoint) extends Relationship
 
 /**
  * Inter-concept relationship in the locator-free model.
@@ -185,7 +221,7 @@ sealed trait InterConceptRelationship extends StandardRelationship {
    */
   final def isFollowedBy(rel: InterConceptRelationship): Boolean = {
     (this.targetConcept == rel.sourceConcept) &&
-      (this.effectiveTargetBaseSetKey == rel.baseSetKey)
+    (this.effectiveTargetBaseSetKey == rel.baseSetKey)
   }
 
   /**
@@ -217,16 +253,14 @@ sealed trait ConceptResourceRelationship extends StandardRelationship {
   def target: RegularResource[dom.StandardResource]
 }
 
-final case class ConceptLabelRelationship(
-  arc: dom.LabelArc,
-  source: ConceptKeyEndpoint,
-  target: RegularResource[dom.ConceptLabelResource])
-  extends ConceptResourceRelationship {
+final case class ConceptLabelRelationship(arc: dom.LabelArc, source: ConceptKeyEndpoint, target: RegularResource[dom.ConceptLabelResource])
+    extends ConceptResourceRelationship {
 
   def resourceRole: String = target.resource.roleOption.getOrElse(StandardLabelRoles.StandardLabel)
 
   def language: String = {
-    target.resource.attrOption(ENames.XmlLangEName)
+    target.resource
+      .attrOption(ENames.XmlLangEName)
       .getOrElse(sys.error(s"Missing xml:lang in ${target.resource.name} in ${target.resource.docUri}"))
   }
 
@@ -234,10 +268,10 @@ final case class ConceptLabelRelationship(
 }
 
 final case class ConceptReferenceRelationship(
-  arc: dom.ReferenceArc,
-  source: ConceptKeyEndpoint,
-  target: RegularResource[dom.ConceptReferenceResource])
-  extends ConceptResourceRelationship {
+    arc: dom.ReferenceArc,
+    source: ConceptKeyEndpoint,
+    target: RegularResource[dom.ConceptReferenceResource])
+    extends ConceptResourceRelationship {
 
   def resourceRole: String = target.resource.roleOption.getOrElse(StandardReferenceRoles.StandardReference)
 
@@ -252,15 +286,13 @@ sealed trait PresentationRelationship extends InterConceptRelationship {
   def arc: dom.PresentationArc
 }
 
-final case class ParentChildRelationship(
-  arc: dom.PresentationArc,
-  source: ConceptKeyEndpoint,
-  target: ConceptKeyEndpoint) extends PresentationRelationship
+final case class ParentChildRelationship(arc: dom.PresentationArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+    extends PresentationRelationship {
+  requireArcrole(StandardArcroles.StandardPresentationArcrole)
+}
 
-final case class OtherPresentationRelationship(
-  arc: dom.PresentationArc,
-  source: ConceptKeyEndpoint,
-  target: ConceptKeyEndpoint) extends PresentationRelationship
+final case class OtherPresentationRelationship(arc: dom.PresentationArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+    extends PresentationRelationship
 
 /**
  * Calculation relationship in the locator-free model.
@@ -272,15 +304,13 @@ sealed trait CalculationRelationship extends InterConceptRelationship {
   def weight: Double = arc.weight
 }
 
-final case class SummationItemRelationship(
-  arc: dom.CalculationArc,
-  source: ConceptKeyEndpoint,
-  target: ConceptKeyEndpoint) extends CalculationRelationship
+final case class SummationItemRelationship(arc: dom.CalculationArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+    extends CalculationRelationship {
+  requireArcrole(StandardArcroles.StandardCalculationArcrole)
+}
 
-final case class OtherCalculationRelationship(
-  arc: dom.CalculationArc,
-  source: ConceptKeyEndpoint,
-  target: ConceptKeyEndpoint) extends CalculationRelationship
+final case class OtherCalculationRelationship(arc: dom.CalculationArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+    extends CalculationRelationship
 
 /**
  * Definition relationship in the locator-free model.
@@ -290,25 +320,25 @@ sealed trait DefinitionRelationship extends InterConceptRelationship {
   def arc: dom.DefinitionArc
 }
 
-final case class GeneralSpecialRelationship(
-  arc: dom.DefinitionArc,
-  source: ConceptKeyEndpoint,
-  target: ConceptKeyEndpoint) extends DefinitionRelationship
+final case class GeneralSpecialRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+    extends DefinitionRelationship {
+  requireArcrole(StandardArcroles.GeneralSpecialArcrole)
+}
 
-final case class EssenceAliasRelationship(
-  arc: dom.DefinitionArc,
-  source: ConceptKeyEndpoint,
-  target: ConceptKeyEndpoint) extends DefinitionRelationship
+final case class EssenceAliasRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+    extends DefinitionRelationship {
+  requireArcrole(StandardArcroles.EssenceAliasArcrole)
+}
 
-final case class SimilarTuplesRelationship(
-  arc: dom.DefinitionArc,
-  source: ConceptKeyEndpoint,
-  target: ConceptKeyEndpoint) extends DefinitionRelationship
+final case class SimilarTuplesRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+    extends DefinitionRelationship {
+  requireArcrole(StandardArcroles.SimilarTuplesArcrole)
+}
 
-final case class RequiresElementRelationship(
-  arc: dom.DefinitionArc,
-  source: ConceptKeyEndpoint,
-  target: ConceptKeyEndpoint) extends DefinitionRelationship
+final case class RequiresElementRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+    extends DefinitionRelationship {
+  requireArcrole(StandardArcroles.RequiresElementArcrole)
+}
 
 /**
  * Dimensional (definition) relationship in the locator-free model.
@@ -330,8 +360,9 @@ sealed trait HasHypercubeRelationship extends DimensionalRelationship {
   }
 
   final def contextElement: ContextElement = {
-    val attrValue = arc.attrOption(ENames.XbrldtContextElementEName).getOrElse(
-      sys.error(s"Missing attribute @xbrldt:contextElement on has-hypercube arc in $docUri"))
+    val attrValue = arc
+      .attrOption(ENames.XbrldtContextElementEName)
+      .getOrElse(sys.error(s"Missing attribute @xbrldt:contextElement on has-hypercube arc in $docUri"))
 
     ContextElement.fromString(attrValue)
   }
@@ -345,26 +376,23 @@ sealed trait HasHypercubeRelationship extends DimensionalRelationship {
   }
 }
 
-final case class AllRelationship(
-  arc: dom.DefinitionArc,
-  source: ConceptKeyEndpoint,
-  target: ConceptKeyEndpoint) extends HasHypercubeRelationship {
+final case class AllRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+    extends HasHypercubeRelationship {
+  requireArcrole("http://xbrl.org/int/dim/arcrole/all")
 
   def isAllRelationship: Boolean = true
 }
 
-final case class NotAllRelationship(
-  arc: dom.DefinitionArc,
-  source: ConceptKeyEndpoint,
-  target: ConceptKeyEndpoint) extends HasHypercubeRelationship {
+final case class NotAllRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+    extends HasHypercubeRelationship {
+  requireArcrole("http://xbrl.org/int/dim/arcrole/notAll")
 
   def isAllRelationship: Boolean = false
 }
 
-final case class HypercubeDimensionRelationship(
-  arc: dom.DefinitionArc,
-  source: ConceptKeyEndpoint,
-  target: ConceptKeyEndpoint) extends DimensionalRelationship {
+final case class HypercubeDimensionRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+    extends DimensionalRelationship {
+  requireArcrole("http://xbrl.org/int/dim/arcrole/hypercube-dimension")
 
   def hypercube: EName = sourceConcept
 
@@ -394,30 +422,27 @@ sealed trait DomainAwareRelationship extends DimensionalRelationship {
   }
 }
 
-final case class DimensionDomainRelationship(
-  arc: dom.DefinitionArc,
-  source: ConceptKeyEndpoint,
-  target: ConceptKeyEndpoint) extends DomainAwareRelationship {
+final case class DimensionDomainRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+    extends DomainAwareRelationship {
+  requireArcrole("http://xbrl.org/int/dim/arcrole/dimension-domain")
 
   def dimension: EName = sourceConcept
 
   def domain: EName = targetConcept
 }
 
-final case class DomainMemberRelationship(
-  arc: dom.DefinitionArc,
-  source: ConceptKeyEndpoint,
-  target: ConceptKeyEndpoint) extends DomainAwareRelationship {
+final case class DomainMemberRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+    extends DomainAwareRelationship {
+  requireArcrole("http://xbrl.org/int/dim/arcrole/domain-member")
 
   def domain: EName = sourceConcept
 
   def member: EName = targetConcept
 }
 
-final case class DimensionDefaultRelationship(
-  arc: dom.DefinitionArc,
-  source: ConceptKeyEndpoint,
-  target: ConceptKeyEndpoint) extends DimensionalRelationship {
+final case class DimensionDefaultRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+    extends DimensionalRelationship {
+  requireArcrole("http://xbrl.org/int/dim/arcrole/dimension-default")
 
   def dimension: EName = sourceConcept
 
@@ -427,27 +452,224 @@ final case class DimensionDefaultRelationship(
 /**
  * Definition relationship that is not one of the known standard or dimensional ones.
  */
-final case class OtherDefinitionRelationship(
-  arc: dom.DefinitionArc,
-  source: ConceptKeyEndpoint,
-  target: ConceptKeyEndpoint) extends DefinitionRelationship
+final case class OtherDefinitionRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+    extends DefinitionRelationship
+
+// Formula and table relationships
+
+/**
+ * Non-standard formula-related relationship in the locator-free model, so typically a generic formula-related relationship.
+ */
+sealed trait FormulaRelationship extends NonStandardRelationship {
+
+  def arc: dom.AnyNonStandardArc
+
+  def source: RegularResource[_ <: dom.FormulaResource]
+
+  def target: RegularResource[_ <: dom.FormulaResource]
+}
+
+/**
+ * Variable-set relationship.
+ */
+final case class VariableSetRelationship(
+    arc: dom.VariableArc,
+    source: RegularResource[_ <: dom.VariableSet],
+    target: RegularResource[_ <: dom.VariableOrParameter])
+    extends FormulaRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2008/variable-set")
+
+  def variableSet: dom.VariableSet = source.resource
+
+  def variableOrParameter: dom.VariableOrParameter = target.resource
+
+  def arcNameAttrValue: EName = arc.nameAttrValue
+}
+
+/**
+ * Variable-filter relationship.
+ */
+final case class VariableFilterRelationship(
+    arc: dom.VariableFilterArc,
+    source: RegularResource[_ <: dom.FactVariable],
+    target: RegularResource[_ <: dom.Filter])
+    extends FormulaRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2008/variable-filter")
+
+  def factVariable: dom.FactVariable = source.resource
+
+  def filter: dom.Filter = target.resource
+
+  def complement: Boolean = arc.complement
+
+  def cover: Boolean = arc.cover
+}
+
+/**
+ * Variable-set-filter relationship.
+ */
+final case class VariableSetFilterRelationship(
+    arc: dom.VariableSetFilterArc,
+    source: RegularResource[_ <: dom.VariableSet],
+    target: RegularResource[_ <: dom.Filter])
+    extends FormulaRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2008/variable-set-filter")
+
+  def variableSet: dom.VariableSet = source.resource
+
+  def filter: dom.Filter = target.resource
+
+  def complement: Boolean = arc.complement
+}
+
+/**
+ * Boolean-filter relationship, backed by a VariableFilterArc.
+ */
+final case class BooleanFilterRelationship(
+    arc: dom.VariableFilterArc,
+    source: RegularResource[_ <: dom.BooleanFilter],
+    target: RegularResource[_ <: dom.Filter])
+    extends FormulaRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2008/boolean-filter")
+
+  def booleanFilter: dom.BooleanFilter = source.resource
+
+  def subFilter: dom.Filter = target.resource
+
+  def complement: Boolean = arc.complement
+
+  def cover: Boolean = arc.cover
+}
+
+/**
+ * A consistency-assertion-parameter relationship, backed by a VariableArc.
+ */
+final case class ConsistencyAssertionParameterRelationship(
+    arc: dom.VariableArc,
+    source: RegularResource[_ <: dom.ConsistencyAssertion],
+    target: RegularResource[_ <: dom.Parameter])
+    extends FormulaRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2008/consistency-assertion-parameter")
+
+  def consistencyAssertion: dom.ConsistencyAssertion = source.resource
+
+  def parameter: dom.Parameter = target.resource
+
+  def arcNameAttrValue: EName = arc.nameAttrValue
+}
+
+/**
+ * Another formula-related relationship (with "unknown" arc element name).
+ */
+sealed trait OtherFormulaRelationship extends FormulaRelationship {
+
+  def arc: dom.AnyNonStandardArc
+}
+
+/**
+ * A variable-set-precondition relationship.
+ */
+final case class VariableSetPreconditionRelationship(
+    arc: dom.AnyNonStandardArc,
+    source: RegularResource[_ <: dom.VariableSet],
+    target: RegularResource[_ <: dom.Precondition])
+    extends OtherFormulaRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2008/variable-set-precondition")
+
+  def variableSet: dom.VariableSet = source.resource
+
+  def precondition: dom.Precondition = target.resource
+}
+
+/**
+ * A consistency-assertion-formula relationship.
+ */
+final case class ConsistencyAssertionFormulaRelationship(
+    arc: dom.AnyNonStandardArc,
+    source: RegularResource[_ <: dom.ConsistencyAssertion],
+    target: RegularResource[_ <: dom.Formula])
+    extends OtherFormulaRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2008/consistency-assertion-formula")
+
+  def consistencyAssertion: dom.ConsistencyAssertion = source.resource
+
+  def formula: dom.Formula = target.resource
+}
+
+/**
+ * An assertion-set relationship.
+ */
+final case class AssertionSetRelationship(
+    arc: dom.AnyNonStandardArc,
+    source: RegularResource[_ <: dom.AssertionSet],
+    target: RegularResource[_ <: dom.Assertion])
+    extends OtherFormulaRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2008/assertion-set")
+
+  def assertionSet: dom.AssertionSet = source.resource
+
+  def assertion: dom.Assertion = target.resource
+}
+
+/**
+ * An assertion-set relationship.
+ */
+final case class InstanceVariableRelationship(
+    arc: dom.AnyNonStandardArc,
+    source: RegularResource[_ <: dom.Instance],
+    target: RegularResource[_ <: dom.Variable])
+    extends OtherFormulaRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2010/instance-variable")
+
+  def instance: dom.Instance = source.resource
+
+  def variable: dom.Variable = target.resource
+}
+
+/**
+ * A formula-instance relationship.
+ */
+final case class FormulaInstanceRelationship(
+    arc: dom.AnyNonStandardArc,
+    source: RegularResource[_ <: dom.Formula],
+    target: RegularResource[_ <: dom.Instance])
+    extends OtherFormulaRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2010/formula-instance")
+
+  def formula: dom.Formula = source.resource
+
+  def instance: dom.Instance = target.resource
+}
+
+/**
+ * An assertion-unsatisfied-severity relationship.
+ */
+final case class AssertionUnsatisfiedSeverityRelationship(
+    arc: dom.AnyNonStandardArc,
+    source: RegularResource[_ <: dom.Assertion],
+    target: RegularResource[_ <: dom.Severity])
+    extends OtherFormulaRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2016/assertion-unsatisfied-severity")
+
+  def assertion: dom.Assertion = source.resource
+
+  def severity: dom.Severity = target.resource
+}
 
 // Companion objects
 
 object Relationship {
 
-  def apply(
-    arc: dom.XLinkArc,
-    source: Endpoint,
-    target: Endpoint): Relationship = {
+  def apply(arc: dom.XLinkArc, source: Endpoint, target: Endpoint): Relationship = {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
     (arc, source) match {
       case (arc: dom.StandardArc, source: ConceptKeyEndpoint) =>
-        StandardRelationship.opt(arc, source, target)
+        StandardRelationship
+          .opt(arc, source, target)
           .getOrElse(UnknownRelationship(arc, source, target))
-      case (arc: dom.NonStandardArc, _) =>
+      case (arc: dom.AnyNonStandardArc, _) =>
         NonStandardRelationship.opt(arc, source, target).getOrElse(UnknownRelationship(arc, source, target))
       case _ =>
         UnknownRelationship(arc, source, target)
@@ -457,10 +679,7 @@ object Relationship {
 
 object StandardRelationship {
 
-  def opt(
-    arc: dom.StandardArc,
-    source: ConceptKeyEndpoint,
-    target: Endpoint): Option[StandardRelationship] = {
+  def opt(arc: dom.StandardArc, source: ConceptKeyEndpoint, target: Endpoint): Option[StandardRelationship] = {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
@@ -477,24 +696,56 @@ object StandardRelationship {
 
 object NonStandardRelationship {
 
-  def opt(
-    arc: dom.NonStandardArc,
-    source: Endpoint,
-    target: Endpoint): Option[NonStandardRelationship] = {
+  def opt(arc: dom.AnyNonStandardArc, source: Endpoint, target: Endpoint): Option[NonStandardRelationship] = {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
     val ElementLabelArcrole = "http://xbrl.org/arcrole/2008/element-label"
     val ElementReferenceArcrole = "http://xbrl.org/arcrole/2008/element-reference"
 
-    (arc, arc.arcrole, target, target.targetResourceOption) match {
-      case (arc: dom.NonStandardArc, ElementLabelArcrole, target: RegularResource[_], Some(_: NonStandardResource)) =>
-        Some(ElementLabelRelationship(arc, source, target.asInstanceOf[RegularResource[NonStandardResource]]))
-      case (arc: dom.NonStandardArc, ElementReferenceArcrole, target: RegularResource[_], Some(_: NonStandardResource)) =>
-        Some(ElementReferenceRelationship(arc, source, target.asInstanceOf[RegularResource[NonStandardResource]]))
-      case (arc: dom.NonStandardArc, _, _, Some(e: dom.XLinkResource)) if e.name == ENames.MsgMessageEName =>
-        Some(ElementMessageRelationship(arc, source, target))
-      case (arc: dom.NonStandardArc, _, _, _) =>
+    (arc, arc.arcrole, source, source.targetResourceOption, target, target.targetResourceOption) match {
+      case (arc: dom.AnyNonStandardArc, ElementLabelArcrole, _, _, target: RegularResource[_], Some(_: dom.NonStandardResource)) =>
+        Some(ElementLabelRelationship(arc, source, target.asInstanceOf[RegularResource[dom.NonStandardResource]]))
+      case (arc: dom.AnyNonStandardArc, ElementReferenceArcrole, _, _, target: RegularResource[_], Some(_: dom.NonStandardResource)) =>
+        Some(ElementReferenceRelationship(arc, source, target.asInstanceOf[RegularResource[dom.NonStandardResource]]))
+      case (
+          arc: dom.AnyNonStandardArc,
+          "http://xbrl.org/arcrole/2010/assertion-satisfied-message",
+          source: RegularResource[_],
+          Some(_: dom.Assertion),
+          target: RegularResource[_],
+          Some(_: dom.Message)) =>
+        Some(
+          AssertionSatisfiedMessageRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.Assertion]],
+            target.asInstanceOf[RegularResource[dom.Message]]))
+      case (
+          arc: dom.AnyNonStandardArc,
+          "http://xbrl.org/arcrole/2010/assertion-unsatisfied-message",
+          source: RegularResource[_],
+          Some(_: dom.Assertion),
+          target: RegularResource[_],
+          Some(_: dom.Message)) =>
+        Some(
+          AssertionUnsatisfiedMessageRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.Assertion]],
+            target.asInstanceOf[RegularResource[dom.Message]]))
+      case (
+          arc: dom.AnyNonStandardArc,
+          _,
+          source: RegularResource[_],
+          Some(_: dom.FormulaResource),
+          target: RegularResource[_],
+          Some(_: dom.FormulaResource)) =>
+        FormulaRelationship.opt(
+          arc,
+          source.asInstanceOf[RegularResource[dom.FormulaResource]],
+          target.asInstanceOf[RegularResource[dom.FormulaResource]])
+      case (arc: dom.AnyNonStandardArc, _, _, _, target: RegularResource[_], Some(_: dom.Message)) =>
+        Some(OtherElementMessageRelationship(arc, source, target.asInstanceOf[RegularResource[dom.Message]]))
+      case (arc: dom.AnyNonStandardArc, _, _, _, _, _) =>
         Some(OtherNonStandardRelationship(arc, source, target))
       case _ =>
         None
@@ -505,10 +756,7 @@ object NonStandardRelationship {
 object InterConceptRelationship {
 
   // scalastyle:off cyclomatic.complexity
-  def opt(
-    arc: dom.InterConceptArc,
-    source: ConceptKeyEndpoint,
-    target: ConceptKeyEndpoint): Option[InterConceptRelationship] = {
+  def opt(arc: dom.InterConceptArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint): Option[InterConceptRelationship] = {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
@@ -516,26 +764,26 @@ object InterConceptRelationship {
       case arc: dom.PresentationArc =>
         arc.arcrole match {
           case "http://www.xbrl.org/2003/arcrole/parent-child" => Some(ParentChildRelationship(arc, source, target))
-          case _ => Some(OtherPresentationRelationship(arc, source, target))
+          case _                                               => Some(OtherPresentationRelationship(arc, source, target))
         }
       case arc: dom.DefinitionArc =>
         arc.arcrole match {
           case "http://xbrl.org/int/dim/arcrole/hypercube-dimension" => Some(HypercubeDimensionRelationship(arc, source, target))
-          case "http://xbrl.org/int/dim/arcrole/dimension-domain" => Some(DimensionDomainRelationship(arc, source, target))
-          case "http://xbrl.org/int/dim/arcrole/domain-member" => Some(DomainMemberRelationship(arc, source, target))
-          case "http://xbrl.org/int/dim/arcrole/dimension-default" => Some(DimensionDefaultRelationship(arc, source, target))
-          case "http://xbrl.org/int/dim/arcrole/all" => Some(AllRelationship(arc, source, target))
-          case "http://xbrl.org/int/dim/arcrole/notAll" => Some(NotAllRelationship(arc, source, target))
-          case "http://www.xbrl.org/2003/arcrole/general-special" => Some(GeneralSpecialRelationship(arc, source, target))
-          case "http://www.xbrl.org/2003/arcrole/essence-alias" => Some(EssenceAliasRelationship(arc, source, target))
-          case "http://www.xbrl.org/2003/arcrole/similar-tuples" => Some(SimilarTuplesRelationship(arc, source, target))
-          case "http://www.xbrl.org/2003/arcrole/requires-element" => Some(RequiresElementRelationship(arc, source, target))
-          case _ => Some(OtherDefinitionRelationship(arc, source, target))
+          case "http://xbrl.org/int/dim/arcrole/dimension-domain"    => Some(DimensionDomainRelationship(arc, source, target))
+          case "http://xbrl.org/int/dim/arcrole/domain-member"       => Some(DomainMemberRelationship(arc, source, target))
+          case "http://xbrl.org/int/dim/arcrole/dimension-default"   => Some(DimensionDefaultRelationship(arc, source, target))
+          case "http://xbrl.org/int/dim/arcrole/all"                 => Some(AllRelationship(arc, source, target))
+          case "http://xbrl.org/int/dim/arcrole/notAll"              => Some(NotAllRelationship(arc, source, target))
+          case "http://www.xbrl.org/2003/arcrole/general-special"    => Some(GeneralSpecialRelationship(arc, source, target))
+          case "http://www.xbrl.org/2003/arcrole/essence-alias"      => Some(EssenceAliasRelationship(arc, source, target))
+          case "http://www.xbrl.org/2003/arcrole/similar-tuples"     => Some(SimilarTuplesRelationship(arc, source, target))
+          case "http://www.xbrl.org/2003/arcrole/requires-element"   => Some(RequiresElementRelationship(arc, source, target))
+          case _                                                     => Some(OtherDefinitionRelationship(arc, source, target))
         }
       case arc: dom.CalculationArc =>
         arc.arcrole match {
           case "http://www.xbrl.org/2003/arcrole/summation-item" => Some(SummationItemRelationship(arc, source, target))
-          case _ => Some(OtherCalculationRelationship(arc, source, target))
+          case _                                                 => Some(OtherCalculationRelationship(arc, source, target))
         }
       case _ =>
         None
@@ -546,9 +794,9 @@ object InterConceptRelationship {
 object ConceptResourceRelationship {
 
   def opt(
-    arc: dom.ConceptResourceArc,
-    source: ConceptKeyEndpoint,
-    target: RegularResource[dom.StandardResource]): Option[ConceptResourceRelationship] = {
+      arc: dom.ConceptResourceArc,
+      source: ConceptKeyEndpoint,
+      target: RegularResource[dom.StandardResource]): Option[ConceptResourceRelationship] = {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
@@ -557,6 +805,111 @@ object ConceptResourceRelationship {
         Some(ConceptLabelRelationship(arc, source, target.asInstanceOf[RegularResource[dom.ConceptLabelResource]]))
       case (arc: dom.ReferenceArc, _: dom.ConceptReferenceResource) =>
         Some(ConceptReferenceRelationship(arc, source, target.asInstanceOf[RegularResource[dom.ConceptReferenceResource]]))
+      case _ =>
+        None
+    }
+  }
+}
+
+object FormulaRelationship {
+
+  def opt(
+      arc: dom.AnyNonStandardArc,
+      source: RegularResource[dom.FormulaResource],
+      target: RegularResource[dom.FormulaResource]): Option[FormulaRelationship] = {
+    require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
+
+    (arc, arc.arcrole, source.targetResourceOption, target.targetResourceOption) match {
+      case (
+          arc: dom.VariableArc,
+          "http://xbrl.org/arcrole/2008/variable-set",
+          Some(_: dom.VariableSet),
+          Some(_: dom.VariableOrParameter)) =>
+        Some(
+          VariableSetRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.VariableSet]],
+            target.asInstanceOf[RegularResource[dom.VariableOrParameter]]))
+      case (arc: dom.VariableFilterArc, "http://xbrl.org/arcrole/2008/variable-filter", Some(_: dom.FactVariable), Some(_: dom.Filter)) =>
+        Some(
+          VariableFilterRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.FactVariable]],
+            target.asInstanceOf[RegularResource[dom.Filter]]))
+      case (
+          arc: dom.VariableSetFilterArc,
+          "http://xbrl.org/arcrole/2008/variable-set-filter",
+          Some(_: dom.VariableSet),
+          Some(_: dom.Filter)) =>
+        Some(
+          VariableSetFilterRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.VariableSet]],
+            target.asInstanceOf[RegularResource[dom.Filter]]))
+      case (arc: dom.VariableFilterArc, "http://xbrl.org/arcrole/2008/boolean-filter", Some(_: dom.BooleanFilter), Some(_: dom.Filter)) =>
+        Some(
+          BooleanFilterRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.BooleanFilter]],
+            target.asInstanceOf[RegularResource[dom.Filter]]))
+      case (
+          arc: dom.VariableArc,
+          "http://xbrl.org/arcrole/2008/consistency-assertion-parameter",
+          Some(_: dom.ConsistencyAssertion),
+          Some(_: dom.Parameter)) =>
+        Some(
+          ConsistencyAssertionParameterRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.ConsistencyAssertion]],
+            target.asInstanceOf[RegularResource[dom.Parameter]]))
+      case (
+          arc: dom.AnyNonStandardArc,
+          "http://xbrl.org/arcrole/2008/variable-set-precondition",
+          Some(_: dom.VariableSet),
+          Some(_: dom.Precondition)) =>
+        Some(
+          VariableSetPreconditionRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.VariableSet]],
+            target.asInstanceOf[RegularResource[dom.Precondition]]))
+      case (
+          arc: dom.AnyNonStandardArc,
+          "http://xbrl.org/arcrole/2008/consistency-assertion-formula",
+          Some(_: dom.ConsistencyAssertion),
+          Some(_: dom.Formula)) =>
+        Some(
+          ConsistencyAssertionFormulaRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.ConsistencyAssertion]],
+            target.asInstanceOf[RegularResource[dom.Formula]]))
+      case (arc: dom.AnyNonStandardArc, "http://xbrl.org/arcrole/2008/assertion-set", Some(_: dom.AssertionSet), Some(_: dom.Assertion)) =>
+        Some(
+          AssertionSetRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.AssertionSet]],
+            target.asInstanceOf[RegularResource[dom.Assertion]]))
+      case (arc: dom.AnyNonStandardArc, "http://xbrl.org/arcrole/2010/instance-variable", Some(_: dom.Instance), Some(_: dom.Variable)) =>
+        Some(
+          InstanceVariableRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.Instance]],
+            target.asInstanceOf[RegularResource[dom.Variable]]))
+      case (arc: dom.AnyNonStandardArc, "http://xbrl.org/arcrole/2010/formula-instance", Some(_: dom.Formula), Some(_: dom.Instance)) =>
+        Some(
+          FormulaInstanceRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.Formula]],
+            target.asInstanceOf[RegularResource[dom.Instance]]))
+      case (
+          arc: dom.AnyNonStandardArc,
+          "http://xbrl.org/arcrole/2016/assertion-unsatisfied-severity",
+          Some(_: dom.Assertion),
+          Some(_: dom.Severity)) =>
+        Some(
+          AssertionUnsatisfiedSeverityRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.Assertion]],
+            target.asInstanceOf[RegularResource[dom.Severity]]))
       case _ =>
         None
     }

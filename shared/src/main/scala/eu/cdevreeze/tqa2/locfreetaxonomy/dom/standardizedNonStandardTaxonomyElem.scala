@@ -161,12 +161,6 @@ final case class VariableSetFilterArc(underlyingElem: BackingNodes.Elem, taxonom
   }
 }
 
-/**
- * Another FormulaArc, with unknown arc name but with a known formula-related arcrole.
- */
-final case class OtherFormulaArc(underlyingElem: BackingNodes.Elem, taxonomyElemFactory: BackingNodes.Elem => TaxonomyElem)
-    extends FormulaArc
-
 // Formula resources
 
 /**

@@ -22,6 +22,7 @@ import java.net.URI
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.HasHypercubeRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.ParentChildRelationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Relationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.validate.Validation
 import eu.cdevreeze.tqa2.validate.ValidationResult
@@ -90,18 +91,48 @@ object LocatorFreeTaxonomyLoader {
     println(s"Number of dimensional concepts that are not items in the taxo: ${dimensionalConcepts.diff(items).size}")
     println(s"Number of items in the taxo that are not dimensional concepts: ${items.diff(dimensionalConcepts).size}")
 
+    val relationshipCounts: Map[Class[_ <: Relationship], Int] = taxo.relationships.groupBy(_.getClass).view.mapValues(_.size).toMap
+    val relationshipArcroleCounts: Map[Class[_ <: Relationship], Map[String, Int]] =
+      taxo.relationships.groupBy(_.getClass).view.mapValues(_.groupBy(_.arcrole).view.mapValues(_.size).toMap).toMap
+
+    println()
+    println(s"There are ${taxo.relationships.size} relationships in the taxonomy (in ${taxo.rootElems.size} documents)")
+    println()
+    relationshipCounts.toSeq.sortBy(_._2).reverse.foreach {
+      case (relCls, cnt) =>
+        val arcroleCounts: Map[String, Int] = relationshipArcroleCounts.getOrElse(relCls, Map.empty)
+
+        val arcroleCountStrings: Seq[String] = arcroleCounts.toSeq
+          .sortBy(_._2)
+          .reverse
+          .map {
+            case (arcrole, cnt) => s"$arcrole ($cnt)"
+          }
+
+        println(
+          s"Relationship class ${relCls.getSimpleName}, count $cnt (arcroles: ${arcroleCountStrings.mkString(", ")})"
+        )
+    }
+
     val allElems: Seq[TaxonomyElem] = taxo.rootElems.flatMap(_.findAllDescendantElemsOrSelf)
 
-    val domTypeCounts: Map[Class[_], Int] = allElems.groupBy(_.getClass).view.mapValues(_.size).toMap
-    val domTypeElemNames: Map[Class[_], Set[EName]] = allElems.groupMap(_.getClass)(_.name).view.mapValues(_.toSet).toMap
+    val domTypeCounts: Map[Class[_ <: TaxonomyElem], Int] = allElems.groupBy(_.getClass).view.mapValues(_.size).toMap
+    val domTypeElemNameCounts: Map[Class[_ <: TaxonomyElem], Map[EName, Int]] =
+      allElems.groupBy(_.getClass).view.mapValues(_.groupBy(_.name).view.mapValues(_.size).toMap).toMap
 
     println()
     println(s"There are ${allElems.size} XML elements in the taxonomy (in ${taxo.rootElems.size} documents)")
     println()
     domTypeCounts.toSeq.sortBy(_._2).reverse.foreach {
       case (cls, cnt) =>
-        val elemNames: Set[EName] = domTypeElemNames.getOrElse(cls, Set.empty)
-        println(s"Element class ${cls.getSimpleName}, count $cnt (element names: ${elemNames.toSeq.sortBy(_.toString).mkString(", ")})")
+        val elemNameCounts: Map[EName, Int] = domTypeElemNameCounts.getOrElse(cls, Map.empty)
+
+        val elemCountStrings: Seq[String] = elemNameCounts.toSeq
+          .sortBy(_._2)
+          .reverse
+          .map { case (nm, cnt) => s"$nm ($cnt)" }
+
+        println(s"Element class ${cls.getSimpleName}, count $cnt (element names: ${elemCountStrings.mkString(", ")})")
     }
   }
 
