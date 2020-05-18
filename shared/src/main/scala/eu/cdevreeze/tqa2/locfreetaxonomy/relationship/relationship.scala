@@ -470,6 +470,18 @@ sealed trait FormulaRelationship extends NonStandardRelationship {
 }
 
 /**
+ * Non-standard table-related relationship in the locator-free model, so typically a generic table-related relationship.
+ */
+sealed trait TableRelationship extends NonStandardRelationship {
+
+  def arc: dom.TableArc
+
+  def source: RegularResource[_ <: dom.TableResource]
+
+  def target: RegularResource[_ <: dom.FormulaOrTableResource]
+}
+
+/**
  * Variable-set relationship.
  */
 final case class VariableSetRelationship(
@@ -656,6 +668,107 @@ final case class AssertionUnsatisfiedSeverityRelationship(
   def severity: dom.Severity = target.resource
 }
 
+/**
+ * A table-breakdown relationship.
+ */
+final case class TableBreakdownRelationship(
+    arc: dom.TableBreakdownArc,
+    source: RegularResource[_ <: dom.Table],
+    target: RegularResource[_ <: dom.TableBreakdown])
+    extends TableRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2014/table-breakdown")
+
+  def table: dom.Table = source.resource
+
+  def breakdown: dom.TableBreakdown = target.resource
+
+  def axis: TableAxis = arc.axis
+}
+
+/**
+ * A breakdown-tree relationship.
+ */
+final case class BreakdownTreeRelationship(
+    arc: dom.BreakdownTreeArc,
+    source: RegularResource[_ <: dom.TableBreakdown],
+    target: RegularResource[_ <: dom.DefinitionNode])
+    extends TableRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2014/breakdown-tree")
+
+  def breakdown: dom.TableBreakdown = source.resource
+
+  def definitionNode: dom.DefinitionNode = target.resource
+}
+
+/**
+ * A definition-node-subtree relationship.
+ */
+final case class DefinitionNodeSubtreeRelationship(
+    arc: dom.DefinitionNodeSubtreeArc,
+    source: RegularResource[_ <: dom.DefinitionNode],
+    target: RegularResource[_ <: dom.DefinitionNode])
+    extends TableRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2014/definition-node-subtree")
+
+  def sourceNode: dom.DefinitionNode = source.resource
+
+  def targetNode: dom.DefinitionNode = target.resource
+}
+
+/**
+ * A table-filter relationship.
+ */
+final case class TableFilterRelationship(
+    arc: dom.TableFilterArc,
+    source: RegularResource[_ <: dom.Table],
+    target: RegularResource[_ <: dom.Filter])
+    extends TableRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2014/table-filter")
+
+  def table: dom.Table = source.resource
+
+  def filter: dom.Filter = target.resource
+
+  def complement: Boolean = arc.complement
+}
+
+/**
+ * A table-parameter relationship.
+ */
+final case class TableParameterRelationship(
+    arc: dom.TableParameterArc,
+    source: RegularResource[_ <: dom.Table],
+    target: RegularResource[_ <: dom.Parameter])
+    extends TableRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2014/table-parameter")
+
+  def table: dom.Table = source.resource
+
+  def parameter: dom.Parameter = target.resource
+
+  /**
+   * Returns the name attribute as EName. The default namespace is not used to resolve the QName.
+   */
+  def arcNameAttrValue: EName = arc.nameAttrValue
+}
+
+/**
+ * An aspect-node-filter relationship.
+ */
+final case class AspectNodeFilterRelationship(
+    arc: dom.AspectNodeFilterArc,
+    source: RegularResource[_ <: dom.AspectNode],
+    target: RegularResource[_ <: dom.Filter])
+    extends TableRelationship {
+  requireArcrole("http://xbrl.org/arcrole/2014/aspect-node-filter")
+
+  def aspectNode: dom.AspectNode = source.resource
+
+  def filter: dom.Filter = target.resource
+
+  def complement: Boolean = arc.complement
+}
+
 // Companion objects
 
 object Relationship {
@@ -743,6 +856,17 @@ object NonStandardRelationship {
           arc,
           source.asInstanceOf[RegularResource[dom.FormulaResource]],
           target.asInstanceOf[RegularResource[dom.FormulaResource]])
+      case (
+          arc: dom.TableArc,
+          _,
+          source: RegularResource[_],
+          Some(_: dom.TableResource),
+          target: RegularResource[_],
+          Some(_: dom.FormulaOrTableResource)) =>
+        TableRelationship.opt(
+          arc,
+          source.asInstanceOf[RegularResource[dom.TableResource]],
+          target.asInstanceOf[RegularResource[dom.FormulaOrTableResource]])
       case (arc: dom.AnyNonStandardArc, _, _, _, target: RegularResource[_], Some(_: dom.Message)) =>
         Some(OtherElementMessageRelationship(arc, source, target.asInstanceOf[RegularResource[dom.Message]]))
       case (arc: dom.AnyNonStandardArc, _, _, _, _, _) =>
@@ -910,6 +1034,66 @@ object FormulaRelationship {
             arc,
             source.asInstanceOf[RegularResource[dom.Assertion]],
             target.asInstanceOf[RegularResource[dom.Severity]]))
+      case _ =>
+        None
+    }
+  }
+}
+
+object TableRelationship {
+
+  def opt(
+      arc: dom.TableArc,
+      source: RegularResource[dom.TableResource],
+      target: RegularResource[dom.FormulaOrTableResource]): Option[TableRelationship] = {
+    require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
+
+    (arc, arc.arcrole, source.targetResourceOption, target.targetResourceOption) match {
+      case (arc: dom.TableBreakdownArc, "http://xbrl.org/arcrole/2014/table-breakdown", Some(_: dom.Table), Some(_: dom.TableBreakdown)) =>
+        Some(
+          TableBreakdownRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.Table]],
+            target.asInstanceOf[RegularResource[dom.TableBreakdown]]))
+      case (
+          arc: dom.BreakdownTreeArc,
+          "http://xbrl.org/arcrole/2014/breakdown-tree",
+          Some(_: dom.TableBreakdown),
+          Some(_: dom.DefinitionNode)) =>
+        Some(
+          BreakdownTreeRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.TableBreakdown]],
+            target.asInstanceOf[RegularResource[dom.DefinitionNode]]))
+      case (
+          arc: dom.DefinitionNodeSubtreeArc,
+          "http://xbrl.org/arcrole/2014/definition-node-subtree",
+          Some(_: dom.DefinitionNode),
+          Some(_: dom.DefinitionNode)) =>
+        Some(
+          DefinitionNodeSubtreeRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.DefinitionNode]],
+            target.asInstanceOf[RegularResource[dom.DefinitionNode]]))
+      case (arc: dom.TableFilterArc, "http://xbrl.org/arcrole/2014/table-filter", Some(_: dom.Table), Some(_: dom.Filter)) =>
+        Some(
+          TableFilterRelationship(arc, source.asInstanceOf[RegularResource[dom.Table]], target.asInstanceOf[RegularResource[dom.Filter]]))
+      case (arc: dom.TableParameterArc, "http://xbrl.org/arcrole/2014/table-parameter", Some(_: dom.Table), Some(_: dom.Parameter)) =>
+        Some(
+          TableParameterRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.Table]],
+            target.asInstanceOf[RegularResource[dom.Parameter]]))
+      case (
+          arc: dom.AspectNodeFilterArc,
+          "http://xbrl.org/arcrole/2014/aspect-node-filter",
+          Some(_: dom.AspectNode),
+          Some(_: dom.Filter)) =>
+        Some(
+          AspectNodeFilterRelationship(
+            arc,
+            source.asInstanceOf[RegularResource[dom.AspectNode]],
+            target.asInstanceOf[RegularResource[dom.Filter]]))
       case _ =>
         None
     }

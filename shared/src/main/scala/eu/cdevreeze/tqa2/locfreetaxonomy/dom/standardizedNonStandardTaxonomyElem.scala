@@ -79,9 +79,14 @@ sealed trait StandardizedOtherNonXLinkElem extends StandardizedNonStandardTaxono
 sealed trait FormulaArc extends StandardizedNonStandardArc
 
 /**
+ * StandardizedNonStandardResource defined by one of the formula-related or table-related specifications.
+ */
+sealed trait FormulaOrTableResource extends StandardizedNonStandardResource
+
+/**
  * StandardizedNonStandardResource defined by one of the formula-related specifications.
  */
-sealed trait FormulaResource extends StandardizedNonStandardResource
+sealed trait FormulaResource extends FormulaOrTableResource
 
 /**
  * StandardizedOtherNonXLinkElem defined by one of the formula-related specifications.
@@ -96,7 +101,7 @@ sealed trait TableArc extends StandardizedNonStandardArc
 /**
  * StandardizedNonStandardResource defined by one of the table-related specifications.
  */
-sealed trait TableResource extends StandardizedNonStandardResource
+sealed trait TableResource extends FormulaOrTableResource
 
 /**
  * StandardizedOtherNonXLinkElem defined by one of the table-related specifications.
