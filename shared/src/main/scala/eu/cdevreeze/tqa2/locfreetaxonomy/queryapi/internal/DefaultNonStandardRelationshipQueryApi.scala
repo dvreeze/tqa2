@@ -16,14 +16,14 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal
 
-import scala.reflect.classTag
-import scala.reflect.ClassTag
-
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.TaxonomyElemKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.NonStandardRelationshipQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.RelationshipQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.NonStandardRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.NonStandardRelationshipPath
+
+import scala.reflect.ClassTag
+import scala.reflect.classTag
 
 /**
  * Implementation of NonStandardRelationshipQueryApi. The methods are overridable, which can be considered in case more efficient
@@ -45,9 +45,7 @@ trait DefaultNonStandardRelationshipQueryApi extends NonStandardRelationshipQuer
     findAllRelationshipsOfType(relationshipType)
   }
 
-  def filterNonStandardRelationshipsOfType[A <: NonStandardRelationship](
-    relationshipType: ClassTag[A])(p: A => Boolean): Seq[A] = {
-
+  def filterNonStandardRelationshipsOfType[A <: NonStandardRelationship](relationshipType: ClassTag[A])(p: A => Boolean): Seq[A] = {
     filterRelationshipsOfType(relationshipType)(p)
   }
 
@@ -55,22 +53,21 @@ trait DefaultNonStandardRelationshipQueryApi extends NonStandardRelationshipQuer
     findAllOutgoingRelationshipsOfType(sourceKey, classTag[NonStandardRelationship])
   }
 
-  def filterOutgoingNonStandardRelationships(
-    sourceKey: TaxonomyElemKey)(p: NonStandardRelationship => Boolean): Seq[NonStandardRelationship] = {
+  def filterOutgoingNonStandardRelationships(sourceKey: TaxonomyElemKey)(
+      p: NonStandardRelationship => Boolean): Seq[NonStandardRelationship] = {
 
     filterOutgoingRelationshipsOfType(sourceKey, classTag[NonStandardRelationship])(p)
   }
 
   def findAllOutgoingNonStandardRelationshipsOfType[A <: NonStandardRelationship](
-    sourceKey: TaxonomyElemKey,
-    relationshipType: ClassTag[A]): Seq[A] = {
+      sourceKey: TaxonomyElemKey,
+      relationshipType: ClassTag[A]): Seq[A] = {
 
     findAllOutgoingRelationshipsOfType(sourceKey, relationshipType)
   }
 
-  def filterOutgoingNonStandardRelationshipsOfType[A <: NonStandardRelationship](
-    sourceKey: TaxonomyElemKey,
-    relationshipType: ClassTag[A])(p: A => Boolean): Seq[A] = {
+  def filterOutgoingNonStandardRelationshipsOfType[A <: NonStandardRelationship](sourceKey: TaxonomyElemKey, relationshipType: ClassTag[A])(
+      p: A => Boolean): Seq[A] = {
 
     filterOutgoingRelationshipsOfType(sourceKey, relationshipType)(p)
   }
@@ -79,57 +76,60 @@ trait DefaultNonStandardRelationshipQueryApi extends NonStandardRelationshipQuer
     findAllIncomingRelationshipsOfType(targetKey, classTag[NonStandardRelationship])
   }
 
-  def filterIncomingNonStandardRelationships(
-    targetKey: TaxonomyElemKey)(p: NonStandardRelationship => Boolean): Seq[NonStandardRelationship] = {
+  def filterIncomingNonStandardRelationships(targetKey: TaxonomyElemKey)(
+      p: NonStandardRelationship => Boolean): Seq[NonStandardRelationship] = {
 
     filterIncomingRelationshipsOfType(targetKey, classTag[NonStandardRelationship])(p)
   }
 
   def findAllIncomingNonStandardRelationshipsOfType[A <: NonStandardRelationship](
-    targetKey: TaxonomyElemKey,
-    relationshipType: ClassTag[A]): Seq[A] = {
+      targetKey: TaxonomyElemKey,
+      relationshipType: ClassTag[A]): Seq[A] = {
 
     findAllIncomingRelationshipsOfType(targetKey, relationshipType)
   }
 
-  def filterIncomingNonStandardRelationshipsOfType[A <: NonStandardRelationship](
-    targetKey: TaxonomyElemKey,
-    relationshipType: ClassTag[A])(p: A => Boolean): Seq[A] = {
+  def filterIncomingNonStandardRelationshipsOfType[A <: NonStandardRelationship](targetKey: TaxonomyElemKey, relationshipType: ClassTag[A])(
+      p: A => Boolean): Seq[A] = {
 
     filterIncomingRelationshipsOfType(targetKey, relationshipType)(p)
   }
 
   def filterOutgoingUnrestrictedNonStandardRelationshipPaths[A <: NonStandardRelationship](
-    sourceKey: TaxonomyElemKey,
-    relationshipType: ClassTag[A])(p: NonStandardRelationshipPath[A] => Boolean): Seq[NonStandardRelationshipPath[A]] = {
+      sourceKey: TaxonomyElemKey,
+      relationshipType: ClassTag[A])(p: NonStandardRelationshipPath[A] => Boolean): Seq[NonStandardRelationshipPath[A]] = {
 
-    val nextRelationships = filterOutgoingNonStandardRelationshipsOfType(sourceKey, relationshipType)(rel => p(NonStandardRelationshipPath(rel)))
+    val nextRelationships =
+      filterOutgoingNonStandardRelationshipsOfType(sourceKey, relationshipType)(rel => p(NonStandardRelationshipPath(rel)))
 
     val paths =
-      nextRelationships.flatMap(rel => filterOutgoingUnrestrictedNonStandardRelationshipPaths(NonStandardRelationshipPath(rel), relationshipType)(p))
+      nextRelationships.flatMap(rel =>
+        filterOutgoingUnrestrictedNonStandardRelationshipPaths(NonStandardRelationshipPath(rel), relationshipType)(p))
     paths
   }
 
   def filterIncomingUnrestrictedNonStandardRelationshipPaths[A <: NonStandardRelationship](
-    targetKey: TaxonomyElemKey,
-    relationshipType: ClassTag[A])(p: NonStandardRelationshipPath[A] => Boolean): Seq[NonStandardRelationshipPath[A]] = {
+      targetKey: TaxonomyElemKey,
+      relationshipType: ClassTag[A])(p: NonStandardRelationshipPath[A] => Boolean): Seq[NonStandardRelationshipPath[A]] = {
 
-    val prevRelationships = filterIncomingNonStandardRelationshipsOfType(targetKey, relationshipType)(rel => p(NonStandardRelationshipPath(rel)))
+    val prevRelationships =
+      filterIncomingNonStandardRelationshipsOfType(targetKey, relationshipType)(rel => p(NonStandardRelationshipPath(rel)))
 
     val paths =
-      prevRelationships.flatMap(rel => filterIncomingUnrestrictedNonStandardRelationshipPaths(NonStandardRelationshipPath(rel), relationshipType)(p))
+      prevRelationships.flatMap(rel =>
+        filterIncomingUnrestrictedNonStandardRelationshipPaths(NonStandardRelationshipPath(rel), relationshipType)(p))
     paths
   }
 
   // Private methods
 
   private def filterOutgoingUnrestrictedNonStandardRelationshipPaths[A <: NonStandardRelationship](
-    path: NonStandardRelationshipPath[A],
-    relationshipType: ClassTag[A])(p: NonStandardRelationshipPath[A] => Boolean): Seq[NonStandardRelationshipPath[A]] = {
+      path: NonStandardRelationshipPath[A],
+      relationshipType: ClassTag[A])(p: NonStandardRelationshipPath[A] => Boolean): Seq[NonStandardRelationshipPath[A]] = {
 
     val nextRelationships =
-      filterOutgoingNonStandardRelationshipsOfType(
-        path.target.taxonomyElemKey, relationshipType)(relationship => !stopAppending(path, relationship) && p(path.append(relationship)))
+      filterOutgoingNonStandardRelationshipsOfType(path.target.taxonomyElemKey, relationshipType)(relationship =>
+        !stopAppending(path, relationship) && p(path.append(relationship)))
 
     val nextPaths = nextRelationships.map(rel => path.append(rel))
 
@@ -144,12 +144,12 @@ trait DefaultNonStandardRelationshipQueryApi extends NonStandardRelationshipQuer
   }
 
   private def filterIncomingUnrestrictedNonStandardRelationshipPaths[A <: NonStandardRelationship](
-    path: NonStandardRelationshipPath[A],
-    relationshipType: ClassTag[A])(p: NonStandardRelationshipPath[A] => Boolean): Seq[NonStandardRelationshipPath[A]] = {
+      path: NonStandardRelationshipPath[A],
+      relationshipType: ClassTag[A])(p: NonStandardRelationshipPath[A] => Boolean): Seq[NonStandardRelationshipPath[A]] = {
 
     val prevRelationships =
-      filterIncomingNonStandardRelationshipsOfType(
-        path.source.taxonomyElemKey, relationshipType)(relationship => !stopPrepending(path, relationship) && p(path.prepend(relationship)))
+      filterIncomingNonStandardRelationshipsOfType(path.source.taxonomyElemKey, relationshipType)(relationship =>
+        !stopPrepending(path, relationship) && p(path.prepend(relationship)))
 
     val prevPaths = prevRelationships.map(rel => path.prepend(rel))
 

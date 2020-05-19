@@ -28,7 +28,7 @@ import scala.reflect.classTag
  * Implementation of FormulaRelationshipQueryApi. The methods are overridable, which can be considered in case more efficient
  * implementations are possible.
  *
- * The methods that query for outgoing or incoming relationships, given a source/target element keu, must be fast.
+ * The methods that query for outgoing or incoming relationships, given a source/target element key, must be fast.
  *
  * @author Chris de Vreeze
  */

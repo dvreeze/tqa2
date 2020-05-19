@@ -101,7 +101,6 @@ trait DefaultTaxonomyQueryApi
   }
 
   def findAllOutgoingRelationshipsOfType[A <: Relationship](sourceKey: TaxonomyElemKey, relationshipType: ClassTag[A]): Seq[A] = {
-
     filterOutgoingRelationshipsOfType[A](sourceKey, relationshipType)(_ => true)
   }
 
@@ -122,7 +121,6 @@ trait DefaultTaxonomyQueryApi
   }
 
   def findAllIncomingRelationshipsOfType[A <: Relationship](targetKey: TaxonomyElemKey, relationshipType: ClassTag[A]): Seq[A] = {
-
     filterIncomingRelationshipsOfType[A](targetKey, relationshipType)(_ => true)
   }
 
