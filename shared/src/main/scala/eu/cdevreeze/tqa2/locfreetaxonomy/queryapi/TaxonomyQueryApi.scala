@@ -26,7 +26,7 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Relationship
  * @author Chris de Vreeze
  */
 trait TaxonomyQueryApi
-  extends TaxonomySchemaQueryApi
+    extends TaxonomySchemaQueryApi
     with RelationshipQueryApi
     with StandardRelationshipQueryApi
     with NonStandardRelationshipQueryApi
@@ -36,7 +36,9 @@ trait TaxonomyQueryApi
     with ConceptReferenceRelationshipQueryApi
     with ElementLabelRelationshipQueryApi
     with ElementReferenceRelationshipQueryApi
-    with DimensionalRelationshipQueryApi {
+    with DimensionalRelationshipQueryApi
+    with FormulaRelationshipQueryApi
+    with TableRelationshipQueryApi {
 
   /**
    * Returns all relationships in the taxonomy

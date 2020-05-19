@@ -16,12 +16,12 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal
 
-import scala.reflect.ClassTag
-
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.TaxonomyElemKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElem
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.TaxonomyQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Relationship
+
+import scala.reflect.ClassTag
 
 /**
  * Partial but mostly complete implementation of TaxonomyQueryApi. The methods are overridable, which is needed in case more
@@ -31,18 +31,21 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Relationship
  * @author Chris de Vreeze
  */
 // scalastyle:off number.of.methods
-trait DefaultTaxonomyQueryApi extends TaxonomyQueryApi
-  with DefaultSchemaQueryApi
-  with DefaultTaxonomySchemaQueryApi
-  with DefaultStandardRelationshipQueryApi
-  with DefaultNonStandardRelationshipQueryApi
-  with DefaultInterConceptRelationshipQueryApi
-  with DefaultPresentationRelationshipQueryApi
-  with DefaultConceptLabelRelationshipQueryApi
-  with DefaultConceptReferenceRelationshipQueryApi
-  with DefaultElementLabelRelationshipQueryApi
-  with DefaultElementReferenceRelationshipQueryApi
-  with DefaultDimensionalRelationshipQueryApi {
+trait DefaultTaxonomyQueryApi
+    extends TaxonomyQueryApi
+    with DefaultSchemaQueryApi
+    with DefaultTaxonomySchemaQueryApi
+    with DefaultStandardRelationshipQueryApi
+    with DefaultNonStandardRelationshipQueryApi
+    with DefaultInterConceptRelationshipQueryApi
+    with DefaultPresentationRelationshipQueryApi
+    with DefaultConceptLabelRelationshipQueryApi
+    with DefaultConceptReferenceRelationshipQueryApi
+    with DefaultElementLabelRelationshipQueryApi
+    with DefaultElementReferenceRelationshipQueryApi
+    with DefaultDimensionalRelationshipQueryApi
+    with DefaultFormulaRelationshipQueryApi
+    with DefaultTableRelationshipQueryApi {
 
   // The following abstract methods must be implemented as val fields
 
@@ -97,16 +100,13 @@ trait DefaultTaxonomyQueryApi extends TaxonomyQueryApi
     outgoingRelationshipMap.get(ClassTag(sourceKey.getClass)).flatMap(_.get(sourceKey)).getOrElse(Seq.empty).filter(p)
   }
 
-  def findAllOutgoingRelationshipsOfType[A <: Relationship](
-    sourceKey: TaxonomyElemKey,
-    relationshipType: ClassTag[A]): Seq[A] = {
+  def findAllOutgoingRelationshipsOfType[A <: Relationship](sourceKey: TaxonomyElemKey, relationshipType: ClassTag[A]): Seq[A] = {
 
     filterOutgoingRelationshipsOfType[A](sourceKey, relationshipType)(_ => true)
   }
 
-  def filterOutgoingRelationshipsOfType[A <: Relationship](
-    sourceKey: TaxonomyElemKey,
-    relationshipType: ClassTag[A])(p: A => Boolean): Seq[A] = {
+  def filterOutgoingRelationshipsOfType[A <: Relationship](sourceKey: TaxonomyElemKey, relationshipType: ClassTag[A])(
+      p: A => Boolean): Seq[A] = {
 
     implicit val clsTag: ClassTag[A] = relationshipType
 
@@ -121,16 +121,13 @@ trait DefaultTaxonomyQueryApi extends TaxonomyQueryApi
     incomingRelationshipMap.get(ClassTag(targetKey.getClass)).flatMap(_.get(targetKey)).getOrElse(Seq.empty).filter(p)
   }
 
-  def findAllIncomingRelationshipsOfType[A <: Relationship](
-    targetKey: TaxonomyElemKey,
-    relationshipType: ClassTag[A]): Seq[A] = {
+  def findAllIncomingRelationshipsOfType[A <: Relationship](targetKey: TaxonomyElemKey, relationshipType: ClassTag[A]): Seq[A] = {
 
     filterIncomingRelationshipsOfType[A](targetKey, relationshipType)(_ => true)
   }
 
-  def filterIncomingRelationshipsOfType[A <: Relationship](
-    targetKey: TaxonomyElemKey,
-    relationshipType: ClassTag[A])(p: A => Boolean): Seq[A] = {
+  def filterIncomingRelationshipsOfType[A <: Relationship](targetKey: TaxonomyElemKey, relationshipType: ClassTag[A])(
+      p: A => Boolean): Seq[A] = {
 
     implicit val clsTag: ClassTag[A] = relationshipType
 
