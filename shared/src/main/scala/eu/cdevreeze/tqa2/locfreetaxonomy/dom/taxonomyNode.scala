@@ -16,6 +16,8 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.dom
 
+import java.net.URI
+
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.Namespaces
 import eu.cdevreeze.tqa2.common.datatypes.XsBooleans
@@ -24,6 +26,7 @@ import eu.cdevreeze.tqa2.common.FragmentKey
 import eu.cdevreeze.tqa2.common.locfreexlink
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.common.xmlschema.XmlSchemaDialect
+import eu.cdevreeze.tqa2.common.xpointer.XPointer
 import eu.cdevreeze.tqa2.locfreetaxonomy.common._
 import eu.cdevreeze.yaidom2.core.EName
 import eu.cdevreeze.yaidom2.dialect.AbstractDialectBackingElem
@@ -186,6 +189,38 @@ sealed trait TaxonomyElem extends AbstractDialectBackingElem with AbstractSubtyp
   }
 
   // Other methods
+
+  /**
+   * Returns the key as taxonomy element key. If this element itself represents a key, an "any element key" is returned.
+   * Otherwise, the "canonical" key is returned.
+   */
+  final def key: TaxonomyElemKeys.TaxonomyElemKey = {
+    this match {
+      case e: GlobalElementDeclaration =>
+        TaxonomyElemKeys.ElementKey(e.targetEName)
+      case e: NamedTypeDefinition =>
+        TaxonomyElemKeys.TypeKey(e.targetEName)
+      case e: RoleType =>
+        TaxonomyElemKeys.RoleKey(e.roleUri)
+      case e: ArcroleType =>
+        TaxonomyElemKeys.ArcroleKey(e.arcroleUri)
+      case e =>
+        anyElementKey
+    }
+  }
+
+  /**
+   * Returns the key as "any element key", even if this element is a global element declaration, named type definition,
+   * role type or arcrole type.
+   */
+  final def anyElementKey: TaxonomyElemKeys.AnyElementKey = {
+    // TODO Improve. What if the element is a root element, for example? Do we need a URI fragment then?
+    val docUri: URI = this.docUri
+    val xpointer: XPointer = XPointer.toXPointer(this.underlyingElem)
+    val ownUri: URI = new URI(docUri.getScheme, docUri.getSchemeSpecificPart, xpointer.toString)
+
+    TaxonomyElemKeys.AnyElementKey(ownUri)
+  }
 
   final def fragmentKey: FragmentKey = {
     FragmentKey(underlyingElem.docUri, underlyingElem.ownNavigationPathRelativeToRootElem)

@@ -18,7 +18,6 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.jvm
 
 import java.net.URI
 
-import eu.cdevreeze.tqa2.common.xpointer.XPointer
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom._
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint
@@ -100,12 +99,7 @@ object DefaultParallelRelationshipFactory extends RelationshipFactory {
         case key: TaxonomyElemKey =>
           Endpoint.KeyEndpoint(key.taxoElemKey)
         case nonKey: NonKeyResource =>
-          // TODO Improve. What if the element is a root element, for example? Do we need a URI fragment then?
-          val docUri: URI = nonKey.docUri
-          val xpointer: XPointer = XPointer.toXPointer(nonKey.underlyingElem)
-          val ownUri: URI = new URI(docUri.getScheme, docUri.getSchemeSpecificPart, xpointer.toString)
-
-          val ownKey: TaxonomyElemKeys.AnyElementKey = TaxonomyElemKeys.AnyElementKey(ownUri)
+          val ownKey: TaxonomyElemKeys.AnyElementKey = resource.anyElementKey
 
           Endpoint.LocalResource(ownKey, nonKey)
       }
