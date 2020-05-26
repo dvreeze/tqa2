@@ -92,9 +92,7 @@ object DefaultRelationshipFactory extends RelationshipFactory {
         case key: TaxonomyElemKey =>
           Endpoint.KeyEndpoint(key.taxoElemKey)
         case nonKey: NonKeyResource =>
-          val ownKey: TaxonomyElemKeys.AnyElementKey = resource.anyElementKey
-
-          Endpoint.LocalResource(ownKey, nonKey)
+          Endpoint.LocalResource(resource.ownAnyElementKey, nonKey)
       }
 
     // Now fix "locators" to "resources"

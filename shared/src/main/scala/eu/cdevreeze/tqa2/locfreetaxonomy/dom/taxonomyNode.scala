@@ -191,10 +191,10 @@ sealed trait TaxonomyElem extends AbstractDialectBackingElem with AbstractSubtyp
   // Other methods
 
   /**
-   * Returns the key as taxonomy element key. If this element itself represents a key, an "any element key" is returned.
-   * Otherwise, the "canonical" key is returned.
+   * Returns the key pointing to this element as taxonomy element key. If this element itself represents a key, an "any element key" is returned.
+   * Otherwise, the "canonical" key pointing to this element is returned.
    */
-  final def key: TaxonomyElemKeys.TaxonomyElemKey = {
+  final def ownKey: TaxonomyElemKeys.TaxonomyElemKey = {
     this match {
       case e: GlobalElementDeclaration =>
         TaxonomyElemKeys.ElementKey(e.targetEName)
@@ -205,15 +205,15 @@ sealed trait TaxonomyElem extends AbstractDialectBackingElem with AbstractSubtyp
       case e: ArcroleType =>
         TaxonomyElemKeys.ArcroleKey(e.arcroleUri)
       case e =>
-        anyElementKey
+        ownAnyElementKey
     }
   }
 
   /**
-   * Returns the key as "any element key", even if this element is a global element declaration, named type definition,
+   * Returns the key pointing to this element as "any element key", even if this element is a global element declaration, named type definition,
    * role type or arcrole type.
    */
-  final def anyElementKey: TaxonomyElemKeys.AnyElementKey = {
+  final def ownAnyElementKey: TaxonomyElemKeys.AnyElementKey = {
     // TODO Improve. What if the element is a root element, for example? Do we need a URI fragment then?
     val docUri: URI = this.docUri
     val xpointer: XPointer = XPointer.toXPointer(this.underlyingElem)
