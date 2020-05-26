@@ -24,6 +24,10 @@ import eu.cdevreeze.yaidom2.core.EName
  * Taxonomy element keys in a locator-free taxonomy as case class instances. It is important that they are immutable
  * objects with well-defined efficient equality, which makes them good Map keys.
  *
+ * It is also important that for each taxonomy element, its "canonical" key can easily be determined, without needing
+ * any taxonomy as context. That's why there is no separate concept key, because that would require reasoning about
+ * substitution groups, which may require analysis of multiple taxonomy documents.
+ *
  * @author Chris de Vreeze
  */
 object TaxonomyElemKeys {
@@ -33,8 +37,7 @@ object TaxonomyElemKeys {
    *
    * Note that taxonomy elements may have more than one kind of taxonomy element key, although only 1 of them will
    * be considered the "canonical" one for the kind of element. For example, a concept declaration in the taxonomy
-   * has a concept key as canonical key, but it can also be referred to by an element key (like all global element
-   * declarations), and like all taxonomy elements it can also be referred to by an "any element key".
+   * has an element key as canonical key, but it can also be referred to by an "any element key".
    */
   sealed trait TaxonomyElemKey {
 
@@ -55,17 +58,13 @@ object TaxonomyElemKeys {
   // Specific taxonomy element keys
 
   /**
-   * ConceptKey element, holding the target EName.
-   */
-  final case class ConceptKey(key: EName) extends SchemaComponentKey
-
-  /**
-   * ElementKey element, holding the target EName.
+   * ElementKey element, holding the target EName. The target is a global element declaration. In most cases, it is
+   * a concept declaration.
    */
   final case class ElementKey(key: EName) extends SchemaComponentKey
 
   /**
-   * TypeKey element, holding the target EName.
+   * TypeKey element, holding the target EName. The target is a named type definition.
    */
   final case class TypeKey(key: EName) extends SchemaComponentKey
 

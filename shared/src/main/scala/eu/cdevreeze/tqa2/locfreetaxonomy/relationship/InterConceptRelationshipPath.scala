@@ -16,7 +16,7 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.relationship
 
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint.ConceptKeyEndpoint
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint.ElementKeyEndpoint
 import eu.cdevreeze.yaidom2.core.EName
 
 /**
@@ -30,8 +30,7 @@ import eu.cdevreeze.yaidom2.core.EName
  *
  * @author Chris de Vreeze
  */
-final case class InterConceptRelationshipPath[A <: InterConceptRelationship] private (relationships: Seq[A])
-  extends RelationshipPath {
+final case class InterConceptRelationshipPath[A <: InterConceptRelationship] private (relationships: Seq[A]) extends RelationshipPath {
 
   override type RelationshipType = A
 
@@ -39,9 +38,9 @@ final case class InterConceptRelationshipPath[A <: InterConceptRelationship] pri
 
   require(relationships.nonEmpty, s"A relationship path must have at least one relationship")
 
-  def source: ConceptKeyEndpoint = firstRelationship.source
+  def source: ElementKeyEndpoint = firstRelationship.source
 
-  def target: ConceptKeyEndpoint = lastRelationship.target
+  def target: ElementKeyEndpoint = lastRelationship.target
 
   def sourceConcept: EName = firstRelationship.sourceConcept
 
@@ -59,7 +58,7 @@ final case class InterConceptRelationshipPath[A <: InterConceptRelationship] pri
     relationships.map(_.sourceConcept) :+ relationships.last.targetConcept
   }
 
-  def relationshipTargets: Seq[ConceptKeyEndpoint] = {
+  def relationshipTargets: Seq[ElementKeyEndpoint] = {
     relationships.map(_.target)
   }
 
@@ -129,7 +128,8 @@ object InterConceptRelationshipPath {
   def from[A <: InterConceptRelationship](relationships: Seq[A]): InterConceptRelationshipPath[A] = {
     require(
       relationships.sliding(2).filter(_.size == 2).forall(pair => haveMatchingConcepts(pair(0), pair(1))),
-      s"All subsequent relationships in a path must have matching target/source concepts")
+      s"All subsequent relationships in a path must have matching target/source concepts"
+    )
 
     new InterConceptRelationshipPath(relationships.toVector)
   }

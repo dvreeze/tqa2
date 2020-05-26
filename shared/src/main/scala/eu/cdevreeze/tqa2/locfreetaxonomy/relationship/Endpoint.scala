@@ -35,7 +35,7 @@ import eu.cdevreeze.yaidom2.core.EName
  * resources, and locators to XLink resources, respectively.
  *
  * Type Endpoint and its sub-types strike a balance between keeping too much state on the one hand, and too little state to
- * be meaningful or useful on the other hand. For example, endpoints that are concept keys convey semantics without needing any context,
+ * be meaningful or useful on the other hand. For example, endpoints that are element keys convey semantics without needing any context,
  * and endpoints that are regular resources for standard labels in a standard label link contain those standard labels. All
  * endpoints have in common that they contain at least a taxonomy element key (that either is the endpoint, or that is the
  * regular resource pointed to by the taxonomy element key).
@@ -63,7 +63,7 @@ object Endpoint {
   sealed trait Key extends Endpoint
 
   /**
-   * Endpoint that is a key to an element that is not a resource, like a concept key.
+   * Endpoint that is a key to an element that is not a resource, like an element key.
    *
    * The taxonomy element key type hierarchy is mirrored in this key endpoint type hierarchy, for ease of use, even if
    * this means code duplication and less orthogonality.
@@ -85,11 +85,6 @@ object Endpoint {
   sealed trait AppinfoContentKeyEndpoint extends KeyEndpoint {
 
     type TaxoElemKeyType <: TaxonomyElemKeys.AppinfoContentKey
-  }
-
-  final case class ConceptKeyEndpoint(taxonomyElemKey: TaxonomyElemKeys.ConceptKey) extends SchemaComponentKeyEndpoint {
-
-    type TaxoElemKeyType = TaxonomyElemKeys.ConceptKey
   }
 
   final case class ElementKeyEndpoint(taxonomyElemKey: TaxonomyElemKeys.ElementKey) extends SchemaComponentKeyEndpoint {
@@ -123,7 +118,6 @@ object Endpoint {
       import TaxonomyElemKeys._
 
       taxonomyElemKey match {
-        case k: ConceptKey    => ConceptKeyEndpoint(k)
         case k: ElementKey    => ElementKeyEndpoint(k)
         case k: TypeKey       => TypeKeyEndpoint(k)
         case k: RoleKey       => RoleKeyEndpoint(k)
@@ -133,10 +127,10 @@ object Endpoint {
     }
   }
 
-  object ConceptKeyEndpoint {
+  object ElementKeyEndpoint {
 
-    def apply(conceptName: EName): ConceptKeyEndpoint = {
-      ConceptKeyEndpoint(TaxonomyElemKeys.ConceptKey(conceptName))
+    def apply(elementName: EName): ElementKeyEndpoint = {
+      ElementKeyEndpoint(TaxonomyElemKeys.ElementKey(elementName))
     }
   }
 

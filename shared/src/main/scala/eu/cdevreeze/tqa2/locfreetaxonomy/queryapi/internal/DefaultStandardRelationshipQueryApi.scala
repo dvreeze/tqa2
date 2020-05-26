@@ -16,14 +16,14 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal
 
-import scala.reflect.classTag
-import scala.reflect.ClassTag
-
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.ConceptKey
+import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.ElementKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.RelationshipQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.StandardRelationshipQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.StandardRelationship
 import eu.cdevreeze.yaidom2.core.EName
+
+import scala.reflect.ClassTag
+import scala.reflect.classTag
 
 /**
  * Implementation of StandardRelationshipQueryApi. The methods are overridable, which can be considered in case more efficient
@@ -45,33 +45,26 @@ trait DefaultStandardRelationshipQueryApi extends StandardRelationshipQueryApi w
     findAllRelationshipsOfType(relationshipType)
   }
 
-  def filterStandardRelationshipsOfType[A <: StandardRelationship](
-    relationshipType: ClassTag[A])(p: A => Boolean): Seq[A] = {
+  def filterStandardRelationshipsOfType[A <: StandardRelationship](relationshipType: ClassTag[A])(p: A => Boolean): Seq[A] = {
 
     filterRelationshipsOfType(relationshipType)(p)
   }
 
   def findAllOutgoingStandardRelationships(sourceConcept: EName): Seq[StandardRelationship] = {
-    findAllOutgoingRelationshipsOfType(ConceptKey(sourceConcept), classTag[StandardRelationship])
+    findAllOutgoingRelationshipsOfType(ElementKey(sourceConcept), classTag[StandardRelationship])
   }
 
-  def filterOutgoingStandardRelationships(
-    sourceConcept: EName)(p: StandardRelationship => Boolean): Seq[StandardRelationship] = {
-
-    filterOutgoingRelationshipsOfType(ConceptKey(sourceConcept), classTag[StandardRelationship])(p)
+  def filterOutgoingStandardRelationships(sourceConcept: EName)(p: StandardRelationship => Boolean): Seq[StandardRelationship] = {
+    filterOutgoingRelationshipsOfType(ElementKey(sourceConcept), classTag[StandardRelationship])(p)
   }
 
-  def findAllOutgoingStandardRelationshipsOfType[A <: StandardRelationship](
-    sourceConcept: EName,
-    relationshipType: ClassTag[A]): Seq[A] = {
-
-    findAllOutgoingRelationshipsOfType(ConceptKey(sourceConcept), relationshipType)
+  def findAllOutgoingStandardRelationshipsOfType[A <: StandardRelationship](sourceConcept: EName, relationshipType: ClassTag[A]): Seq[A] = {
+    findAllOutgoingRelationshipsOfType(ElementKey(sourceConcept), relationshipType)
   }
 
-  def filterOutgoingStandardRelationshipsOfType[A <: StandardRelationship](
-    sourceConcept: EName,
-    relationshipType: ClassTag[A])(p: A => Boolean): Seq[A] = {
+  def filterOutgoingStandardRelationshipsOfType[A <: StandardRelationship](sourceConcept: EName, relationshipType: ClassTag[A])(
+      p: A => Boolean): Seq[A] = {
 
-    filterOutgoingRelationshipsOfType(ConceptKey(sourceConcept), relationshipType)(p)
+    filterOutgoingRelationshipsOfType(ElementKey(sourceConcept), relationshipType)(p)
   }
 }

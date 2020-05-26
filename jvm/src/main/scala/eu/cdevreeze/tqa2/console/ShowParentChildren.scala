@@ -19,7 +19,7 @@ package eu.cdevreeze.tqa2.console
 import java.io.File
 import java.net.URI
 
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.ConceptKey
+import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.ElementKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.yaidom2.core.EName
 import net.sf.saxon.s9api.Processor
@@ -84,7 +84,7 @@ object ShowParentChildren {
       println(s"ELR: $elr. Paths (max depth: ${paths.map(_.relationships.size).maxOption.getOrElse(0)}):")
 
       paths.foreach { path =>
-        println(s"\t${path.elements.map(_.taxonomyElemKey.asInstanceOf[ConceptKey].key).mkString(" --> ")}")
+        println(s"\t${path.elements.map(_.taxonomyElemKey.asInstanceOf[ElementKey].key).mkString(" --> ")}")
       }
     }
   }

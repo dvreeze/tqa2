@@ -18,12 +18,12 @@ package eu.cdevreeze.tqa2.locfreetaxonomy.dom
 
 import java.net.URI
 
-import scala.util.Try
-
 import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.locfreexlink
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys
 import eu.cdevreeze.yaidom2.core.EName
+
+import scala.util.Try
 
 /**
  * Taxonomy element key dialect in a locator-free taxonomy.
@@ -76,9 +76,9 @@ object TaxonomyElemKeyDialect {
    */
   trait ConceptKey extends SchemaComponentKey {
 
-    type TaxoElemKeyType = TaxonomyElemKeys.ConceptKey
+    type TaxoElemKeyType = TaxonomyElemKeys.ElementKey
 
-    final def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.ConceptKey(key)
+    final def taxoElemKey: TaxoElemKeyType = TaxonomyElemKeys.ElementKey(key)
   }
 
   /**
@@ -150,7 +150,8 @@ object TaxonomyElemKeyDialect {
     type TaxoElemKeyType = TaxonomyElemKeys.AnyElementKey
 
     final def key: KeyType = {
-      attrOption(ENames.KeyEName).flatMap(u => Try(URI.create(u)).toOption)
+      attrOption(ENames.KeyEName)
+        .flatMap(u => Try(URI.create(u)).toOption)
         .getOrElse(sys.error(s"Missing key attribute. Document: $docUri. Element: $name"))
     }
 

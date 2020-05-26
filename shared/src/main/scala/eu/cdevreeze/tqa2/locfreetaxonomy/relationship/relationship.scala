@@ -22,7 +22,7 @@ import eu.cdevreeze.tqa2.ENames
 import eu.cdevreeze.tqa2.common.datatypes.XsBooleans
 import eu.cdevreeze.tqa2.locfreetaxonomy.common._
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint.ConceptKeyEndpoint
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint.ElementKeyEndpoint
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.Endpoint.RegularResource
 import eu.cdevreeze.yaidom2.core.EName
 
@@ -100,7 +100,7 @@ sealed trait StandardRelationship extends Relationship {
 
   def arc: dom.StandardArc
 
-  def source: ConceptKeyEndpoint
+  def source: ElementKeyEndpoint
 
   final def sourceConcept: EName = source.taxonomyElemKey.key
 }
@@ -204,7 +204,7 @@ sealed trait InterConceptRelationship extends StandardRelationship {
 
   def arc: dom.InterConceptArc
 
-  def target: ConceptKeyEndpoint
+  def target: ElementKeyEndpoint
 
   final def targetConcept: EName = target.taxonomyElemKey.key
 
@@ -253,7 +253,7 @@ sealed trait ConceptResourceRelationship extends StandardRelationship {
   def target: RegularResource[dom.StandardResource]
 }
 
-final case class ConceptLabelRelationship(arc: dom.LabelArc, source: ConceptKeyEndpoint, target: RegularResource[dom.ConceptLabelResource])
+final case class ConceptLabelRelationship(arc: dom.LabelArc, source: ElementKeyEndpoint, target: RegularResource[dom.ConceptLabelResource])
     extends ConceptResourceRelationship {
 
   def resourceRole: String = target.resource.roleOption.getOrElse(StandardLabelRoles.StandardLabel)
@@ -269,7 +269,7 @@ final case class ConceptLabelRelationship(arc: dom.LabelArc, source: ConceptKeyE
 
 final case class ConceptReferenceRelationship(
     arc: dom.ReferenceArc,
-    source: ConceptKeyEndpoint,
+    source: ElementKeyEndpoint,
     target: RegularResource[dom.ConceptReferenceResource])
     extends ConceptResourceRelationship {
 
@@ -286,12 +286,12 @@ sealed trait PresentationRelationship extends InterConceptRelationship {
   def arc: dom.PresentationArc
 }
 
-final case class ParentChildRelationship(arc: dom.PresentationArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+final case class ParentChildRelationship(arc: dom.PresentationArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint)
     extends PresentationRelationship {
   requireArcrole(StandardArcroles.StandardPresentationArcrole)
 }
 
-final case class OtherPresentationRelationship(arc: dom.PresentationArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+final case class OtherPresentationRelationship(arc: dom.PresentationArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint)
     extends PresentationRelationship
 
 /**
@@ -304,12 +304,12 @@ sealed trait CalculationRelationship extends InterConceptRelationship {
   def weight: Double = arc.weight
 }
 
-final case class SummationItemRelationship(arc: dom.CalculationArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+final case class SummationItemRelationship(arc: dom.CalculationArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint)
     extends CalculationRelationship {
   requireArcrole(StandardArcroles.StandardCalculationArcrole)
 }
 
-final case class OtherCalculationRelationship(arc: dom.CalculationArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+final case class OtherCalculationRelationship(arc: dom.CalculationArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint)
     extends CalculationRelationship
 
 /**
@@ -320,22 +320,22 @@ sealed trait DefinitionRelationship extends InterConceptRelationship {
   def arc: dom.DefinitionArc
 }
 
-final case class GeneralSpecialRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+final case class GeneralSpecialRelationship(arc: dom.DefinitionArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint)
     extends DefinitionRelationship {
   requireArcrole(StandardArcroles.GeneralSpecialArcrole)
 }
 
-final case class EssenceAliasRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+final case class EssenceAliasRelationship(arc: dom.DefinitionArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint)
     extends DefinitionRelationship {
   requireArcrole(StandardArcroles.EssenceAliasArcrole)
 }
 
-final case class SimilarTuplesRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+final case class SimilarTuplesRelationship(arc: dom.DefinitionArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint)
     extends DefinitionRelationship {
   requireArcrole(StandardArcroles.SimilarTuplesArcrole)
 }
 
-final case class RequiresElementRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+final case class RequiresElementRelationship(arc: dom.DefinitionArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint)
     extends DefinitionRelationship {
   requireArcrole(StandardArcroles.RequiresElementArcrole)
 }
@@ -376,21 +376,21 @@ sealed trait HasHypercubeRelationship extends DimensionalRelationship {
   }
 }
 
-final case class AllRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+final case class AllRelationship(arc: dom.DefinitionArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint)
     extends HasHypercubeRelationship {
   requireArcrole("http://xbrl.org/int/dim/arcrole/all")
 
   def isAllRelationship: Boolean = true
 }
 
-final case class NotAllRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+final case class NotAllRelationship(arc: dom.DefinitionArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint)
     extends HasHypercubeRelationship {
   requireArcrole("http://xbrl.org/int/dim/arcrole/notAll")
 
   def isAllRelationship: Boolean = false
 }
 
-final case class HypercubeDimensionRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+final case class HypercubeDimensionRelationship(arc: dom.DefinitionArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint)
     extends DimensionalRelationship {
   requireArcrole("http://xbrl.org/int/dim/arcrole/hypercube-dimension")
 
@@ -422,7 +422,7 @@ sealed trait DomainAwareRelationship extends DimensionalRelationship {
   }
 }
 
-final case class DimensionDomainRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+final case class DimensionDomainRelationship(arc: dom.DefinitionArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint)
     extends DomainAwareRelationship {
   requireArcrole("http://xbrl.org/int/dim/arcrole/dimension-domain")
 
@@ -431,7 +431,7 @@ final case class DimensionDomainRelationship(arc: dom.DefinitionArc, source: Con
   def domain: EName = targetConcept
 }
 
-final case class DomainMemberRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+final case class DomainMemberRelationship(arc: dom.DefinitionArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint)
     extends DomainAwareRelationship {
   requireArcrole("http://xbrl.org/int/dim/arcrole/domain-member")
 
@@ -440,7 +440,7 @@ final case class DomainMemberRelationship(arc: dom.DefinitionArc, source: Concep
   def member: EName = targetConcept
 }
 
-final case class DimensionDefaultRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+final case class DimensionDefaultRelationship(arc: dom.DefinitionArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint)
     extends DimensionalRelationship {
   requireArcrole("http://xbrl.org/int/dim/arcrole/dimension-default")
 
@@ -452,7 +452,7 @@ final case class DimensionDefaultRelationship(arc: dom.DefinitionArc, source: Co
 /**
  * Definition relationship that is not one of the known standard or dimensional ones.
  */
-final case class OtherDefinitionRelationship(arc: dom.DefinitionArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint)
+final case class OtherDefinitionRelationship(arc: dom.DefinitionArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint)
     extends DefinitionRelationship
 
 // Formula and table relationships
@@ -778,7 +778,7 @@ object Relationship {
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
     (arc, source) match {
-      case (arc: dom.StandardArc, source: ConceptKeyEndpoint) =>
+      case (arc: dom.StandardArc, source: ElementKeyEndpoint) =>
         StandardRelationship
           .opt(arc, source, target)
           .getOrElse(UnknownRelationship(arc, source, target))
@@ -792,12 +792,12 @@ object Relationship {
 
 object StandardRelationship {
 
-  def opt(arc: dom.StandardArc, source: ConceptKeyEndpoint, target: Endpoint): Option[StandardRelationship] = {
+  def opt(arc: dom.StandardArc, source: ElementKeyEndpoint, target: Endpoint): Option[StandardRelationship] = {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
     (arc, target, target.targetResourceOption) match {
-      case (arc: dom.InterConceptArc, target: ConceptKeyEndpoint, None) =>
+      case (arc: dom.InterConceptArc, target: ElementKeyEndpoint, None) =>
         InterConceptRelationship.opt(arc, source, target)
       case (arc: dom.ConceptResourceArc, target: RegularResource[_], Some(_: dom.StandardResource)) =>
         ConceptResourceRelationship.opt(arc, source, target.asInstanceOf[RegularResource[dom.StandardResource]])
@@ -880,7 +880,7 @@ object NonStandardRelationship {
 object InterConceptRelationship {
 
   // scalastyle:off cyclomatic.complexity
-  def opt(arc: dom.InterConceptArc, source: ConceptKeyEndpoint, target: ConceptKeyEndpoint): Option[InterConceptRelationship] = {
+  def opt(arc: dom.InterConceptArc, source: ElementKeyEndpoint, target: ElementKeyEndpoint): Option[InterConceptRelationship] = {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")
 
@@ -919,7 +919,7 @@ object ConceptResourceRelationship {
 
   def opt(
       arc: dom.ConceptResourceArc,
-      source: ConceptKeyEndpoint,
+      source: ElementKeyEndpoint,
       target: RegularResource[dom.StandardResource]): Option[ConceptResourceRelationship] = {
 
     require(arc.attrOption(ENames.XLinkArcroleEName).nonEmpty, s"Missing arcrole on arc in ${arc.docUri}")

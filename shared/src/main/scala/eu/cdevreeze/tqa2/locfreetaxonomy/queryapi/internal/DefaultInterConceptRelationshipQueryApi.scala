@@ -16,16 +16,16 @@
 
 package eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal
 
-import scala.reflect.ClassTag
-import scala.reflect.classTag
-
-import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.ConceptKey
+import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.ElementKey
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.InterConceptRelationshipQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.RelationshipQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.StandardRelationshipQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.InterConceptRelationship
 import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.InterConceptRelationshipPath
 import eu.cdevreeze.yaidom2.core.EName
+
+import scala.reflect.ClassTag
+import scala.reflect.classTag
 
 /**
  * Implementation of InterConceptRelationshipQueryApi. The methods are overridable, which can be considered in case more efficient
@@ -34,7 +34,7 @@ import eu.cdevreeze.yaidom2.core.EName
  * @author Chris de Vreeze
  */
 trait DefaultInterConceptRelationshipQueryApi
-  extends InterConceptRelationshipQueryApi
+    extends InterConceptRelationshipQueryApi
     with StandardRelationshipQueryApi
     with RelationshipQueryApi {
 
@@ -58,24 +58,27 @@ trait DefaultInterConceptRelationshipQueryApi
     findAllOutgoingStandardRelationshipsOfType(sourceConcept, classTag[InterConceptRelationship])
   }
 
-  def filterOutgoingInterConceptRelationships(sourceConcept: EName)(p: InterConceptRelationship => Boolean): Seq[InterConceptRelationship] = {
+  def filterOutgoingInterConceptRelationships(sourceConcept: EName)(
+      p: InterConceptRelationship => Boolean): Seq[InterConceptRelationship] = {
     filterOutgoingStandardRelationshipsOfType(sourceConcept, classTag[InterConceptRelationship])(p)
   }
 
   def findAllOutgoingInterConceptRelationshipsOfType[A <: InterConceptRelationship](
-    sourceConcept: EName, relationshipType: ClassTag[A]): Seq[A] = {
+      sourceConcept: EName,
+      relationshipType: ClassTag[A]): Seq[A] = {
 
     findAllOutgoingStandardRelationshipsOfType(sourceConcept, relationshipType)
   }
 
-  def filterOutgoingInterConceptRelationshipsOfType[A <: InterConceptRelationship](
-    sourceConcept: EName, relationshipType: ClassTag[A])(p: A => Boolean): Seq[A] = {
+  def filterOutgoingInterConceptRelationshipsOfType[A <: InterConceptRelationship](sourceConcept: EName, relationshipType: ClassTag[A])(
+      p: A => Boolean): Seq[A] = {
 
     filterOutgoingStandardRelationshipsOfType(sourceConcept, relationshipType)(p)
   }
 
   def findAllConsecutiveInterConceptRelationshipsOfType[A <: InterConceptRelationship](
-    relationship: InterConceptRelationship, resultRelationshipType: ClassTag[A]): Seq[A] = {
+      relationship: InterConceptRelationship,
+      resultRelationshipType: ClassTag[A]): Seq[A] = {
 
     filterOutgoingInterConceptRelationshipsOfType(relationship.targetConcept, resultRelationshipType) { rel =>
       relationship.isFollowedBy(rel)
@@ -83,27 +86,30 @@ trait DefaultInterConceptRelationshipQueryApi
   }
 
   def findAllIncomingInterConceptRelationships(targetConcept: EName): Seq[InterConceptRelationship] = {
-    findAllIncomingRelationshipsOfType(ConceptKey(targetConcept), classTag[InterConceptRelationship])
+    findAllIncomingRelationshipsOfType(ElementKey(targetConcept), classTag[InterConceptRelationship])
   }
 
-  def filterIncomingInterConceptRelationships(targetConcept: EName)(p: InterConceptRelationship => Boolean): Seq[InterConceptRelationship] = {
-    filterIncomingRelationshipsOfType(ConceptKey(targetConcept), classTag[InterConceptRelationship])(p)
+  def filterIncomingInterConceptRelationships(targetConcept: EName)(
+      p: InterConceptRelationship => Boolean): Seq[InterConceptRelationship] = {
+    filterIncomingRelationshipsOfType(ElementKey(targetConcept), classTag[InterConceptRelationship])(p)
   }
 
   def findAllIncomingInterConceptRelationshipsOfType[A <: InterConceptRelationship](
-    targetConcept: EName, relationshipType: ClassTag[A]): Seq[A] = {
+      targetConcept: EName,
+      relationshipType: ClassTag[A]): Seq[A] = {
 
-    findAllIncomingRelationshipsOfType(ConceptKey(targetConcept), relationshipType)
+    findAllIncomingRelationshipsOfType(ElementKey(targetConcept), relationshipType)
   }
 
-  def filterIncomingInterConceptRelationshipsOfType[A <: InterConceptRelationship](
-    targetConcept: EName, relationshipType: ClassTag[A])(p: A => Boolean): Seq[A] = {
+  def filterIncomingInterConceptRelationshipsOfType[A <: InterConceptRelationship](targetConcept: EName, relationshipType: ClassTag[A])(
+      p: A => Boolean): Seq[A] = {
 
-    filterIncomingRelationshipsOfType(ConceptKey(targetConcept), relationshipType)(p)
+    filterIncomingRelationshipsOfType(ElementKey(targetConcept), relationshipType)(p)
   }
 
   def filterOutgoingConsecutiveInterConceptRelationshipPaths[A <: InterConceptRelationship](
-    sourceConcept: EName, relationshipType: ClassTag[A])(p: InterConceptRelationshipPath[A] => Boolean): Seq[InterConceptRelationshipPath[A]] = {
+      sourceConcept: EName,
+      relationshipType: ClassTag[A])(p: InterConceptRelationshipPath[A] => Boolean): Seq[InterConceptRelationshipPath[A]] = {
 
     filterOutgoingUnrestrictedInterConceptRelationshipPaths(sourceConcept, relationshipType) { path =>
       path.isConsecutiveRelationshipPath && p(path)
@@ -111,38 +117,45 @@ trait DefaultInterConceptRelationshipQueryApi
   }
 
   def filterIncomingConsecutiveInterConceptRelationshipPaths[A <: InterConceptRelationship](
-    targetConcept: EName, relationshipType: ClassTag[A])(p: InterConceptRelationshipPath[A] => Boolean): Seq[InterConceptRelationshipPath[A]] = {
+      targetConcept: EName,
+      relationshipType: ClassTag[A])(p: InterConceptRelationshipPath[A] => Boolean): Seq[InterConceptRelationshipPath[A]] = {
 
     filterIncomingUnrestrictedInterConceptRelationshipPaths(targetConcept, relationshipType) { path =>
       path.isConsecutiveRelationshipPath && p(path)
     }
   }
 
-  def filterOutgoingUnrestrictedInterConceptRelationshipPaths[A <: InterConceptRelationship](sourceConcept: EName, relationshipType: ClassTag[A])(
-    p: InterConceptRelationshipPath[A] => Boolean): Seq[InterConceptRelationshipPath[A]] = {
+  def filterOutgoingUnrestrictedInterConceptRelationshipPaths[A <: InterConceptRelationship](
+      sourceConcept: EName,
+      relationshipType: ClassTag[A])(p: InterConceptRelationshipPath[A] => Boolean): Seq[InterConceptRelationshipPath[A]] = {
 
-    val nextRelationships = filterOutgoingInterConceptRelationshipsOfType(sourceConcept, relationshipType)(rel => p(InterConceptRelationshipPath(rel)))
+    val nextRelationships =
+      filterOutgoingInterConceptRelationshipsOfType(sourceConcept, relationshipType)(rel => p(InterConceptRelationshipPath(rel)))
 
     val paths =
-      nextRelationships.flatMap(rel => filterOutgoingUnrestrictedInterConceptRelationshipPaths(InterConceptRelationshipPath(rel), relationshipType)(p))
+      nextRelationships.flatMap(rel =>
+        filterOutgoingUnrestrictedInterConceptRelationshipPaths(InterConceptRelationshipPath(rel), relationshipType)(p))
     paths
   }
 
-  def filterIncomingUnrestrictedInterConceptRelationshipPaths[A <: InterConceptRelationship](targetConcept: EName, relationshipType: ClassTag[A])(
-    p: InterConceptRelationshipPath[A] => Boolean): Seq[InterConceptRelationshipPath[A]] = {
+  def filterIncomingUnrestrictedInterConceptRelationshipPaths[A <: InterConceptRelationship](
+      targetConcept: EName,
+      relationshipType: ClassTag[A])(p: InterConceptRelationshipPath[A] => Boolean): Seq[InterConceptRelationshipPath[A]] = {
 
-    val prevRelationships = filterIncomingInterConceptRelationshipsOfType(targetConcept, relationshipType)(rel => p(InterConceptRelationshipPath(rel)))
+    val prevRelationships =
+      filterIncomingInterConceptRelationshipsOfType(targetConcept, relationshipType)(rel => p(InterConceptRelationshipPath(rel)))
 
     val paths =
-      prevRelationships.flatMap(rel => filterIncomingUnrestrictedInterConceptRelationshipPaths(InterConceptRelationshipPath(rel), relationshipType)(p))
+      prevRelationships.flatMap(rel =>
+        filterIncomingUnrestrictedInterConceptRelationshipPaths(InterConceptRelationshipPath(rel), relationshipType)(p))
     paths
   }
 
   // Private methods
 
   private def filterOutgoingUnrestrictedInterConceptRelationshipPaths[A <: InterConceptRelationship](
-    path: InterConceptRelationshipPath[A], relationshipType: ClassTag[A])(
-    p: InterConceptRelationshipPath[A] => Boolean): Seq[InterConceptRelationshipPath[A]] = {
+      path: InterConceptRelationshipPath[A],
+      relationshipType: ClassTag[A])(p: InterConceptRelationshipPath[A] => Boolean): Seq[InterConceptRelationshipPath[A]] = {
 
     val nextRelationships: Seq[A] =
       filterOutgoingInterConceptRelationshipsOfType(
@@ -163,8 +176,8 @@ trait DefaultInterConceptRelationshipQueryApi
   }
 
   private def filterIncomingUnrestrictedInterConceptRelationshipPaths[A <: InterConceptRelationship](
-    path: InterConceptRelationshipPath[A], relationshipType: ClassTag[A])(
-    p: InterConceptRelationshipPath[A] => Boolean): Seq[InterConceptRelationshipPath[A]] = {
+      path: InterConceptRelationshipPath[A],
+      relationshipType: ClassTag[A])(p: InterConceptRelationshipPath[A] => Boolean): Seq[InterConceptRelationshipPath[A]] = {
 
     val prevRelationships: Seq[A] =
       filterIncomingInterConceptRelationshipsOfType(
