@@ -17,9 +17,12 @@
 package eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.internal
 
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.TaxonomyElemKey
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.DefinitionNode
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Table
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TableBreakdown
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.NonStandardRelationshipQueryApi
 import eu.cdevreeze.tqa2.locfreetaxonomy.queryapi.TableRelationshipQueryApi
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.TableRelationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship._
 
 import scala.reflect.ClassTag
 import scala.reflect.classTag
@@ -84,5 +87,57 @@ trait DefaultTableRelationshipQueryApi extends TableRelationshipQueryApi with No
   def filterIncomingTableRelationshipsOfType[A <: TableRelationship](targetKey: TaxonomyElemKey, relationshipType: ClassTag[A])(
       p: A => Boolean): Seq[A] = {
     filterIncomingNonStandardRelationshipsOfType(targetKey, relationshipType)(p)
+  }
+
+  // Specialized query API methods
+
+  def findAllTableBreakdownRelationships: Seq[TableBreakdownRelationship] = {
+    findAllTableRelationshipsOfType(classTag[TableBreakdownRelationship])
+  }
+
+  def filterTableBreakdownRelationships(p: TableBreakdownRelationship => Boolean): Seq[TableBreakdownRelationship] = {
+    filterTableRelationshipsOfType(classTag[TableBreakdownRelationship])(p)
+  }
+
+  def findAllOutgoingTableBreakdownRelationships(table: Table): Seq[TableBreakdownRelationship] = {
+    findAllOutgoingTableRelationshipsOfType(table.ownKey, classTag[TableBreakdownRelationship])
+  }
+
+  def filterOutgoingTableBreakdownRelationships(table: Table)(p: TableBreakdownRelationship => Boolean): Seq[TableBreakdownRelationship] = {
+    filterOutgoingTableRelationshipsOfType(table.ownKey, classTag[TableBreakdownRelationship])(p)
+  }
+
+  def findAllOutgoingBreakdownTreeRelationships(breakdown: TableBreakdown): Seq[BreakdownTreeRelationship] = {
+    findAllOutgoingTableRelationshipsOfType(breakdown.ownKey, classTag[BreakdownTreeRelationship])
+  }
+
+  def filterOutgoingBreakdownTreeRelationships(breakdown: TableBreakdown)(
+      p: BreakdownTreeRelationship => Boolean): Seq[BreakdownTreeRelationship] = {
+    filterOutgoingTableRelationshipsOfType(breakdown.ownKey, classTag[BreakdownTreeRelationship])(p)
+  }
+
+  def findAllOutgoingDefinitionNodeSubtreeRelationships(node: DefinitionNode): Seq[DefinitionNodeSubtreeRelationship] = {
+    findAllOutgoingTableRelationshipsOfType(node.ownKey, classTag[DefinitionNodeSubtreeRelationship])
+  }
+
+  def filterOutgoingDefinitionNodeSubtreeRelationships(node: DefinitionNode)(
+      p: DefinitionNodeSubtreeRelationship => Boolean): Seq[DefinitionNodeSubtreeRelationship] = {
+    filterOutgoingTableRelationshipsOfType(node.ownKey, classTag[DefinitionNodeSubtreeRelationship])(p)
+  }
+
+  def findAllOutgoingTableFilterRelationships(table: Table): Seq[TableFilterRelationship] = {
+    findAllOutgoingTableRelationshipsOfType(table.ownKey, classTag[TableFilterRelationship])
+  }
+
+  def filterOutgoingTableFilterRelationships(table: Table)(p: TableFilterRelationship => Boolean): Seq[TableFilterRelationship] = {
+    filterOutgoingTableRelationshipsOfType(table.ownKey, classTag[TableFilterRelationship])(p)
+  }
+
+  def findAllOutgoingTableParameterRelationships(table: Table): Seq[TableParameterRelationship] = {
+    findAllOutgoingTableRelationshipsOfType(table.ownKey, classTag[TableParameterRelationship])
+  }
+
+  def filterOutgoingTableParameterRelationships(table: Table)(p: TableParameterRelationship => Boolean): Seq[TableParameterRelationship] = {
+    filterOutgoingTableRelationshipsOfType(table.ownKey, classTag[TableParameterRelationship])(p)
   }
 }

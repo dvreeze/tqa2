@@ -17,7 +17,10 @@
 package eu.cdevreeze.tqa2.locfreetaxonomy.queryapi
 
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.TaxonomyElemKey
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.TableRelationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.DefinitionNode
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Table
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TableBreakdown
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship._
 
 import scala.reflect.ClassTag
 
@@ -57,7 +60,7 @@ trait TableRelationshipQueryApi {
    * Filters table-related relationships of the given type that are outgoing from the given XML element.
    */
   def filterOutgoingTableRelationshipsOfType[A <: TableRelationship](sourceKey: TaxonomyElemKey, relationshipType: ClassTag[A])(
-    p: A => Boolean): Seq[A]
+      p: A => Boolean): Seq[A]
 
   /**
    * Finds all table-related relationships that are incoming to the given XML element.
@@ -78,5 +81,63 @@ trait TableRelationshipQueryApi {
    * Filters table-related relationships of the given type that are incoming to the given XML element.
    */
   def filterIncomingTableRelationshipsOfType[A <: TableRelationship](targetKey: TaxonomyElemKey, relationshipType: ClassTag[A])(
-    p: A => Boolean): Seq[A]
+      p: A => Boolean): Seq[A]
+
+  // Specialized query API methods
+
+  def findAllTableBreakdownRelationships: Seq[TableBreakdownRelationship]
+
+  def filterTableBreakdownRelationships(p: TableBreakdownRelationship => Boolean): Seq[TableBreakdownRelationship]
+
+  /**
+   * Finds all table-breakdown relationships that are outgoing from the given table.
+   */
+  def findAllOutgoingTableBreakdownRelationships(table: Table): Seq[TableBreakdownRelationship]
+
+  /**
+   * Filters table-breakdown relationships that are outgoing from the given table.
+   */
+  def filterOutgoingTableBreakdownRelationships(table: Table)(p: TableBreakdownRelationship => Boolean): Seq[TableBreakdownRelationship]
+
+  /**
+   * Finds all breakdown-tree relationships that are outgoing from the given breakdown.
+   */
+  def findAllOutgoingBreakdownTreeRelationships(breakdown: TableBreakdown): Seq[BreakdownTreeRelationship]
+
+  /**
+   * Filters breakdown-tree relationships that are outgoing from the given breakdown.
+   */
+  def filterOutgoingBreakdownTreeRelationships(breakdown: TableBreakdown)(
+      p: BreakdownTreeRelationship => Boolean): Seq[BreakdownTreeRelationship]
+
+  /**
+   * Finds all definition-node-subtree relationships that are outgoing from the given node.
+   */
+  def findAllOutgoingDefinitionNodeSubtreeRelationships(node: DefinitionNode): Seq[DefinitionNodeSubtreeRelationship]
+
+  /**
+   * Filters definition-node-subtree relationships that are outgoing from the given node.
+   */
+  def filterOutgoingDefinitionNodeSubtreeRelationships(node: DefinitionNode)(
+      p: DefinitionNodeSubtreeRelationship => Boolean): Seq[DefinitionNodeSubtreeRelationship]
+
+  /**
+   * Finds all table-filter relationships that are outgoing from the given table.
+   */
+  def findAllOutgoingTableFilterRelationships(table: Table): Seq[TableFilterRelationship]
+
+  /**
+   * Filters table-filter relationships that are outgoing from the given table.
+   */
+  def filterOutgoingTableFilterRelationships(table: Table)(p: TableFilterRelationship => Boolean): Seq[TableFilterRelationship]
+
+  /**
+   * Finds all table-parameter relationships that are outgoing from the given table.
+   */
+  def findAllOutgoingTableParameterRelationships(table: Table): Seq[TableParameterRelationship]
+
+  /**
+   * Filters table-parameter relationships that are outgoing from the given table.
+   */
+  def filterOutgoingTableParameterRelationships(table: Table)(p: TableParameterRelationship => Boolean): Seq[TableParameterRelationship]
 }

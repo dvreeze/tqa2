@@ -17,7 +17,10 @@
 package eu.cdevreeze.tqa2.locfreetaxonomy.queryapi
 
 import eu.cdevreeze.tqa2.locfreetaxonomy.common.TaxonomyElemKeys.TaxonomyElemKey
-import eu.cdevreeze.tqa2.locfreetaxonomy.relationship.FormulaRelationship
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.Assertion
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.FactVariable
+import eu.cdevreeze.tqa2.locfreetaxonomy.dom.VariableSet
+import eu.cdevreeze.tqa2.locfreetaxonomy.relationship._
 
 import scala.reflect.ClassTag
 
@@ -79,4 +82,91 @@ trait FormulaRelationshipQueryApi {
    */
   def filterIncomingFormulaRelationshipsOfType[A <: FormulaRelationship](targetKey: TaxonomyElemKey, relationshipType: ClassTag[A])(
       p: A => Boolean): Seq[A]
+
+  // Specialized query API methods
+
+  // Variable-set relationships
+
+  def findAllVariableSetRelationships: Seq[VariableSetRelationship]
+
+  def filterVariableSetRelationships(p: VariableSetRelationship => Boolean): Seq[VariableSetRelationship]
+
+  /**
+   * Finds all variable-set relationships that are outgoing from the given VariableSet.
+   */
+  def findAllOutgoingVariableSetRelationships(variableSet: VariableSet): Seq[VariableSetRelationship]
+
+  /**
+   * Filters variable-set relationships that are outgoing from the given VariableSet.
+   */
+  def filterOutgoingVariableSetRelationships(variableSet: VariableSet)(p: VariableSetRelationship => Boolean): Seq[VariableSetRelationship]
+
+  // Variable-filter relationships
+
+  def findAllVariableFilterRelationships: Seq[VariableFilterRelationship]
+
+  def filterVariableFilterRelationships(p: VariableFilterRelationship => Boolean): Seq[VariableFilterRelationship]
+
+  /**
+   * Finds all variable-filter relationships that are outgoing from the given FactVariable.
+   */
+  def findAllOutgoingVariableFilterRelationships(factVariable: FactVariable): Seq[VariableFilterRelationship]
+
+  /**
+   * Filters variable-filter relationships that are outgoing from the given FactVariable.
+   */
+  def filterOutgoingVariableFilterRelationships(factVariable: FactVariable)(
+      p: VariableFilterRelationship => Boolean): Seq[VariableFilterRelationship]
+
+  // Variable-set-filter relationships
+
+  def findAllVariableSetFilterRelationships: Seq[VariableSetFilterRelationship]
+
+  def filterVariableSetFilterRelationships(p: VariableSetFilterRelationship => Boolean): Seq[VariableSetFilterRelationship]
+
+  /**
+   * Finds all variable-set-filter relationships that are outgoing from the given VariableSet.
+   */
+  def findAllOutgoingVariableSetFilterRelationships(variableSet: VariableSet): Seq[VariableSetFilterRelationship]
+
+  /**
+   * Filters variable-set-filter relationships that are outgoing from the given VariableSet.
+   */
+  def filterOutgoingVariableSetFilterRelationships(variableSet: VariableSet)(
+      p: VariableSetFilterRelationship => Boolean): Seq[VariableSetFilterRelationship]
+
+  // Variable-set-precondition relationships
+
+  def findAllVariableSetPreconditionRelationships: Seq[VariableSetPreconditionRelationship]
+
+  def filterVariableSetPreconditionRelationships(
+      p: VariableSetPreconditionRelationship => Boolean): Seq[VariableSetPreconditionRelationship]
+
+  /**
+   * Finds all variable-set-precondition relationships that are outgoing from the given VariableSet.
+   */
+  def findAllOutgoingVariableSetPreconditionRelationships(variableSet: VariableSet): Seq[VariableSetPreconditionRelationship]
+
+  /**
+   * Filters variable-set-precondition relationships that are outgoing from the given VariableSet.
+   */
+  def filterOutgoingVariableSetPreconditionRelationships(variableSet: VariableSet)(
+      p: VariableSetPreconditionRelationship => Boolean): Seq[VariableSetPreconditionRelationship]
+
+  // Assertion message relationships. Note that these relationships are strictly not formula-related relationships.
+
+  def findAllAssertionMessageRelationships: Seq[AssertionMessageRelationship]
+
+  def filterAssertionMessageRelationships(p: AssertionMessageRelationship => Boolean): Seq[AssertionMessageRelationship]
+
+  /**
+   * Finds all assertion-message relationships that are outgoing from the given Assertion.
+   */
+  def findAllOutgoingAssertionMessageRelationships(assertion: Assertion): Seq[AssertionMessageRelationship]
+
+  /**
+   * Filters assertion-message relationships that are outgoing from the given Assertion.
+   */
+  def filterOutgoingAssertionMessageRelationships(assertion: Assertion)(
+      p: AssertionMessageRelationship => Boolean): Seq[AssertionMessageRelationship]
 }
