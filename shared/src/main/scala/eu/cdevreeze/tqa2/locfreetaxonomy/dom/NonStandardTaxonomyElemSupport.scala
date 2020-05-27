@@ -59,14 +59,16 @@ object NonStandardTaxonomyElemSupport {
    */
   trait ProvidesQName[V <: HasQNameValue, E <: HasExprText] extends BackingElemApi {
 
-    private implicit val clsTagV: ClassTag[V] = classTag[V]
-    private implicit val clsTagE: ClassTag[E] = classTag[E]
+    def classTagV: ClassTag[V]
+    def classTagE: ClassTag[E]
 
     final def qnameElemOption: Option[V] = {
+      implicit val clsTagV: ClassTag[V] = classTagV
       findAllChildElems.collectFirst { case e: V => e }
     }
 
     final def qnameExpressionElemOption: Option[E] = {
+      implicit val clsTagE: ClassTag[E] = classTagE
       findAllChildElems.collectFirst { case e: E => e }
     }
 

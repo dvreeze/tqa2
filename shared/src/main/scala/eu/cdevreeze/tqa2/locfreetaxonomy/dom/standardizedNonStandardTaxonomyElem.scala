@@ -1290,6 +1290,9 @@ final case class ConceptFilterConcept(underlyingElem: BackingNodes.Elem, taxonom
     extends ConceptFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[ConceptFilterQName, ConceptFilterQNameExpression] {
   requireName(ENames.CfConceptEName)
+
+  val classTagV: ClassTag[ConceptFilterQName] = classTag[ConceptFilterQName]
+  val classTagE: ClassTag[ConceptFilterQNameExpression] = classTag[ConceptFilterQNameExpression]
 }
 
 /**
@@ -1299,6 +1302,9 @@ final case class ConceptFilterAttribute(underlyingElem: BackingNodes.Elem, taxon
     extends ConceptFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[ConceptFilterQName, ConceptFilterQNameExpression] {
   requireName(ENames.CfAttributeEName)
+
+  val classTagV: ClassTag[ConceptFilterQName] = classTag[ConceptFilterQName]
+  val classTagE: ClassTag[ConceptFilterQNameExpression] = classTag[ConceptFilterQNameExpression]
 }
 
 /**
@@ -1308,6 +1314,9 @@ final case class ConceptFilterType(underlyingElem: BackingNodes.Elem, taxonomyEl
     extends ConceptFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[ConceptFilterQName, ConceptFilterQNameExpression] {
   requireName(ENames.CfTypeEName)
+
+  val classTagV: ClassTag[ConceptFilterQName] = classTag[ConceptFilterQName]
+  val classTagE: ClassTag[ConceptFilterQNameExpression] = classTag[ConceptFilterQNameExpression]
 }
 
 /**
@@ -1317,6 +1326,9 @@ final case class ConceptFilterSubstitutionGroup(underlyingElem: BackingNodes.Ele
     extends ConceptFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[ConceptFilterQName, ConceptFilterQNameExpression] {
   requireName(ENames.CfSubstitutionGroupEName)
+
+  val classTagV: ClassTag[ConceptFilterQName] = classTag[ConceptFilterQName]
+  val classTagE: ClassTag[ConceptFilterQNameExpression] = classTag[ConceptFilterQNameExpression]
 }
 
 /**
@@ -1349,6 +1361,9 @@ final case class TupleFilterParent(underlyingElem: BackingNodes.Elem, taxonomyEl
     extends TupleFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[TupleFilterQName, TupleFilterQNameExpression] {
   requireName(ENames.TfParentEName)
+
+  val classTagV: ClassTag[TupleFilterQName] = classTag[TupleFilterQName]
+  val classTagE: ClassTag[TupleFilterQNameExpression] = classTag[TupleFilterQNameExpression]
 }
 
 /**
@@ -1358,6 +1373,9 @@ final case class TupleFilterAncestor(underlyingElem: BackingNodes.Elem, taxonomy
     extends TupleFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[TupleFilterQName, TupleFilterQNameExpression] {
   requireName(ENames.TfAncestorEName)
+
+  val classTagV: ClassTag[TupleFilterQName] = classTag[TupleFilterQName]
+  val classTagE: ClassTag[TupleFilterQNameExpression] = classTag[TupleFilterQNameExpression]
 }
 
 /**
@@ -1390,6 +1408,9 @@ final case class DimensionFilterDimension(underlyingElem: BackingNodes.Elem, tax
     extends DimensionFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[DimensionFilterQName, DimensionFilterQNameExpression] {
   requireName(ENames.DfDimensionEName)
+
+  val classTagV: ClassTag[DimensionFilterQName] = classTag[DimensionFilterQName]
+  val classTagE: ClassTag[DimensionFilterQNameExpression] = classTag[DimensionFilterQNameExpression]
 }
 
 /**
@@ -1516,6 +1537,9 @@ final case class UnitFilterMeasure(underlyingElem: BackingNodes.Elem, taxonomyEl
     extends UnitFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[UnitFilterQName, UnitFilterQNameExpression] {
   requireName(ENames.UfMeasureEName)
+
+  val classTagV: ClassTag[UnitFilterQName] = classTag[UnitFilterQName]
+  val classTagE: ClassTag[UnitFilterQNameExpression] = classTag[UnitFilterQNameExpression]
 }
 
 /**
@@ -1560,6 +1584,9 @@ final case class AspectCoverFilterDimension(underlyingElem: BackingNodes.Elem, t
     extends AspectCoverFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[AspectCoverFilterQName, AspectCoverFilterQNameExpression] {
   requireName(ENames.AcfDimensionEName)
+
+  val classTagV: ClassTag[AspectCoverFilterQName] = classTag[AspectCoverFilterQName]
+  val classTagE: ClassTag[AspectCoverFilterQNameExpression] = classTag[AspectCoverFilterQNameExpression]
 }
 
 /**
@@ -1571,6 +1598,9 @@ final case class AspectCoverFilterExcludeDimension(
     extends AspectCoverFilterContentElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[AspectCoverFilterQName, AspectCoverFilterQNameExpression] {
   requireName(ENames.AcfExcludeDimensionEName)
+
+  val classTagV: ClassTag[AspectCoverFilterQName] = classTag[AspectCoverFilterQName]
+  val classTagE: ClassTag[AspectCoverFilterQNameExpression] = classTag[AspectCoverFilterQNameExpression]
 }
 
 /**
@@ -1790,6 +1820,9 @@ final case class ConceptAspect(underlyingElem: BackingNodes.Elem, taxonomyElemFa
     extends FormulaAspect
     with NonStandardTaxonomyElemSupport.ProvidesQName[QNameElem, QNameExpressionElem] {
   requireName(ENames.FormulaConceptEName)
+
+  val classTagV: ClassTag[QNameElem] = classTag[QNameElem]
+  val classTagE: ClassTag[QNameExpressionElem] = classTag[QNameExpressionElem]
 
   def aspect(aspectModel: AspectModel): Aspect = Aspect.ConceptAspect
 }
@@ -2056,6 +2089,9 @@ final case class MemberElem(underlyingElem: BackingNodes.Elem, taxonomyElemFacto
     extends FormulaNonXLinkElem
     with NonStandardTaxonomyElemSupport.ProvidesQName[QNameElem, QNameExpressionElem] {
   requireName(ENames.FormulaMemberEName)
+
+  val classTagV: ClassTag[QNameElem] = classTag[QNameElem]
+  val classTagE: ClassTag[QNameExpressionElem] = classTag[QNameExpressionElem]
 }
 
 /**
