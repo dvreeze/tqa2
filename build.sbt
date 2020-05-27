@@ -16,7 +16,7 @@ lazy val commonSettings = Seq(
   name         := "tqa2",
   description  := "XBRL taxonomy query API, using a locator-free taxonomy model",
   organization := "eu.cdevreeze.tqa2",
-  version      := "0.3.0",
+  version      := "0.4.0-SNAPSHOT",
 
   scalaVersion       := scalaVer,
   crossScalaVersions := crossScalaVer,
