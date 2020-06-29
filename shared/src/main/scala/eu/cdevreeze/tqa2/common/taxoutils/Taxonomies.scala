@@ -32,13 +32,30 @@ import scala.util.Try
 object Taxonomies {
 
   /**
-   * Returns true if the document URI belongs to www.w3.org, www.xbrl.org or www.locfreexbrl.org. Note that among the
-   * schemas there is also one linkbase file (having one simple link), namely http://www.xbrl.org/2016/severities.xml.
+   * Returns true if the URI has host www.xbrl.org and a path starting with "/taxonomy/". Documents having these URIs
+   * are not considered core taxonomy documents.
+   */
+  def isXbrlOrgTaxonomyUri(uri: URI): Boolean = {
+    Option(uri.getHost).contains("www.xbrl.org") && Option(uri.getPath).exists(_.startsWith("/taxonomy/"))
+  }
+
+  /**
+   * Returns true if the namespace interpreted as URI returns true on calling function isXbrlOrgTaxonomyUri. Schema documents
+   * having these target namespaces are not considered core taxonomy documents.
+   */
+  def isXbrlOrgTaxonomyNamespace(ns: String): Boolean = {
+    Try(isXbrlOrgTaxonomyUri(URI.create(ns))).getOrElse(false)
+  }
+
+  /**
+   * Returns true if the document URI belongs to www.w3.org, www.xbrl.org or www.locfreexbrl.org, but function isXbrlOrgTaxonomyUri
+   * returns false. Note that among the files (mostly schemas) there is also one linkbase file (having one simple link), namely
+   * http://www.xbrl.org/2016/severities.xml.
    */
   def isCoreDocumentUri(uri: URI): Boolean = {
     val host = Option(uri.getHost).getOrElse("")
 
-    Set("www.w3.org", "xbrl.org", "www.xbrl.org", "www.locfreexbrl.org").contains(host)
+    Set("www.w3.org", "xbrl.org", "www.xbrl.org", "www.locfreexbrl.org").contains(host) && !isXbrlOrgTaxonomyUri(uri)
   }
 
   /**
