@@ -72,15 +72,15 @@ trait DefaultDtsUriCollector extends DtsUriCollector {
     // One step, processing all URIs currently known, and not yet processed
     val docUrisToProcess: Set[URI] = docUris.diff(processedDocUris)
 
-    val taxoDocElemsFound: Seq[TaxonomyElem] = docUrisToProcess.toIndexedSeq.map(uri => taxoElemBuilder(uri))
+    val taxoDocElemsToProcess: Seq[TaxonomyElem] = docUrisToProcess.toIndexedSeq.map(uri => taxoElemBuilder(uri))
 
-    val taxoDocMapFound: Map[URI, TaxonomyElem] = taxoDocElemsFound.map(e => e.docUri -> e).toMap
+    val taxoDocElemsToProcessMap: Map[URI, TaxonomyElem] = taxoDocElemsToProcess.map(e => e.docUri -> e).toMap
 
-    val docUrisFound: Set[URI] = taxoDocElemsFound.flatMap(e => findAllUsedDocUris(e)).toSet
+    val docUrisFound: Set[URI] = taxoDocElemsToProcess.flatMap(e => findAllUsedDocUris(e)).toSet
 
     val newDocUris: Set[URI] = docUris.union(docUrisFound)
 
-    val newProcessedDocs: Map[URI, TaxonomyElem] = processedDocElems ++ taxoDocMapFound
+    val newProcessedDocs: Map[URI, TaxonomyElem] = processedDocElems ++ taxoDocElemsToProcessMap
 
     assert(newProcessedDocs.keySet == docUris)
 
