@@ -350,7 +350,7 @@ trait DefaultDimensionalRelationshipQueryApi extends DimensionalRelationshipQuer
     val elrSourceConceptPairs = (inheritedElrSourceConceptPairs ++ ownElrSourceConceptPairs).distinct
 
     val hasHypercubes =
-      elrSourceConceptPairs flatMap {
+      elrSourceConceptPairs.flatMap {
         case (elr, sourceConcept) =>
           filterOutgoingHasHypercubeRelationshipsOnElr(sourceConcept, elr)
       }
@@ -374,7 +374,7 @@ trait DefaultDimensionalRelationshipQueryApi extends DimensionalRelationshipQuer
       domainMemberRelationships.map(rel => rel.elr -> rel.sourceConcept).distinct
 
     val hasHypercubes =
-      inheritedElrSourceConceptPairs flatMap {
+      inheritedElrSourceConceptPairs.flatMap {
         case (elr, sourceConcept) =>
           filterOutgoingHasHypercubeRelationshipsOnElr(sourceConcept, elr)
       }
