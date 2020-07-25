@@ -41,7 +41,7 @@ object ShowFormulas {
   private val processor = new Processor(false)
 
   def main(args: Array[String]): Unit = {
-    require(args.length == 2, s"Usage: ShowDimensions <taxo root dir> <entrypoint URI>")
+    require(args.length == 2, s"Usage: ShowFormulas <taxo root dir> <entrypoint URI>")
 
     val start = System.currentTimeMillis()
 

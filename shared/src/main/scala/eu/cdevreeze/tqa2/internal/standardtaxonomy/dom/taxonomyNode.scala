@@ -191,6 +191,8 @@ sealed trait TaxonomyElem extends AbstractDialectBackingElem with AbstractSubtyp
     case _              => false
   }
 
+  final def idOption: Option[String] = attrOption(ENames.IdEName)
+
   protected[dom] def requireName(elemName: EName): Unit = {
     require(name == elemName, s"Required name: $elemName. Found name $name instead, in document $docUri")
   }

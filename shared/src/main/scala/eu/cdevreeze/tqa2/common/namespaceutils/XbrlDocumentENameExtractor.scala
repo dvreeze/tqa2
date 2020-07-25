@@ -82,11 +82,15 @@ object XbrlDocumentENameExtractor {
       "{http://xbrl.org/2010/filter/concept-relation}variable" -> QNameTextENameExtractorIgnoringDefaultNamespace,
       "{http://xbrl.org/2008/filter/dimension}variable" -> QNameTextENameExtractorIgnoringDefaultNamespace,
       "{http://xbrl.org/2010/message}message" -> XPathInMessageTextENameExtractor,
-    ).map(kv => EName.parse(kv._1) -> kv._2).toMap
+    ).map(kv => EName.parse(kv._1) -> kv._2)
+      .groupBy(_._1)
+      .view
+      .mapValues(kvs => kvs.ensuring(kvs.sizeIs == 1, s"Duplicate ENames: ${kvs.map(_._1).mkString(", ")}").head._2)
+      .toMap
   }
 
   val defaultAttributeValueTextENameExtractors: Map[EName, Map[EName, TextENameExtractor]] = {
-    Map(
+    Seq(
       EName.parse("{http://www.locfreexbrl.org/2019/key}conceptKey") -> Map(
         EName.parse("key") -> QNameTextENameExtractor,
       ),
@@ -100,7 +104,8 @@ object XbrlDocumentENameExtractor {
         EName.parse("ref") -> QNameTextENameExtractor,
         EName.parse("substitutionGroup") -> QNameTextENameExtractor,
         EName.parse("type") -> QNameTextENameExtractor,
-        EName.parse("{http://locfreexbrl.org/2005/xbrldt}typedDomainKey") -> QNameTextENameExtractor, // loc-free model attribute
+        // loc-free model attribute
+        EName.parse("{http://locfreexbrl.org/2005/xbrldt}typedDomainKey") -> QNameTextENameExtractor,
       ),
       EName.parse("{http://www.w3.org/2001/XMLSchema}attribute") -> Map(
         EName.parse("ref") -> QNameTextENameExtractor,
@@ -123,12 +128,15 @@ object XbrlDocumentENameExtractor {
       ),
       EName.parse("{http://xbrl.org/2008/formula}explicitDimension") -> Map(
         EName.parse("dimension") -> QNameTextENameExtractor,
+        EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
       EName.parse("{http://xbrl.org/2008/formula}typedDimension") -> Map(
         EName.parse("dimension") -> QNameTextENameExtractor,
+        EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
       EName.parse("{http://xbrl.org/2008/filter/match}matchDimension") -> Map(
         EName.parse("dimension") -> QNameTextENameExtractor,
+        EName.parse("variable") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
       EName.parse("{http://xbrl.org/2008/variable}function") -> Map(
         EName.parse("name") -> QNameTextENameExtractor,
@@ -136,6 +144,7 @@ object XbrlDocumentENameExtractor {
       EName.parse("{http://xbrl.org/2008/variable}parameter") -> Map(
         EName.parse("name") -> QNameTextENameExtractor,
         EName.parse("as") -> QNameTextENameExtractor,
+        EName.parse("select") -> XPathTextENameExtractor,
       ),
       EName.parse("{http://xbrl.org/2010/filter/concept-relation}conceptRelation") -> Map(
         EName.parse("test") -> XPathTextENameExtractor,
@@ -162,10 +171,12 @@ object XbrlDocumentENameExtractor {
       ),
       EName.parse("{http://xbrl.org/2008/formula}formula") -> Map(
         EName.parse("value") -> XPathTextENameExtractor,
+        EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
       EName.parse("{http://xbrl.org/2008/formula}entityIdentifier") -> Map(
         EName.parse("scheme") -> XPathTextENameExtractor,
         EName.parse("value") -> XPathTextENameExtractor,
+        EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
       EName.parse("{http://xbrl.org/2008/formula}instant") -> Map(
         EName.parse("value") -> XPathTextENameExtractor,
@@ -176,12 +187,15 @@ object XbrlDocumentENameExtractor {
       ),
       EName.parse("{http://xbrl.org/2008/formula}multiplyBy") -> Map(
         EName.parse("measure") -> XPathTextENameExtractor,
+        EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
       EName.parse("{http://xbrl.org/2008/formula}divideBy") -> Map(
         EName.parse("measure") -> XPathTextENameExtractor,
+        EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
       EName.parse("{http://xbrl.org/2008/formula}occXpath") -> Map(
         EName.parse("select") -> XPathTextENameExtractor,
+        EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
       EName.parse("{http://xbrl.org/2008/filter/general}general") -> Map(
         EName.parse("test") -> XPathTextENameExtractor,
@@ -209,6 +223,7 @@ object XbrlDocumentENameExtractor {
       ),
       EName.parse("{http://xbrl.org/2008/filter/tuple}locationFilter") -> Map(
         EName.parse("location") -> XPathTextENameExtractor,
+        EName.parse("variable") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
       EName.parse("{http://xbrl.org/2008/filter/unit}generalMeasures") -> Map(
         EName.parse("test") -> XPathTextENameExtractor,
@@ -218,9 +233,6 @@ object XbrlDocumentENameExtractor {
       ),
       EName.parse("{http://xbrl.org/2008/filter/value}precision") -> Map(
         EName.parse("minimum") -> XPathTextENameExtractor,
-      ),
-      EName.parse("{http://xbrl.org/2008/variable}parameter") -> Map(
-        EName.parse("select") -> XPathTextENameExtractor,
       ),
       EName.parse("{http://xbrl.org/2008/variable}equalityDefinition") -> Map(
         EName.parse("test") -> XPathTextENameExtractor,
@@ -237,16 +249,10 @@ object XbrlDocumentENameExtractor {
       EName.parse("{http://xbrl.org/2010/custom-function}input") -> Map(
         EName.parse("name") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
-      EName.parse("{http://xbrl.org/2008/formula}formula") -> Map(
-        EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
-      ),
       EName.parse("{http://xbrl.org/2008/formula}aspects") -> Map(
         EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
       EName.parse("{http://xbrl.org/2008/formula}concept") -> Map(
-        EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
-      ),
-      EName.parse("{http://xbrl.org/2008/formula}entityIdentifier") -> Map(
         EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
       EName.parse("{http://xbrl.org/2008/formula}period") -> Map(
@@ -259,21 +265,6 @@ object XbrlDocumentENameExtractor {
         EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
       EName.parse("{http://xbrl.org/2008/formula}occFragments") -> Map(
-        EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
-      ),
-      EName.parse("{http://xbrl.org/2008/formula}occXpath") -> Map(
-        EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
-      ),
-      EName.parse("{http://xbrl.org/2008/formula}explicitDimension") -> Map(
-        EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
-      ),
-      EName.parse("{http://xbrl.org/2008/formula}typedDimension") -> Map(
-        EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
-      ),
-      EName.parse("{http://xbrl.org/2008/formula}multiplyBy") -> Map(
-        EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
-      ),
-      EName.parse("{http://xbrl.org/2008/formula}divideBy") -> Map(
         EName.parse("source") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
       EName.parse("{http://xbrl.org/2008/filter/match}matchConcept") -> Map(
@@ -300,9 +291,6 @@ object XbrlDocumentENameExtractor {
       EName.parse("{http://xbrl.org/2008/filter/match}matchNonXDTScenario") -> Map(
         EName.parse("variable") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
-      EName.parse("{http://xbrl.org/2008/filter/match}matchDimension") -> Map(
-        EName.parse("variable") -> QNameTextENameExtractorIgnoringDefaultNamespace,
-      ),
       EName.parse("{http://xbrl.org/2008/filter/period}instantDuration") -> Map(
         EName.parse("variable") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
@@ -312,16 +300,16 @@ object XbrlDocumentENameExtractor {
       EName.parse("{http://xbrl.org/2008/filter/tuple}siblingFilter") -> Map(
         EName.parse("variable") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
-      EName.parse("{http://xbrl.org/2008/filter/tuple}locationFilter") -> Map(
-        EName.parse("variable") -> QNameTextENameExtractorIgnoringDefaultNamespace,
-      ),
       EName.parse("{http://xbrl.org/2008/variable}variableArc") -> Map(
         EName.parse("name") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
       EName.parse("{http://xbrl.org/2014/table}tableParameterArc") -> Map(
         EName.parse("name") -> QNameTextENameExtractorIgnoringDefaultNamespace,
       ),
-    )
+    ).groupBy(_._1)
+      .view
+      .mapValues(kvs => kvs.ensuring(kvs.sizeIs == 1, s"Duplicate ENames: ${kvs.map(_._1).mkString(", ")}").head._2)
+      .toMap
   }
 
   val defaultInstance: XbrlDocumentENameExtractor = {
