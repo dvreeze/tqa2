@@ -2,9 +2,9 @@
 // Run amm in scripts folder
 // In amm session, use command "import $exec.eu.cdevreeze.tqa2.scripts.LoadStandardDts"
 
-// Taking TQA2 version 0.3.0
+// Taking TQA2 version 0.4.0
 
-import $ivy.`eu.cdevreeze.tqa2::tqa2:0.3.0`
+import $ivy.`eu.cdevreeze.tqa2::tqa2:0.4.0-SNAPSHOT`
 
 // Imports that (must) remain available after this initialization script
 
@@ -28,8 +28,8 @@ val processor = new Processor(false)
 def loadDts(localRootDir: File, entrypointUris: Set[URI], docCacheSize: Int, lenient: Boolean): TaxonomyBase = {
   val docBuilder =
     SaxonDocumentBuilder(
-      processor.newDocumentBuilder(),
-      SaxUriResolvers.fromLocalMirrorRootDirectory(localRootDir))
+      processor,
+      SaxUriResolvers.fromLocalMirrorRootDirectoryWithoutScheme(localRootDir))
 
   val documentBuilder =
     new CachingDocumentBuilder(CachingDocumentBuilder.createCache(docBuilder, docCacheSize))

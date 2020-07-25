@@ -126,7 +126,7 @@ object SaxUriResolvers {
    * of the URI mirrored under the given root directory. The protocol (HTTP or HTTPS) is not represented in
    * the local mirror.
    */
-  def fromLocalMirrorRootDirectory(rootDir: File): SaxUriResolver = {
+  def fromLocalMirrorRootDirectoryWithoutScheme(rootDir: File): SaxUriResolver = {
     require(rootDir.isDirectory, s"Not a directory: $rootDir")
     require(rootDir.isAbsolute, s"Not an absolute path: $rootDir")
 
@@ -147,11 +147,35 @@ object SaxUriResolvers {
   }
 
   /**
+   * Returns an URI resolver that expects all files to be found in a local mirror, with the protocol (HTTP or HTTPS, in lowercase)
+   * of the URI mirrored under the given root directory, and the host name in a sub-directory under that.
+   */
+  def fromLocalMirrorRootDirectoryUsingScheme(rootDir: File): SaxUriResolver = {
+    require(rootDir.isDirectory, s"Not a directory: $rootDir")
+    require(rootDir.isAbsolute, s"Not an absolute path: $rootDir")
+
+    def convertUri(uri: URI): URI = {
+      require(uri.getHost != null, s"Missing host name in URI '$uri'")
+      require(uri.getScheme == "http" || uri.getScheme == "https", s"Not an HTTP(S) URI: '$uri'")
+
+      val uriStart = returnWithTrailingSlash(new URI(uri.getScheme, uri.getHost, null, null))
+      val rewritePrefix = returnWithTrailingSlash(rootDir.toPath.resolve(uri.getScheme).resolve(uri.getHost).toUri)
+
+      val catalog = SimpleCatalog.from(Map(uriStart -> rewritePrefix))
+
+      val mappedUri = catalog.getMappedUri(uri)
+      mappedUri
+    }
+
+    fromUriConverter(convertUri)
+  }
+
+  /**
    * Returns an URI resolver that expects all files to be found in a local mirror in a ZIP file, with the host name
    * of the URI mirrored under the given optional parent directory. The protocol (HTTP or HTTPS) is not represented in
    * the local mirror.
    */
-  def forZipFileContainingLocalMirror(zipFile: ZipFile, parentPathOption: Option[URI]): SaxUriResolver = {
+  def forZipFileContainingLocalMirrorWithoutScheme(zipFile: ZipFile, parentPathOption: Option[URI]): SaxUriResolver = {
     require(parentPathOption.forall(!_.isAbsolute), s"Not a relative URI: ${parentPathOption.get}")
 
     def convertUri(uri: URI): URI = {
@@ -166,6 +190,37 @@ object SaxUriResolvers {
         parentPathOption
           .map(pp => URI.create(returnWithTrailingSlash(pp)).resolve(hostAsRelativeUri))
           .getOrElse(hostAsRelativeUri)
+          .toString
+          .ensuring(_.endsWith("/"))
+
+      val catalog = SimpleCatalog.from(Map(uriStart -> rewritePrefix))
+
+      val mappedUri = catalog.getMappedUri(uri)
+      mappedUri
+    }
+
+    forZipFile(zipFile, convertUri)
+  }
+
+  /**
+   * Returns an URI resolver that expects all files to be found in a local mirror in a ZIP file, with the protocol (HTTP or HTTPS,
+   * in lowercase) of the URI mirrored under the given root directory, and the host name in a sub-directory under that.
+   */
+  def forZipFileContainingLocalMirrorUsingScheme(zipFile: ZipFile, parentPathOption: Option[URI]): SaxUriResolver = {
+    require(parentPathOption.forall(!_.isAbsolute), s"Not a relative URI: ${parentPathOption.get}")
+
+    def convertUri(uri: URI): URI = {
+      require(uri.getHost != null, s"Missing host name in URI '$uri'")
+      require(uri.getScheme == "http" || uri.getScheme == "https", s"Not an HTTP(S) URI: '$uri'")
+
+      val uriStart = returnWithTrailingSlash(new URI(uri.getScheme, uri.getHost, null, null))
+
+      val schemePlusHostAsRelativeUri = URI.create(uri.getScheme + "/" + uri.getHost + "/")
+
+      val rewritePrefix =
+        parentPathOption
+          .map(pp => URI.create(returnWithTrailingSlash(pp)).resolve(schemePlusHostAsRelativeUri))
+          .getOrElse(schemePlusHostAsRelativeUri)
           .toString
           .ensuring(_.endsWith("/"))
 

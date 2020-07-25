@@ -94,7 +94,7 @@ private[console] object ConsoleUtil {
   }
 
   private def getDocumentBuilder(taxoRootDir: File, processor: Processor): SaxonDocumentBuilder = {
-    val uriResolver: SaxUriResolver = SaxUriResolvers.fromLocalMirrorRootDirectory(taxoRootDir)
+    val uriResolver: SaxUriResolver = SaxUriResolvers.fromLocalMirrorRootDirectoryWithoutScheme(taxoRootDir)
 
     SaxonDocumentBuilder(processor, uriResolver)
   }

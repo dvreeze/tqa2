@@ -71,7 +71,7 @@ object TestResourceUtil {
 
     val localRootDir: File = new File(convertClasspathUriToAbsoluteUri(localRootUriRelativeToClasspathRoot))
 
-    val uriResolver: URI => SaxInputSource = SaxUriResolvers.fromLocalMirrorRootDirectory(localRootDir)
+    val uriResolver: URI => SaxInputSource = SaxUriResolvers.fromLocalMirrorRootDirectoryWithoutScheme(localRootDir)
 
     val docBuilder: DocumentBuilder = SaxonDocumentBuilder(processor, uriResolver)
 

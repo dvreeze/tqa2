@@ -27,12 +27,13 @@ import net.sf.saxon.s9api
 import org.xml.sax.InputSource
 
 /**
- * Saxon document builder, using an underlying Saxon DocumentBuilder and a URI resolver.
+ * Thread-safe Saxon document builder, using an underlying Saxon DocumentBuilder and a URI resolver.
  *
  * @author Chris de Vreeze
  */
-final class SaxonDocumentBuilder(val underlyingDocBuilder: s9api.DocumentBuilder, val uriResolver: URI => SaxInputSource)
-    extends DocumentBuilder.UsingUriResolver {
+final class SaxonDocumentBuilder(val processor: s9api.Processor, val uriResolver: URI => SaxInputSource)
+    extends DocumentBuilder.UsingUriResolver
+    with DocumentBuilder.ThreadSafeDocumentBuilder {
 
   type BackingDoc = SaxonDocument
 
@@ -42,7 +43,8 @@ final class SaxonDocumentBuilder(val underlyingDocBuilder: s9api.DocumentBuilder
 
     val src = convertInputSourceToSource(is).ensuring(_.getSystemId == uri.toString)
 
-    val node = underlyingDocBuilder.build(src).ensuring(_.getUnderlyingNode.getSystemId == uri.toString)
+    val saxonDocBuilder = processor.newDocumentBuilder()
+    val node = saxonDocBuilder.build(src).ensuring(_.getUnderlyingNode.getSystemId == uri.toString)
     SaxonDocument(node)
   }
 
@@ -67,11 +69,11 @@ final class SaxonDocumentBuilder(val underlyingDocBuilder: s9api.DocumentBuilder
 
 object SaxonDocumentBuilder {
 
-  def apply(underlyingDocBuilder: s9api.DocumentBuilder, uriResolver: URI => SaxInputSource): SaxonDocumentBuilder = {
-    new SaxonDocumentBuilder(underlyingDocBuilder, uriResolver)
-  }
-
+  /**
+   * Creates a SaxonDocumentBuilder from an underlying Saxon s9api Processor and a SAX URI resolver.
+   * The URI resolver is typically obtained through the SaxUriResolvers singleton object.
+   */
   def apply(saxonProcessor: s9api.Processor, uriResolver: URI => SaxInputSource): SaxonDocumentBuilder = {
-    new SaxonDocumentBuilder(saxonProcessor.newDocumentBuilder(), uriResolver)
+    new SaxonDocumentBuilder(saxonProcessor, uriResolver)
   }
 }

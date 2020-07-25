@@ -164,12 +164,22 @@ trait DefaultDtsUriCollector extends DtsUriCollector {
 
 object DefaultDtsUriCollector {
 
-  val instance: DefaultDtsUriCollector = new DefaultDtsUriCollector {}
+  final object DefaultInstance extends DefaultDtsUriCollector
 
-  val instanceAddingLocfreeSchemas: DefaultDtsUriCollector = new DefaultDtsUriCollector {
+  final object InstanceAddingLocfreeSchemas extends DefaultDtsUriCollector {
 
     override def findAllDtsUris(entrypoint: Set[URI], taxoElemBuilder: URI => TaxonomyElem): Set[URI] = {
       super.findAllDtsUris(entrypoint.union(Taxonomies.locfreeSchemaUris), taxoElemBuilder)
     }
   }
+
+  /**
+   * Returns DefaultInstance
+   */
+  val instance: DefaultDtsUriCollector = DefaultInstance
+
+  /**
+   * Returns InstanceAddingLocfreeSchemas
+   */
+  val instanceAddingLocfreeSchemas: DefaultDtsUriCollector = InstanceAddingLocfreeSchemas
 }

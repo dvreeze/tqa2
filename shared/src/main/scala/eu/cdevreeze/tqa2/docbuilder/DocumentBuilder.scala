@@ -42,6 +42,8 @@ trait DocumentBuilder {
 
 object DocumentBuilder {
 
+  type Aux[A] = DocumentBuilder { type BackingDoc = A }
+
   /**
    * Document builder that uses an URI resolver internally, typically to load the document from a local mirror.
    * The "original" URI is stored with the document as its document URI, even if the document is loaded from a local mirror.
@@ -51,5 +53,18 @@ object DocumentBuilder {
     def uriResolver: UriResolver
   }
 
-  type Aux[A] = DocumentBuilder { type BackingDoc = A }
+  object UsingUriResolver {
+
+    type Aux[A] = UsingUriResolver { type BackingDoc = A }
+  }
+
+  /**
+   * DocumentBuilder promising that it can safely be used by multiple threads simultaneously.
+   */
+  trait ThreadSafeDocumentBuilder extends DocumentBuilder
+
+  object ThreadSafeDocumentBuilder {
+
+    type Aux[A] = ThreadSafeDocumentBuilder { type BackingDoc = A }
+  }
 }

@@ -9,7 +9,7 @@
 
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-val scalaVer = "2.13.2"
+val scalaVer = "2.13.3"
 val crossScalaVer = Seq(scalaVer)
 
 lazy val commonSettings = Seq(
@@ -21,7 +21,7 @@ lazy val commonSettings = Seq(
   scalaVersion       := scalaVer,
   crossScalaVersions := crossScalaVer,
 
-  scalacOptions ++= Seq("-unchecked", "-deprecation", "-feature", "-Xfatal-warnings", "-Xlint"),
+  scalacOptions ++= Seq("-Wconf:cat=unused-imports:w,cat=unchecked:w,cat=deprecation:w,cat=feature:w,cat=lint:w"),
 
   Test / publishArtifact := false,
   publishMavenStyle := true,
