@@ -34,6 +34,8 @@ import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.builder.DtsUriCollector
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.jvm.DefaultParallelRelationshipFactory
 import net.sf.saxon.s9api.Processor
 
+import scala.collection.parallel.CollectionConverters._
+
 /**
  * Console-program-specific bootstrapping support.
  *
@@ -74,7 +76,10 @@ private[console] object ConsoleUtil {
 
     println(s"Parsing DTS documents ...") // scalastyle:off
 
-    val documents: Seq[TaxonomyDocument] = dtsDocUris.toSeq.sortBy(_.toString).map(u => TaxonomyDocument.from(docBuilder.build(u)))
+    val documents: Seq[TaxonomyDocument] = dtsDocUris.toSeq.par
+      .map(u => TaxonomyDocument.from(docBuilder.build(u)))
+      .seq
+      .sortBy(_.docUriOption.toString)
 
     println(s"Building TaxonomyBase ...") // scalastyle:off
 

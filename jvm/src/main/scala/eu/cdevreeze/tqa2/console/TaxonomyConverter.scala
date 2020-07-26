@@ -29,8 +29,8 @@ import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
 import eu.cdevreeze.tqa2.internal.converttaxonomy.DefaultXLinkResourceConverter
 import eu.cdevreeze.tqa2.internal.converttaxonomy.TaxonomyBaseConverter
 import eu.cdevreeze.tqa2.internal.standardtaxonomy
-import eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy.builder.DefaultDtsUriCollector
 import eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy.builder.DefaultTaxonomyBaseBuilder
+import eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy.builder.jvm.DefaultParallelDtsUriCollector
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.TaxonomyBase
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.jvm.DefaultParallelRelationshipFactory
@@ -100,7 +100,7 @@ object TaxonomyConverter {
 
     val inputTaxoBase: standardtaxonomy.taxonomy.TaxonomyBase = DefaultTaxonomyBaseBuilder
       .withDocumentBuilder(docBuilder)
-      .withDtsUriCollector(DefaultDtsUriCollector.instanceAddingLocfreeSchemas)
+      .withDtsUriCollector(DefaultParallelDtsUriCollector.instanceAddingLocfreeSchemas)
       .build(combinedEntrypoint)
 
     println(s"Successfully parsed the input taxonomy. It contains ${inputTaxoBase.rootElems.size} documents") // scalastyle:off
