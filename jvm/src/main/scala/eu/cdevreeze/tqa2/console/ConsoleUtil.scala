@@ -18,13 +18,15 @@ package eu.cdevreeze.tqa2.console
 
 import java.io.File
 import java.net.URI
+import java.util.zip.ZipFile
 
 import eu.cdevreeze.tqa2.common.xmlschema.SubstitutionGroupMap
 import eu.cdevreeze.tqa2.docbuilder.SimpleCatalog
+import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
 import eu.cdevreeze.tqa2.docbuilder.jvm.SaxUriResolver
 import eu.cdevreeze.tqa2.docbuilder.jvm.SaxUriResolvers
 import eu.cdevreeze.tqa2.docbuilder.jvm.SimpleCatalogs
-import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
+import eu.cdevreeze.tqa2.docbuilder.jvm.TaxonomyPackageSaxUriResolvers
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyDocument
 import eu.cdevreeze.tqa2.locfreetaxonomy.dom.TaxonomyElems
 import eu.cdevreeze.tqa2.locfreetaxonomy.taxonomy.BasicTaxonomy
@@ -65,11 +67,27 @@ private[console] object ConsoleUtil {
   }
 
   def createTaxonomy(entrypointUris: Set[URI], taxoRootDir: File, processor: Processor): BasicTaxonomy = {
+    val docBuilder: SaxonDocumentBuilder = getDocumentBuilder(taxoRootDir, processor)
+    createTaxonomy(entrypointUris, docBuilder)
+  }
+
+  def createTaxonomy(entrypointUris: Set[URI], zipFile: ZipFile, processor: Processor): BasicTaxonomy = {
+    val docBuilder: SaxonDocumentBuilder = getDocumentBuilder(zipFile, processor)
+    createTaxonomy(entrypointUris, docBuilder)
+  }
+
+  def createTaxonomy(entrypointUri: URI, taxoRootDir: File, processor: Processor): BasicTaxonomy = {
+    createTaxonomy(Set(entrypointUri), taxoRootDir, processor)
+  }
+
+  def createTaxonomy(entrypointUri: URI, zipFile: ZipFile, processor: Processor): BasicTaxonomy = {
+    createTaxonomy(Set(entrypointUri), zipFile, processor)
+  }
+
+  private def createTaxonomy(entrypointUris: Set[URI], docBuilder: SaxonDocumentBuilder): BasicTaxonomy = {
     val dtsUriCollector: DtsUriCollector = DefaultDtsUriCollector
 
     println(s"Finding DTS document URIs (entrypoint: ${entrypointUris.mkString(", ")} ...") // scalastyle:off
-
-    val docBuilder: SaxonDocumentBuilder = getDocumentBuilder(taxoRootDir, processor)
 
     val dtsDocUris: Set[URI] =
       dtsUriCollector.findAllDtsUris(entrypointUris, uri => TaxonomyElems.of(docBuilder.build(uri).documentElement))
@@ -94,12 +112,14 @@ private[console] object ConsoleUtil {
     taxo
   }
 
-  def createTaxonomy(entrypointUri: URI, taxoRootDir: File, processor: Processor): BasicTaxonomy = {
-    createTaxonomy(Set(entrypointUri), taxoRootDir, processor)
-  }
-
   private def getDocumentBuilder(taxoRootDir: File, processor: Processor): SaxonDocumentBuilder = {
     val uriResolver: SaxUriResolver = SaxUriResolvers.fromLocalMirrorRootDirectoryWithoutScheme(taxoRootDir)
+
+    SaxonDocumentBuilder(processor, uriResolver)
+  }
+
+  private def getDocumentBuilder(zipFile: ZipFile, processor: Processor): SaxonDocumentBuilder = {
+    val uriResolver: SaxUriResolver = TaxonomyPackageSaxUriResolvers.forTaxonomyPackage(zipFile)
 
     SaxonDocumentBuilder(processor, uriResolver)
   }

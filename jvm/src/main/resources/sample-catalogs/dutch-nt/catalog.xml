@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <catalog xmlns="urn:oasis:names:tc:entity:xmlns:xml:catalog">
+    <rewriteURI uriStartString="http://www.locfreexbrl.org/" rewritePrefix="../www.locfreexbrl.org/"/>
     <rewriteURI uriStartString="http://www.nltaxonomie.nl/" rewritePrefix="../www.nltaxonomie.nl/"/>
     <rewriteURI uriStartString="http://www.ebpi.nl/" rewritePrefix="../www.ebpi.nl/"/>
     <rewriteURI uriStartString="https://www.vismaconnect.nl/" rewritePrefix="../www.vismaconnect.nl/"/>
