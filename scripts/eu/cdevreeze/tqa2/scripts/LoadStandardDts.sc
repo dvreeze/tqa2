@@ -22,6 +22,7 @@ import eu.cdevreeze.tqa2.docbuilder.jvm.SaxUriResolvers
 import eu.cdevreeze.tqa2.docbuilder.jvm.saxon.SaxonDocumentBuilder
 import eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy._
 import eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy.builder._
+import eu.cdevreeze.tqa2.internal.standardtaxonomy.taxonomy.builder.jvm.DefaultParallelDtsUriCollector
 
 val processor = new Processor(false)
 
@@ -34,7 +35,7 @@ def loadDts(localRootDir: File, entrypointUris: Set[URI], docCacheSize: Int, len
   val documentBuilder =
     new CachingDocumentBuilder(CachingDocumentBuilder.createCache(docBuilder, docCacheSize))
 
-  val dtsUriCollector = DefaultDtsUriCollector.instance
+  val dtsUriCollector = DefaultParallelDtsUriCollector.instance
 
   val taxoBuilder: DefaultTaxonomyBaseBuilder =
     DefaultTaxonomyBaseBuilder.
