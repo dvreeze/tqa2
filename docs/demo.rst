@@ -332,7 +332,7 @@ Currently the most important ones are:
 
 Taken together, these rules ensure that:
 
-- The use of XLink is indeed restricted to XLink with locators and without simple links
+- The use of XLink is indeed restricted to XLink without locators and without simple links
 - URLs pointing to XML elements (hrefs, schemaLocations) are replaced by more semantic references (with some notable exceptions)
 - In the locator-free representation there are no "dead links" (for taxonomy element keys, XLink labels etc.)
 - Entrypoints in the locator-free model (as described in an earlier section) work as advertised, thus supporting "taxonomy modularity"
