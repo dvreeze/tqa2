@@ -301,6 +301,48 @@ prefix (instead of "xs").
 For ease of conversion, it is also required that embedded linkbases are not used, and that the document root elements are xs:schema
 or link:linkbase in the standard taxonomy.
 
+Validations on locator-free taxonomies
+======================================
+
+Consider any regular XBRL taxonomy that:
+
+- is XBRL-valid, according to the XBRL Core and Dimensions specifications
+- meets the additional requirements for being convertible to the locator-free model
+
+Consider the result of converting that XBRL taxonomy to the locator-free model, saved in the corresponding XML format.
+
+How do we know that the conversion process has led to a sound representation as locator-free taxonomy? So how do we validate
+the conversion process itself? To that end there are several validation rules, checked against the locator-free taxonomy.
+Currently the most important ones are:
+
+- All taxonomy documents are either XML Schema documents or "linkbases" in the locator-free model
+- There are no XLink locators anywhere
+- There are no XLink simple links anywhere
+- There is no xbrldt:typedDomainRef anywhere (it is an URL, after all, but its counterpart in the locator-free taxonomy is "more semantic")
+- All XLink arc 'from' and 'to' XLink labels point to at least one XLink resource within the same XLink extended link
+- All taxonomy element keys refer to an existing taxonomy element in the taxonomy (concepts for concept keys, type definitions for type keys, role types for role type keys, etc.)
+- The use of xs:include is not allowed
+- Each schema has a target namespace
+- No schema target namespace is shared by more than one XML Schema, so each target namespace uniquely corresponds to a schema document
+- Each typed domain key (in a typed dimension declaration) points to an existing typed domain (as global element declaration)
+- In entrypoints, each xs:import schemaLocation attribute must point to an existing schema in the taxonomy
+- In entrypoints, each clink:linkbaseRef element must point to an existing "linkbase" in the locator-free taxonomy
+- No xs:import schemaLocation or clink:linkbaseRef can point to a document that itself contains xs:import schemaLocation attributes or xlink:linkbaseRef elements
+- The schema set imported from an entrypoint must be closed under imported and target namespaces
+
+Taken together, these rules ensure that:
+
+- The use of XLink is indeed restricted to XLink with locators and without simple links
+- URLs pointing to XML elements (hrefs, schemaLocations) are replaced by more semantic references (with some notable exceptions)
+- In the locator-free representation there are no "dead links" (for taxonomy element keys, XLink labels etc.)
+- Entrypoints in the locator-free model (as described in an earlier section) work as advertised, thus supporting "taxonomy modularity"
+
+The rules do not ensure completeness of the taxonomy conversion. Some control queries could be used to validate that.
+
+It would be nice if the locator-free model could be specified independently in its own Core and Dimensions specifications,
+with corresponding conformance suites. Of course, that goes far beyond the validations mentioned above, but will hopefully
+be realized at some point in the future.
+
 Conclusion
 ==========
 
